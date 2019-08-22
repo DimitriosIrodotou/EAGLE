@@ -4,7 +4,7 @@ import numpy as np
 
 def read_dataset_dm_mass():
     # Special case for the mass of dark matter particles.
-    f = h5py.File('/Users/Bam/PycharmProjects/G-EAGLE/G-EAGLE_Data/0021/particledata_007_z008p000/eagle_subfind_particles_007_z008p000.0.hdf5', 'r')
+    f = h5py.File('/Users/Bam/PycharmProjects/G-EAGLE/G-EAGLE_Data/0021/groups_010_z005p000/eagle_subfind_tab_010_z005p000.0.hdf5', 'r')
     h = f['Header'].attrs.get('HubbleParam')
     a = f['Header'].attrs.get('Time')
     dm_mass = f['Header'].attrs.get('MassTable')[1]

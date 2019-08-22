@@ -13,8 +13,8 @@ start_time = time.time()
 properties, prop_num = di_io.ask_user()
 
 # Load the data #
-X = np.load('./Data/' + properties[0] + '.npy')
-Y = np.load('./Data/' + properties[1] + '.npy')
+X = np.load('./Data/Groups/' + properties[0] + '.npy')
+Y = np.load('./Data/Groups/' + properties[1] + '.npy')
 if prop_num != '2':
     z = np.load('./Data/' + properties[2] + '.npy')
 

@@ -8,7 +8,7 @@ def read_dataset(itype, att, nfiles=1):
     data = []
     # Loop over each file and extract the data.
     for i in range(nfiles):
-        f = h5py.File('/Users/Bam/PycharmProjects/G-EAGLE/G-EAGLE_Data/0021/particledata_007_z008p000/eagle_subfind_particles_007_z008p000.%i.hdf5' % i, 'r')
+        f = h5py.File('/Users/Bam/PycharmProjects/G-EAGLE/G-EAGLE_Data/0021/groups_010_z005p000/eagle_subfind_tab_010_z005p000.%i.hdf5' % i, 'r')
         tmp = f['PartType%i/%s' % (itype, att)][...]
         data.append(tmp)
         # Get conversion factors.
