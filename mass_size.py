@@ -17,9 +17,9 @@ start_global_time = time.time()  # Start the global time.
 warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)
 
 
-class PositionHistogram:
+class MassSize:
     """
-    A class to create 2 dimensional histograms of the position of stellar particles.
+    A class to create 2 dimensional histograms of the mass-size relation of galaxies.
     """
 
 
@@ -53,7 +53,7 @@ class PositionHistogram:
                     print('--- Finished plotting the data in %.5s seconds ---' % (time.time() - start_local_time))  # Print plotting time.
                     print('–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––')
 
-        print('--- Finished PositionHistogram.py in %.5s seconds ---' % (time.time() - start_global_time))  # Print total time.
+        print('--- Finished MassSize.py in %.5s seconds ---' % (time.time() - start_global_time))  # Print total time.
         print('–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––')
 
 
@@ -69,14 +69,14 @@ class PositionHistogram:
         # Load subhalo data in h-free physical CGS units #
         subhalo_data = {}
         file_type = 'SUBFIND'
-        for attribute in ['ApertureMeasurements/Mass/030kpc', 'CentreOfPotential', 'GroupNumber', 'SubGroupNumber']:
+        for attribute in ['GroupNumber', 'SubGroupNumber', 'CentreOfPotential', 'ApertureMeasurements/Mass/030kpc']:
             subhalo_data[attribute] = E.read_array(file_type, sim, tag, '/Subhalo/' + attribute, numThreads=4)
 
         # Load particle data in h-free physical CGS units #
         stellar_data = {}
         particle_type = '4'
         file_type = 'PARTDATA'
-        for attribute in ['Coordinates', 'GroupNumber', 'SubGroupNumber']:
+        for attribute in ['GroupNumber', 'SubGroupNumber', 'Coordinates']:
             stellar_data[attribute] = E.read_array(file_type, sim, tag, '/PartType' + particle_type + '/' + attribute, numThreads=4)
 
         # Convert to astronomical units #
@@ -99,13 +99,13 @@ class PositionHistogram:
 
         # Mask the data to select galaxies with a given GroupNumber and SubGroupNumber and particles inside a 30kpc sphere #
         mask = np.where((self.stellar_data['GroupNumber'] == group_number) & (self.stellar_data['SubGroupNumber'] == subgroup_number) & (
-            np.linalg.norm(self.stellar_data['Coordinates'] - self.subhalo_data['CentreOfPotential'][index], axis=1) <= 30.0) & (
+            np.sqrt(np.sum((self.stellar_data['Coordinates'] - self.subhalo_data['CentreOfPotential'][index]) ** 2, axis=1)) <= 30.0) & (
                             self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4][index] > 1e8))
 
         # Mask the temporary dictionary for each galaxy #
         stellar_data_tmp = {}
         for attribute in self.stellar_data.keys():
-            stellar_data_tmp[attribute] = np.copy(self.stellar_data[attribute][mask])
+            stellar_data_tmp[attribute] = np.copy(self.stellar_data[attribute])[mask]
 
         # Normalise the coordinates wrt the centre of potential of the subhalo #
         stellar_data_tmp['Coordinates'] = np.subtract(stellar_data_tmp['Coordinates'], self.subhalo_data['CentreOfPotential'][index])
@@ -172,4 +172,4 @@ class PositionHistogram:
 if __name__ == '__main__':
     tag = '010_z005p000'
     sim = '/cosma7/data/dp004/dc-payy1/G-EAGLE/GEAGLE_06/data/'
-    x = PositionHistogram(sim, tag)
+    x = MassSize(sim, tag)
