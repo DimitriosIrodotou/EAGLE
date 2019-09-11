@@ -29,31 +29,27 @@ class PositionHistogram:
         :param sim: simulation directory
         :param tag: redshift folder
         """
-
         # Load data #
+        self.Ngroups = E.read_header('SUBFIND', sim, tag, 'TotNgroups')
         self.stellar_data, self.subhalo_data = self.read_galaxies(sim, tag)
-        print('--- Finished reading the data in %.5s seconds ---' % (time.time() - start_global_time))  # Print reading time.
+        print('Reading data for ' + re.split('G-EAGLE/|/data', sim)[2] + ' took %.5s seconds' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––')
 
-        # TODO: find out why these two are not the same
-        # print(len(list(set(self.subhalo_data['GroupNumber']))))
-        # print(max(list(set(self.subhalo_data['GroupNumber']))))
-
-        print('Found ' + str(len(list(set(self.subhalo_data['GroupNumber'])))) + ' FoF groups and ' + str(
-            len(list(set(self.subhalo_data['SubGroupNumber'])))) + ' subfind groups ' + 'for G-EAGLE_' + re.split('GEAGLE_|/data', sim)[2])
-
-        for group_number in list(set(self.subhalo_data['GroupNumber'])):  # Loop over all distinct GroupNumber.
+        for group_number in range(1, self.Ngroups):  # Loop over all GroupNumber.
             for subgroup_number in range(0, 1):  # Loop over all distinct SubGroupNumber.
+                start_local_time = time.time()  # Start the local time.
                 stellar_data_tmp, mask = self.mask_galaxies(group_number, subgroup_number)  # Mask the data
+                print('Masking data for halo ' + str(group_number) + ' took %.5s seconds' % (time.time() - start_local_time))
+                print('–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––')
 
                 # Plot the data #
                 if len(mask[0]) > 0.0:
                     start_local_time = time.time()  # Start the local time.
                     self.plot(stellar_data_tmp, group_number, subgroup_number)
-                    print('--- Finished plotting the data in %.5s seconds ---' % (time.time() - start_local_time))  # Print plotting time.
+                    print('Plotting data took %.5s seconds' % (time.time() - start_local_time))
                     print('–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––')
 
-        print('--- Finished PositionHistogram.py in %.5s seconds ---' % (time.time() - start_global_time))  # Print total time.
+        print('Finished PositionHistogram.py in %.5s seconds' % (time.time() - start_global_time))  # Print total time.
         print('–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––')
 
 
@@ -65,7 +61,6 @@ class PositionHistogram:
         :param tag: redshift folder
         :return: stellar_data, subhalo_data
         """
-
         # Load subhalo data in h-free physical CGS units #
         subhalo_data = {}
         file_type = 'SUBFIND'
