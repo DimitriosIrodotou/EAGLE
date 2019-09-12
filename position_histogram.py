@@ -84,7 +84,7 @@ class PositionHistogram:
 
     def mask_galaxies(self, group_number, subgroup_number):
         """
-        A method to select galaxies.
+        A method to mask galaxies.
         :param group_number: from list(set(self.subhalo_data['GroupNumber']))
         :param subgroup_number: from list(set(self.subhalo_data['SubGroupNumber']))
         :return: stellar_data_tmp, mask

@@ -1,3 +1,4 @@
+import argparse
 import re
 import time
 import warnings
@@ -10,11 +11,18 @@ import seaborn as sns
 
 import eagle_IO.eagle_IO.eagle_IO as E
 
-date = time.strftime('%d_%m_%y_%H%M')  # Date
-outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/'  # Path to save plots.
-start_global_time = time.time()  # Start the global time.
-warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)
+# Create a parser and add argument to read data #
+parser = argparse.ArgumentParser(description='Create 2 dimensional histograms of the bulge/disc decomposition.')
+parser.add_argument('-r', action='store_true', help='Read data and save to numpy arrays')
+args = parser.parse_args()
 
+date = time.strftime('%d_%m_%y_%H%M')  # Date
+start_global_time = time.time()  # Start the global time.
+outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/'  # Path to save plots.
+SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/'  # Path to save data.
+warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
+
+# TODO MASK HALO MASS BEFORE THE FOR LOOP
 
 class BulgeDiscDecomposition:
     """
@@ -31,27 +39,33 @@ class BulgeDiscDecomposition:
         disc_fraction = []
         glx_stellar_mass = []
 
-        # Load data #
-        self.Ngroups = E.read_header('SUBFIND', sim, tag, 'TotNgroups')
-        self.stellar_data, self.subhalo_data = self.read_galaxies(sim, tag)
-        print('Reading data for ' + re.split('G-EAGLE/|/data', sim)[2] + ' took %.5s seconds' % (time.time() - start_global_time))
-        print('–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––')
-        for group_number in range(1, self.Ngroups):  # Loop over all GroupNumber.
-            for subgroup_number in range(0, 1):  # Loop over all SubGroupNumber.
-                start_local_time = time.time()  # Start the local time.
-                self.stellar_data_tmp, self.disc_fraction = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
-                glx_stellar_mass.append(np.sum(self.stellar_data_tmp['Mass']))
-                disc_fraction.append(self.disc_fraction)
-                print('Masking data for halo ' + str(group_number) + ' took %.5s seconds' % (time.time() - start_local_time))
-                print('–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––')
+        if args.r:  # Read data.
+            self.stellar_data, self.subhalo_data = self.read_galaxies(sim, tag)
+            print('Reading data for ' + re.split('G-EAGLE/|/data', sim)[2] + ' took %.5s s' % (time.time() - start_global_time))
+            print('–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––')
+
+            # Loop over all distinct GroupNumber and SubGroupNumber, mask the data and save to numpy arrays #
+            for group_number in list(set(self.subhalo_data['GroupNumber'])):
+                for subgroup_number in range(0, 1):
+                    start_local_time = time.time()  # Start the local time.
+                    self.stellar_data_tmp, self.disc_fraction = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
+                    glx_stellar_mass.append(np.sum(self.stellar_data_tmp['Mass']))
+                    disc_fraction.append(self.disc_fraction)
+                    print('Masking data for halo ' + str(group_number) + ' took %.5s s' % (time.time() - start_local_time))
+                    print('–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––')
+                    np.save(SavePath + 'glx_stellar_mass', glx_stellar_mass)
+                    np.save(SavePath + 'disc_fraction', disc_fraction)
+        else:  # Load data.
+            disc_fraction = np.load(SavePath + 'disc_fraction.npy')
+            glx_stellar_mass = np.load(SavePath + 'glx_stellar_mass.npy')
 
         # Plot the data #
         start_local_time = time.time()  # Start the local time.
         self.plot(glx_stellar_mass, disc_fraction)
-        print('Plotting data took %.5s seconds' % (time.time() - start_local_time))
+        print('Plotting data took %.5s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––')
 
-        print('Finished BulgeDiscDecomposition.py in %.5s seconds' % (time.time() - start_global_time))
+        print('Finished BulgeDiscDecomposition.py in %.5s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––')
 
 
