@@ -29,6 +29,7 @@ class PositionHistogram:
         :param sim: simulation directory
         :param tag: redshift folder
         """
+
         # Load data #
         self.Ngroups = E.read_header('SUBFIND', sim, tag, 'TotNgroups')
         self.stellar_data, self.subhalo_data = self.read_galaxies(sim, tag)
@@ -61,6 +62,7 @@ class PositionHistogram:
         :param tag: redshift folder
         :return: stellar_data, subhalo_data
         """
+
         # Load subhalo data in h-free physical CGS units #
         subhalo_data = {}
         file_type = 'SUBFIND'
@@ -89,6 +91,7 @@ class PositionHistogram:
         :param subgroup_number: from list(set(self.subhalo_data['SubGroupNumber']))
         :return: stellar_data_tmp, mask
         """
+
         # Select the corresponding halo in order to get its centre of potential #
         index = np.where(self.subhalo_data['GroupNumber'] == group_number)[0][subgroup_number]
 
