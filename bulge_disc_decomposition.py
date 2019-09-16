@@ -22,7 +22,6 @@ outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/'  # Path to save plo
 SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/'  # Path to save data.
 warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
 
-# TODO MASK HALO MASS BEFORE THE FOR LOOP
 
 class BulgeDiscDecomposition:
     """
@@ -36,6 +35,7 @@ class BulgeDiscDecomposition:
         :param sim: simulation directory
         :param tag: redshift folder
         """
+
         disc_fraction = []
         glx_stellar_mass = []
 
@@ -44,8 +44,9 @@ class BulgeDiscDecomposition:
             print('Reading data for ' + re.split('G-EAGLE/|/data', sim)[2] + ' took %.5s s' % (time.time() - start_global_time))
             print('–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––')
 
+            self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
             # Loop over all distinct GroupNumber and SubGroupNumber, mask the data and save to numpy arrays #
-            for group_number in list(set(self.subhalo_data['GroupNumber'])):
+            for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):
                 for subgroup_number in range(0, 1):
                     start_local_time = time.time()  # Start the local time.
                     self.stellar_data_tmp, self.disc_fraction = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
@@ -55,6 +56,7 @@ class BulgeDiscDecomposition:
                     print('–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––')
                     np.save(SavePath + 'glx_stellar_mass', glx_stellar_mass)
                     np.save(SavePath + 'disc_fraction', disc_fraction)
+
         else:  # Load data.
             disc_fraction = np.load(SavePath + 'disc_fraction.npy')
             glx_stellar_mass = np.load(SavePath + 'glx_stellar_mass.npy')
@@ -101,20 +103,37 @@ class BulgeDiscDecomposition:
         return stellar_data, subhalo_data
 
 
+    def mask_haloes(self):
+        """
+        A method to mask haloes.
+        :return: subhalo_data_tmp
+        """
+
+        # Mask the data to select haloes more #
+        mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 1e8)
+
+        # Mask the temporary dictionary for each galaxy #
+        subhalo_data_tmp = {}
+        for attribute in self.subhalo_data.keys():
+            subhalo_data_tmp[attribute] = np.copy(self.subhalo_data[attribute])[mask]
+
+        return subhalo_data_tmp
+
+
     def mask_galaxies(self, group_number, subgroup_number):
         """
-        A method to select galaxies.
+        A method to mask galaxies.
         :param group_number: from list(set(self.subhalo_data['GroupNumber']))
         :param subgroup_number: from list(set(self.subhalo_data['SubGroupNumber']))
         :return: stellar_data_tmp, mask
         """
+
         # Select the corresponding halo in order to get its centre of potential #
         index = np.where(self.subhalo_data['GroupNumber'] == group_number)[0][subgroup_number]
 
         # Mask the data to select galaxies with a given GroupNumber and SubGroupNumber and particles inside a 30kpc sphere #
         mask = np.where((self.stellar_data['GroupNumber'] == group_number) & (self.stellar_data['SubGroupNumber'] == subgroup_number) & (
-            np.linalg.norm(self.stellar_data['Coordinates'] - self.subhalo_data['CentreOfPotential'][index], axis=1) <= 30.0) & (
-                            self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4][index] > 1e8))
+            np.linalg.norm(self.stellar_data['Coordinates'] - self.subhalo_data['CentreOfPotential'][index], axis=1) <= 30.0))
 
         # Mask the temporary dictionary for each galaxy #
         stellar_data_tmp = {}
@@ -155,7 +174,7 @@ class BulgeDiscDecomposition:
         plt.tick_params(direction='in', which='both', top='on', right='on')
 
         # Generate the XY projection #
-        plt.hexbin(glx_stellar_mass, disc_fraction, bins='log', cmap='bone', gridsize=150, edgecolor='none', mincnt=1)
+        plt.hexbin(glx_stellar_mass, disc_fraction, bins='log', xscale='log', cmap='bone', gridsize=150, edgecolor='none', mincnt=1)
 
         # Save the plot #
         plt.title('z ~ ' + re.split('_z0|p000', tag)[1])
@@ -166,5 +185,6 @@ class BulgeDiscDecomposition:
 
 if __name__ == '__main__':
     tag = '010_z005p000'
-    sim = '/cosma7/data/dp004/dc-payy1/G-EAGLE/GEAGLE_06/data/'
-    x = BulgeDiscDecomposition(sim, tag)
+    for i in range(6, 7):
+        sim = '/cosma7/data/dp004/dc-payy1/G-EAGLE/GEAGLE_0' + str(i) + '/data/'
+        x = BulgeDiscDecomposition(sim, tag)
