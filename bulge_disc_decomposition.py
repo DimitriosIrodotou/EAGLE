@@ -2,13 +2,13 @@ import argparse
 import re
 import time
 import warnings
-
 import astropy.units as u
 import matplotlib.cbook
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
+from matplotlib import gridspec
 import eagle_IO.eagle_IO.eagle_IO as E
 
 # Create a parser and add argument to read data #
@@ -19,7 +19,7 @@ args = parser.parse_args()
 date = time.strftime('%d_%m_%y_%H%M')  # Date
 start_global_time = time.time()  # Start the global time.
 outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/'  # Path to save plots.
-SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/'  # Path to save data.
+SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/BDD/'  # Path to save data.
 warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
 
 
@@ -50,12 +50,12 @@ class BulgeDiscDecomposition:
                 for subgroup_number in range(0, 1):
                     start_local_time = time.time()  # Start the local time.
                     self.stellar_data_tmp, self.disc_fraction = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
-                    glx_stellar_mass.append(np.sum(self.stellar_data_tmp['Mass']))
                     disc_fraction.append(self.disc_fraction)
+                    glx_stellar_mass.append(np.sum(self.stellar_data_tmp['Mass']))
                     print('Masking data for halo ' + str(group_number) + ' took %.5s s' % (time.time() - start_local_time))
                     print('–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––')
-                    np.save(SavePath + 'glx_stellar_mass', glx_stellar_mass)
                     np.save(SavePath + 'disc_fraction', disc_fraction)
+                    np.save(SavePath + 'glx_stellar_mass', glx_stellar_mass)
 
         else:  # Load data.
             disc_fraction = np.load(SavePath + 'disc_fraction.npy')
@@ -90,7 +90,7 @@ class BulgeDiscDecomposition:
         stellar_data = {}
         particle_type = '4'
         file_type = 'PARTDATA'
-        for attribute in ['Coordinates', 'GroupNumber', 'Mass', 'ParticleBindingEnergy', 'SubGroupNumber', 'Velocity']:
+        for attribute in ['Coordinates', 'GroupNumber', 'Mass', 'SubGroupNumber', 'Velocity']:
             stellar_data[attribute] = E.read_array(file_type, sim, tag, '/PartType' + particle_type + '/' + attribute, numThreads=4)
 
         # Convert attributes to astronomical units #
@@ -140,13 +140,19 @@ class BulgeDiscDecomposition:
         for attribute in self.stellar_data.keys():
             stellar_data_tmp[attribute] = np.copy(self.stellar_data[attribute])[mask]
 
+        # Normalise the coordinates and velocities wrt the centre of mass of the subhalo #
+        stellar_data_tmp['Coordinates'] = np.subtract(stellar_data_tmp['Coordinates'], self.subhalo_data['CentreOfPotential'][index])
+        CoM_velocity = np.divide(np.sum(stellar_data_tmp['Mass'][:, np.newaxis] * stellar_data_tmp['Velocity'], axis=0),
+                                 np.sum(stellar_data_tmp['Mass']))
+        stellar_data_tmp['Velocity'] = np.subtract(stellar_data_tmp['Velocity'], CoM_velocity)
+
         # Compute the angular momentum for each particle and for the galaxy and the unit vector parallel to the galactic angular momentum vector #
         prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'])
         glx_angular_momentum = np.sum(prc_angular_momentum, axis=0)
         unit_vector = np.divide(glx_angular_momentum, np.linalg.norm(glx_angular_momentum))
 
         # Select particles whose angular momentum projected along the rotation axis is negative and compute the disc-to-total ratio #
-        index = np.where(np.sum(unit_vector * prc_angular_momentum, axis=1) <= 0.0)
+        index = np.where(np.sum(unit_vector * prc_angular_momentum, axis=0) <= 0.0)
         disc_fraction = 1 - np.divide(2 * np.sum(stellar_data_tmp['Mass'][index]), np.sum(stellar_data_tmp['Mass']))
 
         return stellar_data_tmp, disc_fraction
@@ -167,14 +173,22 @@ class BulgeDiscDecomposition:
         plt.close()
         figure = plt.figure(0, figsize=(10, 10))
 
+        gs = gridspec.GridSpec(1, 2, width_ratios=(30, 1))
+        ax = plt.subplot(gs[:, :1])
+        axcbar = plt.subplot(gs[:, 1])
+
         # plt.xlim(-15, 15)
-        plt.ylim(0.0, 1.2)
-        plt.ylabel(r'$\mathrm{D/T}$')
-        plt.xlabel(r'$\mathrm{M_{\bigstar} / M_{\odot}}$')
-        plt.tick_params(direction='in', which='both', top='on', right='on')
+        ax.set_ylim(-0.3, 1.2)
+        ax.set_ylabel(r'$\mathrm{D/T}$')
+        ax.set_xlabel(r'$\mathrm{M_{\bigstar} / M_{\odot}}$')
+        ax.tick_params(direction='in', which='both', top='on', right='on')
 
         # Generate the XY projection #
-        plt.hexbin(glx_stellar_mass, disc_fraction, bins='log', xscale='log', cmap='bone', gridsize=150, edgecolor='none', mincnt=1)
+        hexbin = ax.hexbin(glx_stellar_mass, disc_fraction, bins='log', xscale='log', cmap='bone', gridsize=50, edgecolor='none', mincnt=1)
+
+        # Generate the color bar #
+        cbar = plt.colorbar(hexbin, cax=axcbar)
+        cbar.set_label('$\mathrm{log_{10}(Particles\; per\; hexbin)}$')
 
         # Save the plot #
         plt.title('z ~ ' + re.split('_z0|p000', tag)[1])
