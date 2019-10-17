@@ -12,14 +12,14 @@ from matplotlib import gridspec
 import eagle_IO.eagle_IO.eagle_IO as E
 
 date = time.strftime('%d_%m_%y_%H%M')  # Date
-outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/'  # Path to save plots.
+outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/RADec/'  # Path to save plots.
 start_global_time = time.time()  # Start the global time.
 warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)
 
 
-class MassSize:
+class RADec:
     """
-    A class to create 2 dimensional histograms of the mass-size relation of galaxies.
+    A class to create RA and Dec plot.
     """
 
 
@@ -31,25 +31,28 @@ class MassSize:
         """
 
         # Load data #
+        self.Ngroups = E.read_header('SUBFIND', sim, tag, 'TotNgroups')
         self.stellar_data, self.subhalo_data = self.read_galaxies(sim, tag)
-        print('--- Finished reading the data in %.5s seconds ---' % (time.time() - start_global_time))  # Print reading time.
+        print('Reading data for ' + re.split('G-EAGLE/|/data', sim)[2] + ' took %.5s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––')
 
-        print('Found ' + str(len(list(set(self.subhalo_data['GroupNumber'])))) + ' FoF groups and ' + str(
-            len(list(set(self.subhalo_data['SubGroupNumber'])))) + ' subfind groups ' + 'for G-EAGLE_' + re.split('GEAGLE_|/data', sim)[2])
+        self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
 
-        for group_number in list(set(self.subhalo_data['GroupNumber'])):  # Loop over all distinct GroupNumber.
+        for group_number in range(1, self.Ngroups):  # Loop over all GroupNumber.
             for subgroup_number in range(0, 1):  # Loop over all distinct SubGroupNumber.
+                start_local_time = time.time()  # Start the local time.
                 stellar_data_tmp, mask = self.mask_galaxies(group_number, subgroup_number)  # Mask the data
+                print('Masking data for halo ' + str(group_number) + ' took %.5s s' % (time.time() - start_local_time))
+                print('–––––––––––––––––––––––––––––––––––––––––')
 
                 # Plot the data #
                 if len(mask[0]) > 0.0:
                     start_local_time = time.time()  # Start the local time.
                     self.plot(stellar_data_tmp, group_number, subgroup_number)
-                    print('--- Finished plotting the data in %.5s seconds ---' % (time.time() - start_local_time))  # Print plotting time.
+                    print('Plotting data took %.5s s' % (time.time() - start_local_time))
                     print('–––––––––––––––––––––––––––––––––––––––––')
 
-        print('--- Finished MassSize.py in %.5s seconds ---' % (time.time() - start_global_time))  # Print total time.
+        print('Finished PositionHistogram.py in %.5s s' % (time.time() - start_global_time))  # Print total time.
         print('–––––––––––––––––––––––––––––––––––––––––')
 
 
@@ -65,14 +68,14 @@ class MassSize:
         # Load subhalo data in h-free physical CGS units #
         subhalo_data = {}
         file_type = 'SUBFIND'
-        for attribute in ['GroupNumber', 'SubGroupNumber', 'CentreOfPotential', 'ApertureMeasurements/Mass/030kpc']:
+        for attribute in ['ApertureMeasurements/Mass/030kpc', 'CentreOfPotential', 'GroupNumber', 'SubGroupNumber']:
             subhalo_data[attribute] = E.read_array(file_type, sim, tag, '/Subhalo/' + attribute, numThreads=4)
 
         # Load particle data in h-free physical CGS units #
         stellar_data = {}
         particle_type = '4'
         file_type = 'PARTDATA'
-        for attribute in ['GroupNumber', 'SubGroupNumber', 'Coordinates']:
+        for attribute in ['Coordinates', 'GroupNumber', 'SubGroupNumber']:
             stellar_data[attribute] = E.read_array(file_type, sim, tag, '/PartType' + particle_type + '/' + attribute, numThreads=4)
 
         # Convert to astronomical units #
@@ -83,28 +86,46 @@ class MassSize:
         return stellar_data, subhalo_data
 
 
+    def mask_haloes(self):
+        """
+        A method to mask haloes.
+        :return: subhalo_data_tmp
+        """
+
+        # Mask the data to select haloes more #
+        mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 1e8)
+
+        # Mask the temporary dictionary for each galaxy #
+        subhalo_data_tmp = {}
+        for attribute in self.subhalo_data.keys():
+            subhalo_data_tmp[attribute] = np.copy(self.subhalo_data[attribute])[mask]
+
+        return subhalo_data_tmp
+
+
     def mask_galaxies(self, group_number, subgroup_number):
         """
-        A method to select galaxies.
-        :param group_number: from list(set(self.subhalo_data['GroupNumber']))
-        :param subgroup_number: from list(set(self.subhalo_data['SubGroupNumber']))
+        A method to mask galaxies.
+        :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber']))
+        :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
         :return: stellar_data_tmp, mask
         """
+
         # Select the corresponding halo in order to get its centre of potential #
-        index = np.where(self.subhalo_data['GroupNumber'] == group_number)[0][subgroup_number]
+        index = np.where(self.subhalo_data_tmp['GroupNumber'] == group_number)[0][subgroup_number]
 
         # Mask the data to select galaxies with a given GroupNumber and SubGroupNumber and particles inside a 30kpc sphere #
         mask = np.where((self.stellar_data['GroupNumber'] == group_number) & (self.stellar_data['SubGroupNumber'] == subgroup_number) & (
-            np.sqrt(np.sum((self.stellar_data['Coordinates'] - self.subhalo_data['CentreOfPotential'][index]) ** 2, axis=1)) <= 30.0) & (
-                            self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4][index] > 1e8))
+            np.linalg.norm(self.stellar_data['Coordinates'] - self.subhalo_data_tmp['CentreOfPotential'][index], axis=1) <= 30.0) & (
+                            self.subhalo_data_tmp['ApertureMeasurements/Mass/030kpc'][:, 4][index] > 1e8))
 
         # Mask the temporary dictionary for each galaxy #
         stellar_data_tmp = {}
         for attribute in self.stellar_data.keys():
-            stellar_data_tmp[attribute] = np.copy(self.stellar_data[attribute])[mask]
+            stellar_data_tmp[attribute] = np.copy(self.stellar_data[attribute][mask])
 
         # Normalise the coordinates wrt the centre of potential of the subhalo #
-        stellar_data_tmp['Coordinates'] = np.subtract(stellar_data_tmp['Coordinates'], self.subhalo_data['CentreOfPotential'][index])
+        stellar_data_tmp['Coordinates'] = np.subtract(stellar_data_tmp['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][index])
 
         return stellar_data_tmp, mask
 
@@ -114,8 +135,8 @@ class MassSize:
         """
         A method to plot a hexbin histogram.
         :param stellar_data_tmp: temporary data
-        :param group_number: from list(set(self.subhalo_data['GroupNumber']))
-        :param subgroup_number: from list(set(self.subhalo_data['SubGroupNumber']))
+        :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber']))
+        :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
         :return: None
         """
 
@@ -160,7 +181,7 @@ class MassSize:
 
         # Save the plot #
         plt.title('z ~ ' + re.split('_z0|p000', tag)[1])
-        plt.savefig(outdir + 'PH' + '-' + str(group_number) + str(subgroup_number) + '-' + date + '.png', bbox_inches='tight')
+        plt.savefig(outdir + 'RADec' + '-' + str(group_number) + str(subgroup_number) + '-' + date + '.png', bbox_inches='tight')
 
         return None
 
@@ -168,4 +189,4 @@ class MassSize:
 if __name__ == '__main__':
     tag = '010_z005p000'
     sim = '/cosma7/data/dp004/dc-payy1/G-EAGLE/GEAGLE_06/data/'
-    x = MassSize(sim, tag)
+    x = PositionHistogram(sim, tag)

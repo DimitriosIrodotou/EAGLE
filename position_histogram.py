@@ -1,3 +1,4 @@
+import argparse
 import re
 import time
 import warnings
@@ -11,10 +12,18 @@ from matplotlib import gridspec
 
 import eagle_IO.eagle_IO.eagle_IO as E
 
+# Create a parser and add argument to read data #
+parser = argparse.ArgumentParser(description='Create 2 dimensional histograms of the position of stellar particles.')
+parser.add_argument('-r', action='store_true', help='Read data')
+parser.add_argument('-l', action='store_true', help='Load data')
+parser.add_argument('-rs', action='store_true', help='Read data and save to numpy arrays')
+args = parser.parse_args()
+
 date = time.strftime('%d_%m_%y_%H%M')  # Date
-outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/'  # Path to save plots.
 start_global_time = time.time()  # Start the global time.
-warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)
+outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/PH/'  # Path to save plots.
+SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/PH/'  # Path to save data.
+warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
 
 
 class PositionHistogram:
@@ -30,28 +39,52 @@ class PositionHistogram:
         :param tag: redshift folder
         """
 
-        # Load data #
+        p = 1
+        stellar_data_tmp = {}
+
         self.Ngroups = E.read_header('SUBFIND', sim, tag, 'TotNgroups')
         self.stellar_data, self.subhalo_data = self.read_galaxies(sim, tag)
-        print('Reading data for ' + re.split('G-EAGLE/|/data', sim)[2] + ' took %.5s seconds' % (time.time() - start_global_time))
-        print('–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––')
+        print('Reading data for ' + re.split('G-EAGLE/|/data', sim)[2] + ' took %.5s s' % (time.time() - start_global_time))
+        print('–––––––––––––––––––––––––––––––––––––––––')
 
-        for group_number in range(1, self.Ngroups):  # Loop over all GroupNumber.
-            for subgroup_number in range(0, 1):  # Loop over all distinct SubGroupNumber.
-                start_local_time = time.time()  # Start the local time.
-                stellar_data_tmp, mask = self.mask_galaxies(group_number, subgroup_number)  # Mask the data
-                print('Masking data for halo ' + str(group_number) + ' took %.5s seconds' % (time.time() - start_local_time))
-                print('–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––')
+        self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
+
+        for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all the accepted haloes
+            for subgroup_number in range(0, 1):
+                if args.rs:  # Read and save data.
+                    start_local_time = time.time()  # Start the local time.
+                    stellar_data_tmp = self.mask_galaxies(group_number, subgroup_number)  # Mask the data
+
+                    # Save data in nampy arrays #
+                    np.save(SavePath + 'group_number_' + str(group_number), group_number)
+                    np.save(SavePath + 'subgroup_number_' + str(group_number), subgroup_number)
+                    np.save(SavePath + 'stellar_data_tmp_' + str(group_number), stellar_data_tmp)
+                    print('Masking and saving data for halo ' + str(group_number) + ' took %.4s s' % (time.time() - start_local_time) + ' (' + str(
+                        round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
+                    print('–––––––––––––––––––––––––––––––––––––––––––––')
+                    p += 1
+
+                elif args.r:  # Read data.
+                    start_local_time = time.time()  # Start the local time.
+                    stellar_data_tmp = self.mask_galaxies(group_number, subgroup_number)  # Mask the data
+                    print('Masking and saving data for halo ' + str(group_number) + ' took %.4s s' % (time.time() - start_local_time) + ' (' + str(
+                        round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
+                    print('–––––––––––––––––––––––––––––––––––––––––––––')
+                    p += 1
+
+                elif args.l:  # Load data.
+                    group_number = np.load(SavePath + 'group_number_' + str(group_number) + '.npy')
+                    subgroup_number = np.load(SavePath + 'subgroup_number_' + str(group_number) + '.npy')
+                    stellar_data_tmp = np.load(SavePath + 'stellar_data_tmp_' + str(group_number) + '.npy', allow_pickle=True)
 
                 # Plot the data #
-                if len(mask[0]) > 0.0:
-                    start_local_time = time.time()  # Start the local time.
-                    self.plot(stellar_data_tmp, group_number, subgroup_number)
-                    print('Plotting data took %.5s seconds' % (time.time() - start_local_time))
-                    print('–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––')
+                start_local_time = time.time()  # Start the local time.
+                self.plot(stellar_data_tmp, group_number, subgroup_number)
+                print('Plotting data took %.5s s' % (time.time() - start_local_time))
+                print('–––––––––––––––––––––––––––––––––––––––––')
 
-        print('Finished PositionHistogram.py in %.5s seconds' % (time.time() - start_global_time))  # Print total time.
-        print('–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––')
+            print('Finished PositionHistogram.py in %.5s s' % (time.time() - start_global_time))  # Print total time.
+            print('–––––––––––––––––––––––––––––––––––––––––')
 
 
     @staticmethod
@@ -84,21 +117,38 @@ class PositionHistogram:
         return stellar_data, subhalo_data
 
 
+    def mask_haloes(self):
+        """
+        A method to mask haloes.
+        :return: subhalo_data_tmp
+        """
+
+        # Mask the data to select haloes more #
+        mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 1e8)
+
+        # Mask the temporary dictionary for each galaxy #
+        subhalo_data_tmp = {}
+        for attribute in self.subhalo_data.keys():
+            subhalo_data_tmp[attribute] = np.copy(self.subhalo_data[attribute])[mask]
+
+        return subhalo_data_tmp
+
+
     def mask_galaxies(self, group_number, subgroup_number):
         """
         A method to mask galaxies.
-        :param group_number: from list(set(self.subhalo_data['GroupNumber']))
-        :param subgroup_number: from list(set(self.subhalo_data['SubGroupNumber']))
-        :return: stellar_data_tmp, mask
+        :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber']))
+        :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
+        :return: stellar_data_tmp
         """
 
         # Select the corresponding halo in order to get its centre of potential #
-        index = np.where(self.subhalo_data['GroupNumber'] == group_number)[0][subgroup_number]
+        index = np.where(self.subhalo_data_tmp['GroupNumber'] == group_number)[0][subgroup_number]
 
         # Mask the data to select galaxies with a given GroupNumber and SubGroupNumber and particles inside a 30kpc sphere #
         mask = np.where((self.stellar_data['GroupNumber'] == group_number) & (self.stellar_data['SubGroupNumber'] == subgroup_number) & (
-            np.linalg.norm(self.stellar_data['Coordinates'] - self.subhalo_data['CentreOfPotential'][index], axis=1) <= 30.0) & (
-                            self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4][index] > 1e8))
+            np.linalg.norm(self.stellar_data['Coordinates'] - self.subhalo_data_tmp['CentreOfPotential'][index], axis=1) <= 30.0) & (
+                            self.subhalo_data_tmp['ApertureMeasurements/Mass/030kpc'][:, 4][index] > 1e8))
 
         # Mask the temporary dictionary for each galaxy #
         stellar_data_tmp = {}
@@ -106,9 +156,9 @@ class PositionHistogram:
             stellar_data_tmp[attribute] = np.copy(self.stellar_data[attribute][mask])
 
         # Normalise the coordinates wrt the centre of potential of the subhalo #
-        stellar_data_tmp['Coordinates'] = np.subtract(stellar_data_tmp['Coordinates'], self.subhalo_data['CentreOfPotential'][index])
+        stellar_data_tmp['Coordinates'] = np.subtract(stellar_data_tmp['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][index])
 
-        return stellar_data_tmp, mask
+        return stellar_data_tmp
 
 
     @staticmethod
@@ -116,8 +166,8 @@ class PositionHistogram:
         """
         A method to plot a hexbin histogram.
         :param stellar_data_tmp: temporary data
-        :param group_number: from list(set(self.subhalo_data['GroupNumber']))
-        :param subgroup_number: from list(set(self.subhalo_data['SubGroupNumber']))
+        :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber']))
+        :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
         :return: None
         """
 

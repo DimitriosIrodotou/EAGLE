@@ -14,12 +14,13 @@ import eagle_IO.eagle_IO.eagle_IO as E
 # Create a parser and add argument to read data #
 parser = argparse.ArgumentParser(description='Create 2 dimensional histograms of the bulge/disc decomposition.')
 parser.add_argument('-r', action='store_true', help='Read data')
+parser.add_argument('-l', action='store_true', help='Load data')
 parser.add_argument('-rs', action='store_true', help='Read data and save to numpy arrays')
 args = parser.parse_args()
 
 date = time.strftime('%d_%m_%y_%H%M')  # Date
 start_global_time = time.time()  # Start the global time.
-outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/'  # Path to save plots.
+outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/BDD/'  # Path to save plots.
 SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/BDD/'  # Path to save data.
 warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
 
@@ -37,57 +38,60 @@ class BulgeDiscDecomposition:
         :param tag: redshift folder
         """
 
+        p = 1
         disc_fraction = []
         glx_stellar_mass = []
 
-        if args.r:  # Read data.
+        if args.rs:  # Read and save data.
             self.stellar_data, self.subhalo_data = self.read_galaxies(sim, tag)
-            print('Reading data for ' + re.split('G-EAGLE/|/data', sim)[2] + ' took %.5s s' % (time.time() - start_global_time))
-            print('–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––')
+            print('Reading data for ' + re.split('G-EAGLE/|/data', sim)[2] + ' took %.4s s' % (time.time() - start_global_time))
+            print('–––––––––––––––––––––––––––––––––––––––––––––')
 
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
             # Loop over all distinct GroupNumber and SubGroupNumber, mask the data and save to numpy arrays #
-            for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):
-                for subgroup_number in range(0, 1):
-                    start_local_time = time.time()  # Start the local time.
-                    self.stellar_data_tmp, self.disc_fraction = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
-                    print('Masking data for halo ' + str(group_number) + ' took %.5s s' % (time.time() - start_local_time))
-                    print('–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––')
-
-        elif args.rs:  # Read and save data.
-            self.stellar_data, self.subhalo_data = self.read_galaxies(sim, tag)
-            print('Reading data for ' + re.split('G-EAGLE/|/data', sim)[2] + ' took %.5s s' % (time.time() - start_global_time))
-            print('–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––')
-
-            self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
-            # Loop over all distinct GroupNumber and SubGroupNumber, mask the data and save to numpy arrays #
-            for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):
+            for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all the accepted haloes
                 for subgroup_number in range(0, 1):
                     start_local_time = time.time()  # Start the local time.
                     self.stellar_data_tmp, self.disc_fraction = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
                     disc_fraction.append(self.disc_fraction)
                     glx_stellar_mass.append(np.sum(self.stellar_data_tmp['Mass']))
-                    print('Masking data for halo ' + str(group_number) + ' took %.5s s' % (time.time() - start_local_time))
-                    print('–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––')
-                    # Save data in nmpy arrays #
-                    start_local_time = time.time()  # Start the local time.
+
+                    # Save data in nampy arrays #
                     np.save(SavePath + 'disc_fraction', disc_fraction)
                     np.save(SavePath + 'glx_stellar_mass', glx_stellar_mass)
-                    print('Saving data for halo ' + str(group_number) + ' took %.5s s' % (time.time() - start_local_time))
-                    print('–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––')
+                    print('Masking and saving data for halo ' + str(group_number) + ' took %.4s s' % (time.time() - start_local_time) + ' (' + str(
+                        round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
+                    print('–––––––––––––––––––––––––––––––––––––––––––––')
+                    p += 1
 
-        else:  # Load data.
+        elif args.r:  # Read data.
+            self.stellar_data, self.subhalo_data = self.read_galaxies(sim, tag)
+            print('Reading data for ' + re.split('G-EAGLE/|/data', sim)[2] + ' took %.4s s' % (time.time() - start_global_time))
+            print('–––––––––––––––––––––––––––––––––––––––––––––')
+
+            self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
+            # Loop over all distinct GroupNumber and SubGroupNumber, mask the data and save to numpy arrays #
+            for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all the accepted haloes
+                for subgroup_number in range(0, 1):
+                    start_local_time = time.time()  # Start the local time.
+                    self.stellar_data_tmp, self.disc_fraction = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
+                    print('Masking data for halo ' + str(group_number) + ' took %.4s s' % (time.time() - start_local_time) + ' (' + str(
+                        round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
+                    print('–––––––––––––––––––––––––––––––––––––––––––––')
+                    p += 1
+
+        elif args.l:  # Load data.
             disc_fraction = np.load(SavePath + 'disc_fraction.npy')
             glx_stellar_mass = np.load(SavePath + 'glx_stellar_mass.npy')
 
         # Plot the data #
         start_local_time = time.time()  # Start the local time.
         self.plot(glx_stellar_mass, disc_fraction)
-        print('Plotting data took %.5s s' % (time.time() - start_local_time))
-        print('–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––')
+        print('Plotting data took %.4s s' % (time.time() - start_local_time))
+        print('–––––––––––––––––––––––––––––––––––––––––––––')
 
-        print('Finished BulgeDiscDecomposition.py in %.5s s' % (time.time() - start_global_time))
-        print('–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––')
+        print('Finished BulgeDiscDecomposition.py in %.4s s' % (time.time() - start_global_time))
+        print('–––––––––––––––––––––––––––––––––––––––––––––')
 
 
     @staticmethod
@@ -142,17 +146,17 @@ class BulgeDiscDecomposition:
     def mask_galaxies(self, group_number, subgroup_number):
         """
         A method to mask galaxies.
-        :param group_number: from list(set(self.subhalo_data['GroupNumber']))
-        :param subgroup_number: from list(set(self.subhalo_data['SubGroupNumber']))
-        :return: stellar_data_tmp, mask
+        :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber']))
+        :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
+        :return: stellar_data_tmp, disc_fraction
         """
 
         # Select the corresponding halo in order to get its centre of potential #
-        index = np.where(self.subhalo_data['GroupNumber'] == group_number)[0][subgroup_number]
+        index = np.where(self.subhalo_data_tmp['GroupNumber'] == group_number)[0][subgroup_number]
 
         # Mask the data to select galaxies with a given GroupNumber and SubGroupNumber and particles inside a 30kpc sphere #
         mask = np.where((self.stellar_data['GroupNumber'] == group_number) & (self.stellar_data['SubGroupNumber'] == subgroup_number) & (
-            np.linalg.norm(self.stellar_data['Coordinates'] - self.subhalo_data['CentreOfMass'][index], axis=1) <= 30.0))
+            np.linalg.norm(self.stellar_data['Coordinates'] - self.subhalo_data_tmp['CentreOfMass'][index], axis=1) <= 30.0))
 
         # Mask the temporary dictionary for each galaxy #
         stellar_data_tmp = {}
@@ -160,7 +164,7 @@ class BulgeDiscDecomposition:
             stellar_data_tmp[attribute] = np.copy(self.stellar_data[attribute])[mask]
 
         # Normalise the coordinates and velocities wrt the centre of mass of the subhalo #
-        stellar_data_tmp['Coordinates'] = np.subtract(stellar_data_tmp['Coordinates'], self.subhalo_data['CentreOfMass'][index])
+        stellar_data_tmp['Coordinates'] = np.subtract(stellar_data_tmp['Coordinates'], self.subhalo_data_tmp['CentreOfMass'][index])
         CoM_velocity = np.divide(np.sum(stellar_data_tmp['Mass'][:, np.newaxis] * stellar_data_tmp['Velocity'], axis=0),
                                  np.sum(stellar_data_tmp['Mass']))
         stellar_data_tmp['Velocity'] = np.subtract(stellar_data_tmp['Velocity'], CoM_velocity)
@@ -172,7 +176,7 @@ class BulgeDiscDecomposition:
 
         # Select particles whose angular momentum projected along the rotation axis is -1 and compute the disc-to-total ratio #
         norm_projection = np.dot(prc_angular_momentum, unit_vector) / np.linalg.norm(prc_angular_momentum, axis=1)
-        index = np.where(norm_projection < 0.0)
+        index = np.where(norm_projection < 1.0)
         disc_fraction = 1 - (2 * np.sum(stellar_data_tmp['Mass'][index])) / np.sum(stellar_data_tmp['Mass'])
 
         return stellar_data_tmp, disc_fraction
@@ -198,7 +202,7 @@ class BulgeDiscDecomposition:
         axcbar = plt.subplot(gs[:, 1])
 
         # plt.xlim(-15, 15)
-        ax.set_ylim(-0.3, 1.2)
+        ax.set_ylim(-1.2, 1.2)
         ax.set_ylabel(r'$\mathrm{D/T}$')
         ax.set_xlabel(r'$\mathrm{M_{\bigstar} / M_{\odot}}$')
         ax.tick_params(direction='in', which='both', top='on', right='on')
