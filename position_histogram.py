@@ -1,16 +1,16 @@
-import argparse
 import re
 import time
 import warnings
+import argparse
 
-import astropy.units as u
-import matplotlib.cbook
-import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
-from matplotlib import gridspec
-
+import matplotlib.cbook
+import astropy.units as u
+import matplotlib.pyplot as plt
 import eagle_IO.eagle_IO.eagle_IO as E
+
+from matplotlib import gridspec
 
 # Create a parser and add argument to read data #
 parser = argparse.ArgumentParser(description='Create 2 dimensional histograms of the position of stellar particles.')
@@ -39,52 +39,62 @@ class PositionHistogram:
         :param tag: redshift folder
         """
 
-        p = 1
-        stellar_data_tmp = {}
+        p = 1  # Counter.
 
         self.Ngroups = E.read_header('SUBFIND', sim, tag, 'TotNgroups')
         self.stellar_data, self.subhalo_data = self.read_galaxies(sim, tag)
-        print('Reading data for ' + re.split('G-EAGLE/|/data', sim)[2] + ' took %.5s s' % (time.time() - start_global_time))
+        print('Read data for ' + re.split('G-EAGLE/|/data', sim)[2] + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––')
 
         self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
 
-        for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all the accepted haloes
+        # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all the accepted haloes
+        for group_number in range(4, 5):  # Loop over all the accepted haloes
             for subgroup_number in range(0, 1):
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
+
                     stellar_data_tmp = self.mask_galaxies(group_number, subgroup_number)  # Mask the data
 
                     # Save data in nampy arrays #
                     np.save(SavePath + 'group_number_' + str(group_number), group_number)
                     np.save(SavePath + 'subgroup_number_' + str(group_number), subgroup_number)
                     np.save(SavePath + 'stellar_data_tmp_' + str(group_number), stellar_data_tmp)
-                    print('Masking and saving data for halo ' + str(group_number) + ' took %.4s s' % (time.time() - start_local_time) + ' (' + str(
+                    print('Masked and saved data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                         round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
                     p += 1
 
                 elif args.r:  # Read data.
                     start_local_time = time.time()  # Start the local time.
+
                     stellar_data_tmp = self.mask_galaxies(group_number, subgroup_number)  # Mask the data
-                    print('Masking and saving data for halo ' + str(group_number) + ' took %.4s s' % (time.time() - start_local_time) + ' (' + str(
+                    print('Masked data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                         round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
                     p += 1
 
                 elif args.l:  # Load data.
+                    start_local_time = time.time()  # Start the local time.
+
                     group_number = np.load(SavePath + 'group_number_' + str(group_number) + '.npy')
                     subgroup_number = np.load(SavePath + 'subgroup_number_' + str(group_number) + '.npy')
                     stellar_data_tmp = np.load(SavePath + 'stellar_data_tmp_' + str(group_number) + '.npy', allow_pickle=True)
+                    stellar_data_tmp = stellar_data_tmp.item()
+                    print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
+                        round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
+                    print('–––––––––––––––––––––––––––––––––––––––––––––')
 
                 # Plot the data #
                 start_local_time = time.time()  # Start the local time.
+
                 self.plot(stellar_data_tmp, group_number, subgroup_number)
-                print('Plotting data took %.5s s' % (time.time() - start_local_time))
+                print('Plotted data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
                 print('–––––––––––––––––––––––––––––––––––––––––')
 
-            print('Finished PositionHistogram.py in %.5s s' % (time.time() - start_global_time))  # Print total time.
-            print('–––––––––––––––––––––––––––––––––––––––––')
+        print('Finished PositionHistogram for ' + re.split('G-EAGLE/|/data', sim)[2] + ' in %.4s s' % (
+            time.time() - start_global_time))  # Print total time.
+        print('–––––––––––––––––––––––––––––––––––––––––')
 
 
     @staticmethod
@@ -178,13 +188,16 @@ class PositionHistogram:
 
         # Generate the figures #
         plt.close()
-        figure = plt.figure(0, figsize=(10, 10))
+        figure = plt.figure(0, figsize=(10, 17.5))
 
-        gs = gridspec.GridSpec(2, 2, height_ratios=[2, 1], width_ratios=(20, 1))
+        gs = gridspec.GridSpec(3, 2, height_ratios=[1, 1, 1], width_ratios=(2, 0.1))
         gs.update(hspace=0.2)
         axtop = plt.subplot(gs[0, 0])
-        axbot = plt.subplot(gs[1, 0])
-        axcbar = plt.subplot(gs[:, 1])
+        axmid = plt.subplot(gs[1, 0])
+        axbot = plt.subplot(gs[2, 0])
+        axcbar1 = plt.subplot(gs[0, 1])
+        axcbar2 = plt.subplot(gs[1, 1])
+        axcbar3 = plt.subplot(gs[2, 1])
 
         # Generate the XY projection #
         axtop.set_xlim(-15, 15)
@@ -198,17 +211,30 @@ class PositionHistogram:
                              gridsize=300, edgecolor='none')
 
         # Generate the XZ projection #
+        axmid.set_xlim(-15, 15)
+        axmid.set_ylim(-15, 15)
+        axmid.set_xlabel(r'$\mathrm{x/kpc}$')
+        axmid.set_ylabel(r'$\mathrm{z/kpc}$')
+        axmid.set_facecolor('k')
+        plmid = axmid.hexbin(list(zip(*stellar_data_tmp['Coordinates']))[0], list(zip(*stellar_data_tmp['Coordinates']))[2], bins='log', cmap='bone',
+                             gridsize=300, edgecolor='none')
+
+        # Generate the ZY projection #
         axbot.set_xlim(-15, 15)
         axbot.set_ylim(-15, 15)
-        axbot.set_xlabel(r'$\mathrm{x/kpc}$')
+        axbot.set_xlabel(r'$\mathrm{y/kpc}$')
         axbot.set_ylabel(r'$\mathrm{z/kpc}$')
         axbot.set_facecolor('k')
-        plbot = axbot.hexbin(list(zip(*stellar_data_tmp['Coordinates']))[0], list(zip(*stellar_data_tmp['Coordinates']))[2], bins='log', cmap='bone',
+        plbot = axbot.hexbin(list(zip(*stellar_data_tmp['Coordinates']))[1], list(zip(*stellar_data_tmp['Coordinates']))[2], bins='log', cmap='bone',
                              gridsize=300, edgecolor='none')
 
         # Generate the color bar #
-        cbar = plt.colorbar(pltop, cax=axcbar)
-        cbar.set_label('$\mathrm{log_{10}(Particles\; per\; hexbin)}$')
+        cbar1 = plt.colorbar(pltop, cax=axcbar1)
+        cbar1.set_label('$\mathrm{log_{10}(Particles\; per\; hexbin)}$')
+        cbar2 = plt.colorbar(plmid, cax=axcbar2)
+        cbar2.set_label('$\mathrm{log_{10}(Particles\; per\; hexbin)}$')
+        cbar3 = plt.colorbar(plbot, cax=axcbar3)
+        cbar3.set_label('$\mathrm{log_{10}(Particles\; per\; hexbin)}$')
 
         # Save the plot #
         plt.title('z ~ ' + re.split('_z0|p000', tag)[1])
@@ -220,4 +246,6 @@ class PositionHistogram:
 if __name__ == '__main__':
     tag = '010_z005p000'
     sim = '/cosma7/data/dp004/dc-payy1/G-EAGLE/GEAGLE_06/data/'
+    # tag = '027_z000p101'
+    # sim = '/cosma5/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'
     x = PositionHistogram(sim, tag)

@@ -1,15 +1,16 @@
-import argparse
 import re
 import time
 import warnings
-import astropy.units as u
-import matplotlib.cbook
-import matplotlib.pyplot as plt
+import argparse
+
 import numpy as np
 import seaborn as sns
+import matplotlib.cbook
+import astropy.units as u
+import matplotlib.pyplot as plt
+import eagle_IO.eagle_IO.eagle_IO as E
 
 from matplotlib import gridspec
-import eagle_IO.eagle_IO.eagle_IO as E
 
 # Create a parser and add argument to read data #
 parser = argparse.ArgumentParser(description='Create 2 dimensional histograms of the bulge/disc decomposition.')
@@ -38,59 +39,70 @@ class BulgeDiscDecomposition:
         :param tag: redshift folder
         """
 
-        p = 1
+        p = 1  # Counter.
+        # Define empty arrays to hold the data #
         disc_fraction = []
         glx_stellar_mass = []
 
         if args.rs:  # Read and save data.
-            self.stellar_data, self.subhalo_data = self.read_galaxies(sim, tag)
-            print('Reading data for ' + re.split('G-EAGLE/|/data', sim)[2] + ' took %.4s s' % (time.time() - start_global_time))
-            print('–––––––––––––––––––––––––––––––––––––––––––––')
 
+            self.stellar_data, self.subhalo_data = self.read_galaxies(sim, tag)  # Extract particle and halo attributes.
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
+            print('Read data for ' + re.split('G-EAGLE/|/data', sim)[2] + ' in %.4s s' % (time.time() - start_global_time))
+            print('–––––––––––––––––––––––––––––––––––––––––')
+
             # Loop over all distinct GroupNumber and SubGroupNumber, mask the data and save to numpy arrays #
-            for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all the accepted haloes
+            for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all the masked haloes.
                 for subgroup_number in range(0, 1):
                     start_local_time = time.time()  # Start the local time.
+
                     self.stellar_data_tmp, self.disc_fraction = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
                     disc_fraction.append(self.disc_fraction)
                     glx_stellar_mass.append(np.sum(self.stellar_data_tmp['Mass']))
 
-                    # Save data in nampy arrays #
+                    # Save data in numpy arrays #
                     np.save(SavePath + 'disc_fraction', disc_fraction)
                     np.save(SavePath + 'glx_stellar_mass', glx_stellar_mass)
-                    print('Masking and saving data for halo ' + str(group_number) + ' took %.4s s' % (time.time() - start_local_time) + ' (' + str(
+                    print('Masked and saved data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                         round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
-                    p += 1
+                    p += 1  # Increace the count by one.
 
         elif args.r:  # Read data.
-            self.stellar_data, self.subhalo_data = self.read_galaxies(sim, tag)
-            print('Reading data for ' + re.split('G-EAGLE/|/data', sim)[2] + ' took %.4s s' % (time.time() - start_global_time))
-            print('–––––––––––––––––––––––––––––––––––––––––––––')
 
+            self.stellar_data, self.subhalo_data = self.read_galaxies(sim, tag)  # Extract particle and halo attributes.
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
+            print('Read data for ' + re.split('G-EAGLE/|/data', sim)[2] + ' in %.4s s' % (time.time() - start_global_time))
+            print('–––––––––––––––––––––––––––––––––––––––––')
+
             # Loop over all distinct GroupNumber and SubGroupNumber, mask the data and save to numpy arrays #
             for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all the accepted haloes
                 for subgroup_number in range(0, 1):
                     start_local_time = time.time()  # Start the local time.
+
                     self.stellar_data_tmp, self.disc_fraction = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
-                    print('Masking data for halo ' + str(group_number) + ' took %.4s s' % (time.time() - start_local_time) + ' (' + str(
+                    print('Masked data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                         round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
-                    p += 1
+                    p += 1  # Increace the count by one.
 
         elif args.l:  # Load data.
+            start_local_time = time.time()  # Start the local time.
+
             disc_fraction = np.load(SavePath + 'disc_fraction.npy')
             glx_stellar_mass = np.load(SavePath + 'glx_stellar_mass.npy')
+            print('Loaded data for ' + re.split('G-EAGLE/|/data', sim)[2] + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
+                round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
+            print('–––––––––––––––––––––––––––––––––––––––––––––')
 
         # Plot the data #
         start_local_time = time.time()  # Start the local time.
+
         self.plot(glx_stellar_mass, disc_fraction)
-        print('Plotting data took %.4s s' % (time.time() - start_local_time))
+        print('Plotted data for ' + re.split('G-EAGLE/|/data', sim)[2] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
 
-        print('Finished BulgeDiscDecomposition.py in %.4s s' % (time.time() - start_global_time))
+        print('Finished BulgeDiscDecomposition for ' + re.split('G-EAGLE/|/data', sim)[2] + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
 
 
