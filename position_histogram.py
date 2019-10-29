@@ -49,7 +49,7 @@ class PositionHistogram:
         self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
 
         # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all the accepted haloes
-        for group_number in range(4, 5):  # Loop over all the accepted haloes
+        for group_number in range(1, 51):  # Loop over all the accepted haloes
             for subgroup_number in range(0, 1):
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
@@ -188,31 +188,30 @@ class PositionHistogram:
 
         # Generate the figures #
         plt.close()
-        figure = plt.figure(0, figsize=(10, 17.5))
+        figure = plt.figure(0, figsize=(20, 7.5))
 
-        gs = gridspec.GridSpec(3, 2, height_ratios=[1, 1, 1], width_ratios=(2, 0.1))
-        gs.update(hspace=0.2)
-        axtop = plt.subplot(gs[0, 0])
-        axmid = plt.subplot(gs[1, 0])
-        axbot = plt.subplot(gs[2, 0])
-        axcbar1 = plt.subplot(gs[0, 1])
-        axcbar2 = plt.subplot(gs[1, 1])
-        axcbar3 = plt.subplot(gs[2, 1])
+        gs = gridspec.GridSpec(2, 3, height_ratios=(0.03, 1))
+        gs.update(hspace=0.4, wspace=0.3)
+        axleft = plt.subplot(gs[1, 0])
+        axmid = plt.subplot(gs[1, 1])
+        axright = plt.subplot(gs[1, 2])
+        axcbar1 = plt.subplot(gs[0, 0])
+        axcbar2 = plt.subplot(gs[0, 1])
+        axcbar3 = plt.subplot(gs[0, 2])
 
         # Generate the XY projection #
-        axtop.set_xlim(-15, 15)
-        axtop.set_ylim(-15, 15)
-        axtop.set_xlabel(r'$\mathrm{x/kpc}$')
-        axtop.set_ylabel(r'$\mathrm{y/kpc}$')
-        axtop.tick_params(direction='in', which='both', top='on', right='on')
-        axtop.set_facecolor('k')
-
-        pltop = axtop.hexbin(list(zip(*stellar_data_tmp['Coordinates']))[0], list(zip(*stellar_data_tmp['Coordinates']))[1], bins='log', cmap='bone',
+        axleft.set_xlim(-10, 10)
+        axleft.set_ylim(-10, 10)
+        axleft.set_xlabel(r'$\mathrm{x/kpc}$')
+        axleft.set_ylabel(r'$\mathrm{y/kpc}$')
+        axleft.tick_params(direction='in', which='both', top='on', right='on')
+        axleft.set_facecolor('k')
+        plleft = axleft.hexbin(list(zip(*stellar_data_tmp['Coordinates']))[0], list(zip(*stellar_data_tmp['Coordinates']))[1], bins='log', cmap='bone',
                              gridsize=300, edgecolor='none')
 
         # Generate the XZ projection #
-        axmid.set_xlim(-15, 15)
-        axmid.set_ylim(-15, 15)
+        axmid.set_xlim(-10, 10)
+        axmid.set_ylim(-10, 10)
         axmid.set_xlabel(r'$\mathrm{x/kpc}$')
         axmid.set_ylabel(r'$\mathrm{z/kpc}$')
         axmid.set_facecolor('k')
@@ -220,21 +219,21 @@ class PositionHistogram:
                              gridsize=300, edgecolor='none')
 
         # Generate the ZY projection #
-        axbot.set_xlim(-15, 15)
-        axbot.set_ylim(-15, 15)
-        axbot.set_xlabel(r'$\mathrm{y/kpc}$')
-        axbot.set_ylabel(r'$\mathrm{z/kpc}$')
-        axbot.set_facecolor('k')
-        plbot = axbot.hexbin(list(zip(*stellar_data_tmp['Coordinates']))[1], list(zip(*stellar_data_tmp['Coordinates']))[2], bins='log', cmap='bone',
+        axright.set_xlim(-10, 10)
+        axright.set_ylim(-10, 10)
+        axright.set_xlabel(r'$\mathrm{y/kpc}$')
+        axright.set_ylabel(r'$\mathrm{z/kpc}$')
+        axright.set_facecolor('k')
+        plright = axright.hexbin(list(zip(*stellar_data_tmp['Coordinates']))[1], list(zip(*stellar_data_tmp['Coordinates']))[2], bins='log', cmap='bone',
                              gridsize=300, edgecolor='none')
 
         # Generate the color bar #
-        cbar1 = plt.colorbar(pltop, cax=axcbar1)
-        cbar1.set_label('$\mathrm{log_{10}(Particles\; per\; hexbin)}$')
-        cbar2 = plt.colorbar(plmid, cax=axcbar2)
-        cbar2.set_label('$\mathrm{log_{10}(Particles\; per\; hexbin)}$')
-        cbar3 = plt.colorbar(plbot, cax=axcbar3)
-        cbar3.set_label('$\mathrm{log_{10}(Particles\; per\; hexbin)}$')
+        cbar1 = plt.colorbar(plleft, cax=axcbar1, orientation='horizontal')
+        cbar1.set_label('$\mathrm{Particles\; per\; hexbin}$')
+        cbar2 = plt.colorbar(plmid, cax=axcbar2, orientation='horizontal')
+        cbar2.set_label('$\mathrm{Particles\; per\; hexbin}$')
+        cbar3 = plt.colorbar(plright, cax=axcbar3, orientation='horizontal')
+        cbar3.set_label('$\mathrm{Particles\; per\; hexbin}$')
 
         # Save the plot #
         plt.title('z ~ ' + re.split('_z0|p000', tag)[1])

@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import eagle_IO.eagle_IO.eagle_IO as E
 
 from matplotlib import gridspec
+from ai import cs
 
 # Create a parser and add argument to read data #
 parser = argparse.ArgumentParser(description='Create RA and Dec.')
@@ -54,12 +55,13 @@ class RADec:
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
 
-                    self.stellar_data_tmp, unit_vector = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
+                    stellar_data_tmp, glx_angular_momentum, unit_vector = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
 
                     # Save data in nampy arrays #
                     np.save(SavePath + 'group_number_' + str(group_number), group_number)
                     np.save(SavePath + 'subgroup_number_' + str(group_number), subgroup_number)
-                    np.save(SavePath + 'unit_vector_' + str(group_number), unit_vector)
+                    np.save(SavePath + 'stellar_data_tmp_' + str(group_number), stellar_data_tmp)
+                    np.save(SavePath + 'glx_angular_momentum_' + str(group_number), glx_angular_momentum)
                     print('Masked and saved data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                         round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
@@ -68,7 +70,7 @@ class RADec:
                 elif args.r:  # Read data.
                     start_local_time = time.time()  # Start the local time.
 
-                    self.stellar_data_tmp, unit_vector = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
+                    stellar_data_tmp, glx_angular_momentum, unit_vector = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
                     print('Masked data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                         round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
@@ -80,13 +82,16 @@ class RADec:
                     group_number = np.load(SavePath + 'group_number_' + str(group_number) + '.npy')
                     subgroup_number = np.load(SavePath + 'subgroup_number_' + str(group_number) + '.npy')
                     unit_vector = np.load(SavePath + 'unit_vector_' + str(group_number) + '.npy')
+                    glx_angular_momentum = np.load(SavePath + 'glx_angular_momentum_' + str(group_number) + '.npy')
+                    stellar_data_tmp = np.load(SavePath + 'stellar_data_tmp_' + str(group_number) + '.npy', allow_pickle=True)
+                    stellar_data_tmp = stellar_data_tmp.item()
                     print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                         round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
 
                 # Plot the data #
                 start_local_time = time.time()  # Start the local time.
-                self.plot(self.stellar_data_tmp, unit_vector, group_number, subgroup_number)
+                self.plot(stellar_data_tmp, glx_angular_momentum, unit_vector, group_number, subgroup_number)
                 print('Plotted data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
                 print('–––––––––––––––––––––––––––––––––––––––––')
 
@@ -113,7 +118,7 @@ class RADec:
         stellar_data = {}
         particle_type = '4'
         file_type = 'PARTDATA'
-        for attribute in ['Coordinates', 'GroupNumber', 'Mass', 'SubGroupNumber', 'ParticleBindingEnergy', 'Velocity']:
+        for attribute in ['Coordinates', 'GroupNumber', 'Mass', 'SubGroupNumber', 'StellarFormationTime', 'Velocity']:
             stellar_data[attribute] = E.read_array(file_type, sim, tag, '/PartType' + particle_type + '/' + attribute, numThreads=4)
 
         # Convert attributes to astronomical units #
@@ -171,16 +176,18 @@ class RADec:
 
         # Compute the angular momentum for each particle and for the galaxy and the unit vector parallel to the galactic angular momentum vector #
         prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'])
-        unit_vector = (prc_angular_momentum / np.linalg.norm(prc_angular_momentum, axis=1)[:, np.newaxis])
+        glx_angular_momentum = np.sum(prc_angular_momentum, axis=0)
+        unit_vector = np.divide(prc_angular_momentum, np.linalg.norm(prc_angular_momentum, axis=1)[:, np.newaxis])
 
-        return stellar_data_tmp, unit_vector
+        return stellar_data_tmp, glx_angular_momentum, unit_vector
 
 
     @staticmethod
-    def plot(stellar_data_tmp, unit_vector, group_number, subgroup_number):
+    def plot(stellar_data_tmp, glx_angular_momentum, unit_vector, group_number, subgroup_number):
         """
         A method to plot a hexbin histogram.
         :param unit_vector: from mask_galaxies
+        :param glx_angular_momentum: from mask_galaxies
         :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber']))
         :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
         :return: None
@@ -191,7 +198,7 @@ class RADec:
         sns.set_style('ticks')
         sns.set_context('notebook', font_scale=1.6)
 
-        # Generate the figures #
+        # Generate the figure #
         plt.close()
         figure = plt.figure(0, figsize=(10, 7.5))
 
@@ -207,16 +214,24 @@ class RADec:
         x_tick_labels = np.array(['', '-120', '', '-60', '', 0, '', '60', '', 120])
         ax.set_yticklabels(y_tick_labels)
         ax.set_xticklabels(x_tick_labels)
-        ax.tick_params(axis='x', colors='white')
+        # ax.tick_params(axis='x', colors='blue')
 
         # Generate the RA and Dec projection #
-        # hexbin = ax.hexbin(np.arctan2(unit_vector[:, 1], unit_vector[:, 0]), np.arcsin(unit_vector[:, 2]), bins='log', cmap='copper', gridsize=100,
-        #                    edgecolor='none', mincnt=1, zorder=-1)  # Element-wise arctan of x1/x2.
-        hexbin = ax.scatter(np.arctan2(unit_vector[:, 1], unit_vector[:, 0]), np.arcsin(unit_vector[:, 2]),
-                            c=np.linalg.norm(stellar_data_tmp['Velocity'],axis=1), cmap='hsv', s=1)
+        hexbin = ax.hexbin(np.arctan2(unit_vector[:, 1], unit_vector[:, 0]), np.arcsin(unit_vector[:, 2]), bins='log', cmap='PuRd', gridsize=100,
+                           edgecolor='none', mincnt=1, zorder=-1)  # Element-wise arctan of x1/x2.
+        # hexbin = ax.scatter(np.arctan2(unit_vector[:, 1], unit_vector[:, 0]), np.arcsin(unit_vector[:, 2]),
+        #                     c=stellar_data_tmp['StellarFormationTime'], cmap='hsv', s=1)
+
+        r, theta, phi = cs.cart2sp(x=stellar_data_tmp['Velocity'], y=stellar_data_tmp['Velocity'], z=stellar_data_tmp['Velocity'])
+        print(r, theta, phi)
+        # beta = 1 - np.divide()
+
+        ax.scatter(np.arctan2(glx_angular_momentum[1], glx_angular_momentum[0]), np.arcsin(glx_angular_momentum[2]), s=200, color='black', marker='x',
+                   zorder=-1)
 
         # Generate the color bar #
         cbar = plt.colorbar(hexbin, cax=axcbar)
+        # cbar.set_label('$\mathrm{StellarFormationTime}$')
         cbar.set_label('$\mathrm{Particles\; per\; hexbin}$')
 
         # Save the plot #
