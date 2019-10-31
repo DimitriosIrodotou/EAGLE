@@ -187,7 +187,7 @@ class BulgeDiscDecomposition:
         unit_vector = glx_angular_momentum / np.linalg.norm(glx_angular_momentum, axis=0)
 
         # Select particles whose angular momentum projected along the rotation axis is -1 and compute the disc-to-total ratio #
-        norm_projection = np.dot(prc_angular_momentum, unit_vector) / np.linalg.norm(prc_angular_momentum, axis=1)
+        norm_projection = np.dot(prc_angular_momentum, unit_vector) / np.linalg.norm(prc_angular_momentum, axis=1) #TODO WRONG DOT
         index = np.where(norm_projection < 1.0)
         disc_fraction = 1 - (2 * np.sum(stellar_data_tmp['Mass'][index])) / np.sum(stellar_data_tmp['Mass'])
 
