@@ -122,7 +122,7 @@ class RADec:
         stellar_data = {}
         particle_type = '4'
         file_type = 'PARTDATA'
-        for attribute in ['Coordinates', 'GroupNumber', 'Mass', 'SubGroupNumber', 'StellarFormationTime', 'Velocity']:
+        for attribute in ['Coordinates', 'GroupNumber', 'Mass', 'SubGroupNumber', 'Mass', 'Velocity']:
             stellar_data[attribute] = E.read_array(file_type, sim, tag, '/PartType' + particle_type + '/' + attribute, numThreads=4)
         
         # Convert attributes to astronomical units #
@@ -206,20 +206,25 @@ class RADec:
         
         # Generate the figure #
         plt.close()
-        figure = plt.figure(0, figsize=(10, 7.5))
+        figure = plt.figure(0, figsize=(20, 7.5))
         
-        gs = gridspec.GridSpec(2, 1, height_ratios=(1, 30))
-        axcbar = plt.subplot(gs[0, :])
-        ax = plt.subplot(gs[1, :], projection="mollweide")
+        gs = gridspec.GridSpec(1, 2)
+        axleft = plt.subplot(gs[0, 0], projection="mollweide")
+        axright = plt.subplot(gs[0, 1], projection="mollweide")
         
-        ax.set_xlabel("RA")
-        ax.set_ylabel("Dec")
-        ax.grid(True, color='black')
+        axleft.set_xlabel("RA")
+        axright.set_xlabel("RA")
+        axleft.set_ylabel("Dec")
+        axright.set_ylabel("Dec")
+        axleft.grid(True, color='black')
+        axright.grid(True, color='black')
         
         y_tick_labels = np.array(['', '-60', '', '-30', '', 0, '', '30', '', 60])
         x_tick_labels = np.array(['', '-120', '', '-60', '', 0, '', '60', '', 120])
-        ax.set_yticklabels(y_tick_labels)
-        ax.set_xticklabels(x_tick_labels)
+        axleft.set_xticklabels(x_tick_labels)
+        axleft.set_yticklabels(y_tick_labels)
+        axright.set_xticklabels(x_tick_labels)
+        axright.set_yticklabels(y_tick_labels)
         
         # Generate the RA and Dec projection #
         velocity_r_sqred = np.divide(np.sum(np.multiply(stellar_data_tmp['Velocity'], stellar_data_tmp['Coordinates']), axis=1) ** 2,
@@ -227,30 +232,29 @@ class RADec:
         beta = np.subtract(1, np.divide(
             np.subtract(np.sum(np.multiply(stellar_data_tmp['Velocity'], stellar_data_tmp['Velocity']), axis=1), velocity_r_sqred), velocity_r_sqred))
         
-        # hexbin = ax.hexbin(np.arctan2(unit_vector[:, 1], unit_vector[:, 0]), np.arcsin(unit_vector[:, 2]), bins='log', cmap='PuRd', gridsize=100,
-        #                    edgecolor='none', mincnt=1, zorder=-1)  # Element-wise arctan of x1/x2.
-        hexbin = ax.scatter(np.arctan2(unit_vector[:, 1], unit_vector[:, 0]), np.arcsin(unit_vector[:, 2]), c=beta, cmap='jet', s=1,
-                            zorder=-1, norm=matplotlib.colors.LogNorm())
-        
-        ax.scatter(np.arctan2(glx_angular_momentum[1], glx_angular_momentum[0]), np.arcsin(glx_angular_momentum[2]), s=200, color='black', marker='x',
-                   zorder=-1)
+        hexbin = axleft.hexbin(np.arctan2(unit_vector[:, 1], unit_vector[:, 0]), np.arcsin(unit_vector[:, 2]), bins='log', cmap='PuRd', gridsize=100,
+                               edgecolor='none', mincnt=1, zorder=-1)  # Element-wise arctan of x1/x2.
+        axleft.scatter(np.arctan2(glx_angular_momentum[1], glx_angular_momentum[0]), np.arcsin(glx_angular_momentum[2]), s=200, color='black',
+                       marker='x', zorder=-1)
         
         # Generate the color bar #
-        cbar = plt.colorbar(hexbin, cax=axcbar, orientation='horizontal')
-        # cbar.set_label('$\mathrm{StellarFormationTime}$')
+        cbar = plt.colorbar(hexbin, ax=axleft, orientation='horizontal')
         cbar.set_label('$\mathrm{Particles\; per\; hexbin}$')
         
+        scatter = axright.scatter(np.arctan2(unit_vector[:, 1], unit_vector[:, 0]), np.arcsin(unit_vector[:, 2]),
+                                  c=stellar_data_tmp['Mass'], cmap='jet', s=1, zorder=-1)
+        
+        axright.scatter(np.arctan2(glx_angular_momentum[1], glx_angular_momentum[0]), np.arcsin(glx_angular_momentum[2]), s=200, color='black',
+                        marker='x', zorder=-1)
+        
+        # Generate the color bar #
+        cbar = plt.colorbar(scatter, ax=axright, orientation='horizontal')
+        cbar.set_label('$\mathrm{Mass}$')
+        
         # Save the plot #
-        plt.title('z ~ ' + re.split('_z0|p000', tag)[1])
+        # plt.title('z ~ ' + re.split('_z0|p000', tag)[1])
         plt.savefig(outdir + 'RD' + '-' + str(group_number) + str(subgroup_number) + '-' + date + '.png', bbox_inches='tight')
         
-        plt.close()
-        figure = plt.figure(0, figsize=(10, 7.5))
-        plt.hist(np.log10(beta))
-        print(np.average(np.log(beta)))
-        plt.savefig(outdir + 'RD2' + '-' + str(group_number) + str(subgroup_number) + '-' + date + '.png', bbox_inches='tight')
-        
-        # plt.close()  # figure = plt.figure(0, figsize=(10, 7.5))  # plt.hist(beta)  # plt.show()
         return None
 
 
