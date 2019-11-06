@@ -21,8 +21,6 @@ args = parser.parse_args()
 
 date = time.strftime('%d_%m_%y_%H%M')  # Date
 start_global_time = time.time()  # Start the global time.
-outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/PH/'  # Path to save plots.
-SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/PH/'  # Path to save data.
 warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
 
 
@@ -42,15 +40,16 @@ class PositionHistogram:
         p = 1  # Counter.
         stellar_data_tmp = {}  # Initialise a dictionary to store the data.
         
-        self.Ngroups = E.read_header('SUBFIND', sim, tag, 'TotNgroups')
-        self.stellar_data, self.subhalo_data = self.read_galaxies(sim, tag)
-        print('Read data for ' + re.split('G-EAGLE/|/data', sim)[2] + ' in %.4s s' % (time.time() - start_global_time))
-        print('–––––––––––––––––––––––––––––––––––––––––')
-        
-        self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
+        if not args.l:
+            self.Ngroups = E.read_header('SUBFIND', sim, tag, 'TotNgroups')
+            self.stellar_data, self.subhalo_data = self.read_galaxies(sim, tag)
+            print('Read data for ' + re.split('G-EAGLE/|/data', sim)[2] + ' in %.4s s' % (time.time() - start_global_time))
+            print('–––––––––––––––––––––––––––––––––––––––––')
+            
+            self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
         
         # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all the accepted haloes
-        for group_number in range(1, 2):  # Loop over all the accepted haloes
+        for group_number in range(1, 20):  # Loop over all the accepted haloes
             for subgroup_number in range(0, 1):
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
@@ -82,8 +81,8 @@ class PositionHistogram:
                     subgroup_number = np.load(SavePath + 'subgroup_number_' + str(group_number) + '.npy')
                     stellar_data_tmp = np.load(SavePath + 'stellar_data_tmp_' + str(group_number) + '.npy', allow_pickle=True)
                     stellar_data_tmp = stellar_data_tmp.item()
-                    print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
-                        round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
+                    print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
+                    # + ' (' + str(round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
                 
                 # Plot the data #
@@ -111,14 +110,14 @@ class PositionHistogram:
         subhalo_data = {}
         file_type = 'SUBFIND'
         for attribute in ['ApertureMeasurements/Mass/030kpc', 'CentreOfPotential', 'GroupNumber', 'SubGroupNumber']:
-            subhalo_data[attribute] = E.read_array(file_type, sim, tag, '/Subhalo/' + attribute, numThreads=4)
+            subhalo_data[attribute] = E.read_array(file_type, sim, tag, '/Subhalo/' + attribute, numThreads=8)
         
         # Load particle data in h-free physical CGS units #
         stellar_data = {}
         particle_type = '4'
         file_type = 'PARTDATA'
         for attribute in ['Coordinates', 'GroupNumber', 'SubGroupNumber']:
-            stellar_data[attribute] = E.read_array(file_type, sim, tag, '/PartType' + particle_type + '/' + attribute, numThreads=4)
+            stellar_data[attribute] = E.read_array(file_type, sim, tag, '/PartType' + particle_type + '/' + attribute, numThreads=8)
         
         # Convert to astronomical units #
         stellar_data['Coordinates'] *= u.cm.to(u.kpc)
@@ -238,7 +237,7 @@ class PositionHistogram:
         
         # Save the plot #
         plt.title('z ~ ' + re.split('_z0|p000', tag)[1])
-        plt.savefig(outdir + 'PH' + '-' + str(group_number) + str(subgroup_number) + '-' + date + '.png', bbox_inches='tight')
+        plt.savefig(outdir + str(group_number) + str(subgroup_number) + '-' + 'PH' + '-' + date + '.png', bbox_inches='tight')
         
         return None
 
@@ -246,6 +245,10 @@ class PositionHistogram:
 if __name__ == '__main__':
     tag = '010_z005p000'
     sim = '/cosma7/data/dp004/dc-payy1/G-EAGLE/GEAGLE_06/data/'
+    outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/PH/G-EAGLE/'  # Path to save plots.
+    SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/PH/G-EAGLE/'  # Path to save data.
     # tag = '027_z000p101'
     # sim = '/cosma5/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'
+    # outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/PH/EAGLE/'  # Path to save plots.
+    # SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/PH/EAGLE/'  # Path to save data.
     x = PositionHistogram(sim, tag)

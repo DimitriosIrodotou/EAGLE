@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 import eagle_IO.eagle_IO.eagle_IO as E
 
 from matplotlib import gridspec
-from scipy import interpolate, linalg
 
 # Create a parser and add argument to read data #
 parser = argparse.ArgumentParser(description='Create RA and Dec.')
@@ -25,7 +24,7 @@ start_global_time = time.time()  # Start the global time.
 warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
 
 
-class RADec:
+class RADecSurfaceDensity:
     """
     Create a RA and Dec plot with the angular momemntum of particles for each galaxy.
     """
@@ -123,15 +122,13 @@ class RADec:
         stellar_data = {}
         particle_type = '4'
         file_type = 'PARTDATA'
-        for attribute in ['BirthDensity', 'Coordinates', 'GroupNumber', 'Mass', 'ParticleBindingEnergy', 'StellarFormationTime', 'SubGroupNumber',
-                          'Velocity']:
+        for attribute in ['Coordinates', 'GroupNumber', 'Mass', 'SubGroupNumber', 'Velocity']:
             stellar_data[attribute] = E.read_array(file_type, sim, tag, '/PartType' + particle_type + '/' + attribute, numThreads=8)
         
         # Convert attributes to astronomical units #
         stellar_data['Mass'] *= u.g.to(u.Msun)
         stellar_data['Velocity'] *= u.cm.to(u.km)  # per second.
         stellar_data['Coordinates'] *= u.cm.to(u.kpc)
-        stellar_data['BirthDensity'] /= 6.769911178294543e-31  # Convert back to physical units.
         subhalo_data['CentreOfPotential'] *= u.cm.to(u.kpc)
         subhalo_data['ApertureMeasurements/Mass/030kpc'] *= u.g.to(u.Msun)
         
@@ -191,133 +188,6 @@ class RADec:
     
     
     @staticmethod
-    def kinematics_diagnostics(XYZ, mass, Vxyz, PBE, aperture=0.03, CoMvelocity=True):
-        """
-                Compute the various kinematics diagnostics.
-        XYZ : array_like of dtype float, shape (n, 3)
-            Particles coordinates (in unit of length L) such that XYZ[:,0] = X,
-            XYZ[:,1] = Y & XYZ[:,2] = Z
-        mass : array_like of dtype float, shape (n, )
-            Particles masses (in unit of mass M)
-        Vxyz : array_like of dtype float, shape (n, 3)
-            Particles coordinates (in unit of velocity V) such that Vxyz[:,0] = Vx,
-            Vxyz[:,1] = Vy & Vxyz[:,2] = Vz
-        PBE : array_like of dtype float, shape (n, )
-            Particles specific binding energies
-        aperture : float, optional
-            Aperture (in unit of length L) for the computation. Default is 0.03 L
-        CoMvelocity : bool, optional
-            Boolean to allow the centering of velocities by the considered particles
-            centre-of-mass velocity. Default to True
-
-        Returns
-        -------
-        kappa : float
-            The kinetic energy fraction invested in co-rotation.
-        discfrac : float
-            The disc-to-total mass fraction estimated from the counter-rotating
-            bulge.
-        orbi : float
-            The median orbital circularity of the particles values.
-        vrotsig : float
-            The rotation-to-dispersion ratio .
-        delta : float
-            The dispersion anisotropy.
-        zaxis : array of dtype float, shape (3, )
-            The unit vector of the momentum axis (pointing along the momentum direction).
-        Momentum : float
-            The momentum magnitude (in unit M.L.V).
-        :param mass:
-        :param Vxyz:
-        :param PBE:
-        :param aperture:
-        :param CoMvelocity:
-        :return:
-        """
-        particlesall = np.vstack([XYZ.T, mass, Vxyz.T, PBE]).T
-        # Compute distances
-        distancesall = np.linalg.norm(particlesall[:, :3], axis=1)
-        # Restrict particles
-        extract = (distancesall < aperture)
-        particles = particlesall[extract].copy()
-        distances = distancesall[extract].copy()
-        Mass = np.sum(particles[:, 3])
-        if CoMvelocity:
-            # Compute CoM velocty & correct
-            dvVmass = np.nan_to_num(np.sum(particles[:, 3][:, np.newaxis] * particles[:, 4:7], axis=0) / Mass)
-            particlesall[:, 4:7] -= dvVmass
-            particles[:, 4:7] -= dvVmass
-        # Compute momentum
-        smomentums = np.cross(particles[:, :3], particles[:, 4:7])
-        momentum = np.sum(particles[:, 3][:, np.newaxis] * smomentums, axis=0)
-        Momentum = np.linalg.norm(momentum)
-        # Compute cylindrical quantities
-        zaxis = (momentum / Momentum)
-        zheight = np.sum(zaxis * particles[:, :3], axis=1)
-        cylposition = particles[:, :3] - zheight[:, np.newaxis] * [zaxis]
-        cyldistances = np.sqrt(distances ** 2 - zheight ** 2)
-        smomentumz = np.sum(zaxis * smomentums, axis=1)
-        vrots = smomentumz / cyldistances
-        vrads = np.sum(cylposition * particles[:, 4:7] / cyldistances[:, np.newaxis], axis=1)
-        vheis = np.sum(zaxis * particles[:, 4:7], axis=1)
-        # Compute co-rotational kinetic energy fraction
-        Mvrot2 = np.sum((particles[:, 3] * vrots ** 2)[vrots > 0])
-        kappa = Mvrot2 / np.sum(particles[:, 3] * (np.linalg.norm(particles[:, 4:7], axis=1)) ** 2)
-        # Compute disc-to-total ratio
-        discfrac = 1 - 2 * np.sum(particles[vrots <= 0, 3]) / Mass
-        # Compute orbital circularity
-        sbindingenergy = particles[:, 7]
-        sortE = np.argsort(sbindingenergy)
-        unsortE = np.argsort(sortE)
-        jzE = np.vstack([sbindingenergy, smomentumz]).T[sortE]
-        orbital = (jzE[:, 1] / np.maximum.accumulate(np.abs(jzE[:, 1])))[unsortE]
-        orbi = np.median(orbital)
-        # Compute rotation-to-dispersion and dispersion anisotropy
-        Vrot = np.abs(RADec.cumsummedian(vrots, weights=particles[:, 3]))
-        SigmaXY = np.sqrt(np.average(np.sum(particles[:, [3]] * np.vstack([vrads, vrots]).T ** 2, axis=0) / Mass))  #
-        SigmaO = np.sqrt(SigmaXY ** 2 - .5 * Vrot ** 2)
-        SigmaZ = np.sqrt(np.average(vheis ** 2, weights=particles[:, 3]))
-        vrotsig = Vrot / SigmaO
-        delta = 1 - (SigmaZ / SigmaO) ** 2
-        # Return
-        return kappa, discfrac, orbi, vrotsig, delta, zaxis, Momentum
-    
-    
-    @staticmethod
-    def cumsummedian(a, weights=None):
-        """
-        Compute the weighted median.
-
-        Returns the median of the array elements.
-
-        Parameters
-        ----------
-        a : array_like, shape (n, )
-            Input array or object that can be converted to an array.
-        weights : {array_like, shape (n, ), None}, optional
-            Input array or object that can be converted to an array.
-
-        Returns
-        -------
-        median : float
-
-        """
-        if weights is None:
-            weights = np.ones(np.array(a).shape)
-        A = np.array(a).astype('float')
-        W = np.array(weights).astype('float')
-        if not (np.product(np.isnan(A))):
-            I = np.argsort(A)
-            cumweight = np.hstack([0, np.cumsum(W[I])])
-            X = np.hstack([0, (cumweight[:-1] + cumweight[1:]) / (2 * cumweight[-1]), 1])
-            Y = np.hstack([np.min(A), A[I], np.max(A)])
-            P = interpolate.interp1d(X, Y)(0.5)
-            return float(P)
-        else:
-            return np.nan
-    
-    
-    @staticmethod
     def plot(stellar_data_tmp, glx_angular_momentum, unit_vector, group_number, subgroup_number):
         """
         A method to plot a hexbin histogram.
@@ -339,101 +209,59 @@ class RADec:
         figure = plt.figure(0, figsize=(20, 15))
         
         gs = gridspec.GridSpec(2, 2)
-        axupperleft = plt.subplot(gs[0, 0], projection="mollweide")
-        axlowerleft = plt.subplot(gs[1, 0], projection="mollweide")
-        axupperright = plt.subplot(gs[0, 1], projection="mollweide")
-        axlowerright = plt.subplot(gs[1, 1], projection="mollweide")
+        axleft = plt.subplot(gs[0, 0], projection="mollweide")
+        axright = plt.subplot(gs[0, 1])
         
-        axupperleft.set_xlabel("RA")
-        axlowerleft.set_xlabel("RA")
-        axupperright.set_xlabel("RA")
-        axlowerright.set_xlabel("RA")
-        axupperleft.set_ylabel("Dec")
-        axlowerleft.set_ylabel("Dec")
-        axupperright.set_ylabel("Dec")
-        axlowerright.set_ylabel("Dec")
-        axupperleft.grid(True, color='black')
-        axlowerleft.grid(True, color='black')
-        axupperright.grid(True, color='black')
-        axlowerright.grid(True, color='black')
+        axleft.set_xlabel("RA")
+        axright.set_xlabel("RA")
+        axleft.set_ylabel("Dec")
+        axright.set_ylabel("Dec")
+        axleft.grid(True, color='black')
         
         y_tick_labels = np.array(['', '-60', '', '-30', '', 0, '', '30', '', 60])
         x_tick_labels = np.array(['', '-120', '', '-60', '', 0, '', '60', '', 120])
-        axupperleft.set_xticklabels(x_tick_labels)
-        axupperleft.set_yticklabels(y_tick_labels)
-        axlowerleft.set_xticklabels(x_tick_labels)
-        axlowerleft.set_yticklabels(y_tick_labels)
-        axlowerright.set_xticklabels(x_tick_labels)
-        axlowerright.set_yticklabels(y_tick_labels)
-        axupperright.set_xticklabels(x_tick_labels)
-        axupperright.set_yticklabels(y_tick_labels)
+        axleft.set_xticklabels(x_tick_labels)
+        axleft.set_yticklabels(y_tick_labels)
         
         # Generate the RA and Dec projection #
-        hexbin = axupperleft.hexbin(np.arctan2(unit_vector[:, 1], unit_vector[:, 0]), np.arcsin(unit_vector[:, 2]), bins='log', cmap='PuRd',
-                                    gridsize=100, edgecolor='none', mincnt=1, zorder=-1)  # Element-wise arctan of x1/x2.
-        axupperleft.scatter(np.arctan2(glx_angular_momentum[1], glx_angular_momentum[0]), np.arcsin(glx_angular_momentum[2]), s=300, color='black',
-                            marker='X', zorder=-1)
+        hexbin = axleft.hexbin(np.arctan2(unit_vector[:, 1], unit_vector[:, 0]), np.arcsin(unit_vector[:, 2]), bins='log', cmap='PuRd', gridsize=25,
+                               edgecolor='none', mincnt=1, zorder=-1)  # Element-wise arctan of x1/x2.
+        axleft.scatter(np.arctan2(glx_angular_momentum[1], glx_angular_momentum[0]), np.arcsin(glx_angular_momentum[2]), s=300, color='black',
+                       marker='X', zorder=-1)
+        
+        # Get the values of each hexbin, convert their coordinates and plot them #
+        counts = hexbin.get_array()
+        verts = hexbin.get_offsets()
+        for offc in range(verts.shape[0]):
+            binx, biny = verts[offc][0], verts[offc][1]
+            if counts[offc]:
+                # Inverse transformation from x/y to lat/long #
+                theta = np.arcsin(biny / np.sqrt(2))
+                latitude = np.arcsin((2 * theta + np.sin(2 * theta)) / np.pi)
+                longitude = np.pi * binx / (2 * np.sqrt(2) * np.cos(theta))
+                axleft.plot(longitude, latitude, 'k.')
         
         # Generate the color bar #
-        cbar = plt.colorbar(hexbin, ax=axupperleft, orientation='horizontal')
+        cbar = plt.colorbar(hexbin, ax=axleft, orientation='horizontal')
         cbar.set_label('$\mathrm{Particles\; per\; hexbin}$')
         
-        # Generate the RA and Dec projection colour-coded by StellarFormationTime #
-        scatter = axupperright.scatter(np.arctan2(unit_vector[:, 1], unit_vector[:, 0]), np.arcsin(unit_vector[:, 2]),
-                                       c=stellar_data_tmp['StellarFormationTime'], cmap='jet', s=1, zorder=-1)
-        
-        axupperright.scatter(np.arctan2(glx_angular_momentum[1], glx_angular_momentum[0]), np.arcsin(glx_angular_momentum[2]), s=300, color='black',
-                             marker='X', zorder=-1)
-        
-        # Generate the color bar #
-        cbar = plt.colorbar(scatter, ax=axupperright, orientation='horizontal')
-        cbar.set_label('$\mathrm{StellarFormationTime}$')
-        
-        # Generate the RA and Dec projection colour-coded by e^beta-1 #
-        velocity_r_sqred = np.divide(np.sum(np.multiply(stellar_data_tmp['Velocity'], stellar_data_tmp['Coordinates']), axis=1) ** 2,
-                                     np.sum(np.multiply(stellar_data_tmp['Coordinates'], stellar_data_tmp['Coordinates']), axis=1))
-        beta = np.subtract(1, np.divide(
-            np.subtract(np.sum(np.multiply(stellar_data_tmp['Velocity'], stellar_data_tmp['Velocity']), axis=1), velocity_r_sqred),
-            2 * velocity_r_sqred))
-        
-        scatter = axlowerleft.scatter(np.arctan2(unit_vector[:, 1], unit_vector[:, 0]), np.arcsin(unit_vector[:, 2]),
-                                      c=np.log10(np.divide(beta, np.mean(beta))), cmap='tab20', s=1, zorder=-1)
-        
-        axlowerleft.scatter(np.arctan2(glx_angular_momentum[1], glx_angular_momentum[0]), np.arcsin(glx_angular_momentum[2]), s=300, color='black',
-                            marker='X', zorder=-1)
-        
-        # Generate the color bar #
-        cbar = plt.colorbar(scatter, ax=axlowerleft, orientation='horizontal')
-        cbar.set_label(r'$\mathrm{e^{\beta -1}}$')
-        
-        # Generate the RA and Dec projection colour-coded by BirthDensity #
-        scatter = axlowerright.scatter(np.arctan2(unit_vector[:, 1], unit_vector[:, 0]), np.arcsin(unit_vector[:, 2]),
-                                       c=stellar_data_tmp['BirthDensity'], cmap='jet', s=1, zorder=-1)
-        axlowerright.scatter(np.arctan2(glx_angular_momentum[1], glx_angular_momentum[0]), np.arcsin(glx_angular_momentum[2]), s=300, color='black',
-                             marker='X', zorder=-1)
-        
-        # Generate the color bar #
-        cbar = plt.colorbar(scatter, ax=axlowerright, orientation='horizontal')
-        cbar.set_label('$\mathrm{BirthDensity}$')
+        # Generate the RA and Dec  #
+        scatter = axright.hist(counts, log=True, bins=50)
         
         # Save the plot #
         # plt.title('z ~ ' + re.split('_z0|p000', tag)[1])
-        plt.savefig(outdir + str(group_number) + str(subgroup_number) + '-' + 'RD' + '-' + date + '.png', bbox_inches='tight')
+        plt.savefig(outdir + str(group_number) + str(subgroup_number) + '-' + 'RDSD' + '-' + date + '.png', bbox_inches='tight')
         
-        kappa, discfrac, orbi, vrotsig, delta, zaxis, Momentum = RADec.kinematics_diagnostics(stellar_data_tmp['Coordinates'],
-                                                                                              stellar_data_tmp['Mass'], stellar_data_tmp['Velocity'],
-                                                                                              stellar_data_tmp['ParticleBindingEnergy'],
-                                                                                              aperture=0.03, CoMvelocity=False)
         return None
 
 
 if __name__ == '__main__':
     tag = '010_z005p000'
     sim = '/cosma7/data/dp004/dc-payy1/G-EAGLE/GEAGLE_06/data/'
-    outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/RD/G-EAGLE/'  # Path to save plots.
+    outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/RDSD/G-EAGLE/'  # Path to save plots.
     SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/RD/G-EAGLE/'  # Path to save data.
     # tag = '027_z000p101'
     # sim = '/cosma5/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'
-    # outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/RD/EAGLE/'  # Path to save plots.
-    # SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/RD/EAGLE/'  # Path to save data.
-    x = RADec(sim, tag)
+    # outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/RDSD/EAGLE/'  # Path to save plots.
+    # SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/RDSD/EAGLE/'  # Path to save data.
+    x = RADecSurfaceDensity(sim, tag)
