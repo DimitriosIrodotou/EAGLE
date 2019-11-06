@@ -198,6 +198,8 @@ class RADecSurfaceDensity:
         :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
         :return: None
         """
+        lon = []
+        lat = []
         
         # Set the style of the plots #
         sns.set()
@@ -213,10 +215,11 @@ class RADecSurfaceDensity:
         axright = plt.subplot(gs[0, 1])
         
         axleft.set_xlabel("RA")
-        axright.set_xlabel("RA")
+        axright.set_xlabel("distance")
         axleft.set_ylabel("Dec")
-        axright.set_ylabel("Dec")
+        axright.set_ylabel("counts")
         axleft.grid(True, color='black')
+        axright.grid(True, color='black')
         
         y_tick_labels = np.array(['', '-60', '', '-30', '', 0, '', '30', '', 60])
         x_tick_labels = np.array(['', '-120', '', '-60', '', 0, '', '60', '', 120])
@@ -224,7 +227,7 @@ class RADecSurfaceDensity:
         axleft.set_yticklabels(y_tick_labels)
         
         # Generate the RA and Dec projection #
-        hexbin = axleft.hexbin(np.arctan2(unit_vector[:, 1], unit_vector[:, 0]), np.arcsin(unit_vector[:, 2]), bins='log', cmap='PuRd', gridsize=25,
+        hexbin = axleft.hexbin(np.arctan2(unit_vector[:, 1], unit_vector[:, 0]), np.arcsin(unit_vector[:, 2]), bins='log', cmap='PuRd', gridsize=100,
                                edgecolor='none', mincnt=1, zorder=-1)  # Element-wise arctan of x1/x2.
         axleft.scatter(np.arctan2(glx_angular_momentum[1], glx_angular_momentum[0]), np.arcsin(glx_angular_momentum[2]), s=300, color='black',
                        marker='X', zorder=-1)
@@ -239,6 +242,8 @@ class RADecSurfaceDensity:
                 theta = np.arcsin(biny / np.sqrt(2))
                 latitude = np.arcsin((2 * theta + np.sin(2 * theta)) / np.pi)
                 longitude = np.pi * binx / (2 * np.sqrt(2) * np.cos(theta))
+                lat.append(latitude)
+                lon.append(longitude)
                 axleft.plot(longitude, latitude, 'k.')
         
         # Generate the color bar #
@@ -246,7 +251,11 @@ class RADecSurfaceDensity:
         cbar.set_label('$\mathrm{Particles\; per\; hexbin}$')
         
         # Generate the RA and Dec  #
-        scatter = axright.hist(counts, log=True, bins=50)
+        index = np.argsort(-counts)
+        position_maximum = np.vstack([lon[index[0]], lat[index[0]]]).T
+        position_other = np.vstack([lon, lat]).T
+        distance = np.linalg.norm(np.subtract(position_maximum, position_other), axis=1)
+        axright.scatter(distance, counts, c='blue', s=10)
         
         # Save the plot #
         # plt.title('z ~ ' + re.split('_z0|p000', tag)[1])
