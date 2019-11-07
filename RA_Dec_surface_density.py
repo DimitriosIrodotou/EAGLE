@@ -214,10 +214,10 @@ class RADecSurfaceDensity:
         axleft = plt.subplot(gs[0, 0], projection="mollweide")
         axright = plt.subplot(gs[0, 1])
         
-        axleft.set_xlabel("RA")
-        axright.set_xlabel("distance")
-        axleft.set_ylabel("Dec")
-        axright.set_ylabel("counts")
+        axleft.set_xlabel('RA')
+        axright.set_xlabel('Distance')
+        axleft.set_ylabel('Dec')
+        axright.set_ylabel('Particles per hexbin')
         axleft.grid(True, color='black')
         axright.grid(True, color='black')
         
