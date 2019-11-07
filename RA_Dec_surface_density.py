@@ -10,6 +10,7 @@ import astropy.units as u
 import matplotlib.pyplot as plt
 import eagle_IO.eagle_IO.eagle_IO as E
 
+from PyAstronomy import pyasl
 from matplotlib import gridspec
 
 # Create a parser and add argument to read data #
@@ -39,9 +40,9 @@ class RADecSurfaceDensity:
         
         p = 1  # Counter.
         # Initialise arrays and a dictionary to store the data #
-        unit_vector = []
+        prc_unit_vector = []
         stellar_data_tmp = {}
-        glx_angular_momentum = []
+        glx_unit_vector = []
         
         if not args.l:
             self.Ngroups = E.read_header('SUBFIND', sim, tag, 'TotNgroups')
@@ -57,14 +58,14 @@ class RADecSurfaceDensity:
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
                     
-                    stellar_data_tmp, glx_angular_momentum, unit_vector = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
+                    stellar_data_tmp, glx_unit_vector, prc_unit_vector = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
                     
                     # Save data in nampy arrays #
-                    np.save(SavePath + 'unit_vector_' + str(group_number), unit_vector)
+                    np.save(SavePath + 'unit_vector_' + str(group_number), prc_unit_vector)
                     np.save(SavePath + 'group_number_' + str(group_number), group_number)
                     np.save(SavePath + 'subgroup_number_' + str(group_number), subgroup_number)
                     np.save(SavePath + 'stellar_data_tmp_' + str(group_number), stellar_data_tmp)
-                    np.save(SavePath + 'glx_angular_momentum_' + str(group_number), glx_angular_momentum)
+                    np.save(SavePath + 'glx_unit_vector_' + str(group_number), glx_unit_vector)
                     print('Masked and saved data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                         round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
@@ -73,7 +74,7 @@ class RADecSurfaceDensity:
                 elif args.r:  # Read data.
                     start_local_time = time.time()  # Start the local time.
                     
-                    stellar_data_tmp, glx_angular_momentum, unit_vector = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
+                    stellar_data_tmp, glx_unit_vector, prc_unit_vector = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
                     print('Masked data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                         round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
@@ -84,8 +85,8 @@ class RADecSurfaceDensity:
                     
                     group_number = np.load(SavePath + 'group_number_' + str(group_number) + '.npy')
                     subgroup_number = np.load(SavePath + 'subgroup_number_' + str(group_number) + '.npy')
-                    unit_vector = np.load(SavePath + 'unit_vector_' + str(group_number) + '.npy')
-                    glx_angular_momentum = np.load(SavePath + 'glx_angular_momentum_' + str(group_number) + '.npy')
+                    prc_unit_vector = np.load(SavePath + 'unit_vector_' + str(group_number) + '.npy')
+                    glx_unit_vector = np.load(SavePath + 'glx_unit_vector_' + str(group_number) + '.npy')
                     stellar_data_tmp = np.load(SavePath + 'stellar_data_tmp_' + str(group_number) + '.npy', allow_pickle=True)
                     stellar_data_tmp = stellar_data_tmp.item()
                     print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
@@ -95,11 +96,12 @@ class RADecSurfaceDensity:
                 # Plot the data #
                 start_local_time = time.time()  # Start the local time.
                 
-                self.plot(stellar_data_tmp, glx_angular_momentum, unit_vector, group_number, subgroup_number)
+                self.plot(stellar_data_tmp, glx_unit_vector, prc_unit_vector, group_number, subgroup_number)
                 print('Plotted data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
                 print('–––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished RADec for ' + re.split('G-EAGLE/|/data', sim)[2] + ' in %.4s s' % (time.time() - start_global_time))  # Print total time.
+        print('Finished RADecSurfaceDensity for ' + re.split('G-EAGLE/|/data', sim)[2] + ' in %.4s s' % (
+            time.time() - start_global_time))  # Print total time.
         print('–––––––––––––––––––––––––––––––––––––––––')
     
     
@@ -157,7 +159,7 @@ class RADecSurfaceDensity:
         A method to mask galaxies.
         :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber']))
         :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
-        :return: stellar_data_tmp, unit_vector
+        :return: stellar_data_tmp, prc_unit_vector
         """
         
         # Select the corresponding halo in order to get its centre of potential #
@@ -182,18 +184,19 @@ class RADecSurfaceDensity:
         prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
                                                                                   stellar_data_tmp['Velocity'])  # Msun kpc km s-1
         glx_angular_momentum = np.sum(prc_angular_momentum, axis=0)  # Msun kpc km s-1
-        unit_vector = np.divide(prc_angular_momentum, np.linalg.norm(prc_angular_momentum, axis=1)[:, np.newaxis])
+        glx_unit_vector = np.divide(glx_angular_momentum, np.linalg.norm(glx_angular_momentum))
+        prc_unit_vector = np.divide(prc_angular_momentum, np.linalg.norm(prc_angular_momentum, axis=1)[:, np.newaxis])
         
-        return stellar_data_tmp, glx_angular_momentum, unit_vector
+        return stellar_data_tmp, glx_unit_vector, prc_unit_vector
     
     
     @staticmethod
-    def plot(stellar_data_tmp, glx_angular_momentum, unit_vector, group_number, subgroup_number):
+    def plot(stellar_data_tmp, glx_unit_vector, prc_unit_vector, group_number, subgroup_number):
         """
         A method to plot a hexbin histogram.
         :param stellar_data_tmp: from mask_galaxies
-        :param glx_angular_momentum: from mask_galaxies
-        :param unit_vector: from mask_galaxies
+        :param glx_unit_vector: from mask_galaxies
+        :param prc_unit_vector: from mask_galaxies
         :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber']))
         :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
         :return: None
@@ -211,26 +214,28 @@ class RADecSurfaceDensity:
         figure = plt.figure(0, figsize=(20, 15))
         
         gs = gridspec.GridSpec(2, 2)
-        axleft = plt.subplot(gs[0, 0], projection="mollweide")
-        axright = plt.subplot(gs[0, 1])
+        axupperleft = plt.subplot(gs[0, 0], projection="mollweide")
+        axupperright = plt.subplot(gs[0, 1])
+        axlowerleft = plt.subplot(gs[1, 0])
         
-        axleft.set_xlabel('RA')
-        axright.set_xlabel('Distance')
-        axleft.set_ylabel('Dec')
-        axright.set_ylabel('Particles per hexbin')
-        axleft.grid(True, color='black')
-        axright.grid(True, color='black')
+        axupperleft.set_xlabel('RA')
+        axupperright.set_xlabel('Distance')
+        axupperleft.set_ylabel('Dec')
+        axupperright.set_ylabel('Particles per hexbin')
+        axupperleft.grid(True, color='black')
+        axlowerleft.grid(True, color='black')
+        axupperright.grid(True, color='black')
         
         y_tick_labels = np.array(['', '-60', '', '-30', '', 0, '', '30', '', 60])
         x_tick_labels = np.array(['', '-120', '', '-60', '', 0, '', '60', '', 120])
-        axleft.set_xticklabels(x_tick_labels)
-        axleft.set_yticklabels(y_tick_labels)
+        axupperleft.set_xticklabels(x_tick_labels)
+        axupperleft.set_yticklabels(y_tick_labels)
         
         # Generate the RA and Dec projection #
-        hexbin = axleft.hexbin(np.arctan2(unit_vector[:, 1], unit_vector[:, 0]), np.arcsin(unit_vector[:, 2]), bins='log', cmap='PuRd', gridsize=100,
-                               edgecolor='none', mincnt=1, zorder=-1)  # Element-wise arctan of x1/x2.
-        axleft.scatter(np.arctan2(glx_angular_momentum[1], glx_angular_momentum[0]), np.arcsin(glx_angular_momentum[2]), s=300, color='black',
-                       marker='X', zorder=-1)
+        hexbin = axupperleft.hexbin(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]), np.arcsin(prc_unit_vector[:, 2]), bins='log',
+                                    cmap='PuRd', gridsize=100, edgecolor='none', mincnt=1, zorder=-1)  # Element-wise arctan of x1/x2.
+        axupperleft.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black', marker='X',
+                            zorder=-1)
         
         # Get the values of each hexbin, convert their coordinates and plot them #
         counts = hexbin.get_array()
@@ -243,19 +248,41 @@ class RADecSurfaceDensity:
                 latitude = np.arcsin((2 * theta + np.sin(2 * theta)) / np.pi)
                 longitude = np.pi * binx / (2 * np.sqrt(2) * np.cos(theta))
                 lat.append(latitude)
-                lon.append(longitude)
-                axleft.plot(longitude, latitude, 'k.')
+                lon.append(longitude)  # axupperleft.plot(longitude, latitude, 'k.')
         
         # Generate the color bar #
-        cbar = plt.colorbar(hexbin, ax=axleft, orientation='horizontal')
+        cbar = plt.colorbar(hexbin, ax=axupperleft, orientation='horizontal')
         cbar.set_label('$\mathrm{Particles\; per\; hexbin}$')
         
         # Generate the RA and Dec  #
+        # Calculate the angular distance in degrees between two RA ad Dec coordinates #
         index = np.argsort(-counts)
         position_maximum = np.vstack([lon[index[0]], lat[index[0]]]).T
         position_other = np.vstack([lon, lat]).T
-        distance = np.linalg.norm(np.subtract(position_maximum, position_other), axis=1)
-        axright.scatter(distance, counts, c='blue', s=10)
+        
+        # ONE
+        # distance = np.linalg.norm(np.subtract(position_maximum, position_other), axis=1)
+        
+        # TWO
+        delt_lat = (np.subtract(position_maximum[0, 1], position_other[:, 1])) * np.divide(np.pi, 180.0)
+        delta_lon = (np.subtract(position_maximum[0, 0], position_other[:, 0])) * np.divide(np.pi, 180.0)
+        distance = 2.0 * np.arcsin(np.sqrt(np.sin(delt_lat / 2.0) ** 2 + np.cos(position_maximum[0, 1] * np.divide(np.pi, 180.0)) * np.cos(
+            position_other[:, 1] * np.pi / 180.) * np.sin(delta_lon / 2.0) ** 2))
+        distance = distance / np.divide(np.pi, 180.0)
+        
+        # axupperright.scatter(distance, counts, c='blue', s=10)
+        # THREE
+        angular_theta = np.arccos(
+            np.cos(90 - position_maximum[:, 1]) * np.cos(90 - position_other[:, 1]) + np.sin(90 - position_maximum[:, 1]) * np.sin(
+                90 - position_other[:, 1])* np.cos(position_other[:, 0] - position_other[:, 0]))
+        
+        axupperright.scatter(angular_theta, counts, c='blue', s=10)
+        
+        # Generate the RA and Dec  #
+        position_X = np.vstack([np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2])]).T
+        position_other = np.vstack([lon, lat]).T
+        distance_from_X = np.linalg.norm(np.subtract(position_X, position_other), axis=1)
+        axlowerleft.scatter(distance_from_X, counts, c='red', s=10)
         
         # Save the plot #
         # plt.title('z ~ ' + re.split('_z0|p000', tag)[1])
@@ -268,7 +295,7 @@ if __name__ == '__main__':
     tag = '010_z005p000'
     sim = '/cosma7/data/dp004/dc-payy1/G-EAGLE/GEAGLE_06/data/'
     outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/RDSD/G-EAGLE/'  # Path to save plots.
-    SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/RD/G-EAGLE/'  # Path to save data.
+    SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/RDSD/G-EAGLE/'  # Path to save data.
     # tag = '027_z000p101'
     # sim = '/cosma5/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'
     # outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/RDSD/EAGLE/'  # Path to save plots.

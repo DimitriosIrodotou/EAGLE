@@ -42,7 +42,7 @@ class RADec:
         # Initialise arrays and a dictionary to store the data #
         unit_vector = []
         stellar_data_tmp = {}
-        glx_angular_momentum = []
+        glx_unit_vector = []
         
         if not args.l:
             self.Ngroups = E.read_header('SUBFIND', sim, tag, 'TotNgroups')
@@ -53,19 +53,19 @@ class RADec:
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
         
         # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all the accepted haloes
-        for group_number in range(1, 2):  # Loop over all the accepted haloes
+        for group_number in range(1, 20):  # Loop over all the accepted haloes
             for subgroup_number in range(0, 1):
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
                     
-                    stellar_data_tmp, glx_angular_momentum, unit_vector = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
+                    stellar_data_tmp, glx_unit_vector, unit_vector = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
                     
                     # Save data in nampy arrays #
                     np.save(SavePath + 'unit_vector_' + str(group_number), unit_vector)
                     np.save(SavePath + 'group_number_' + str(group_number), group_number)
                     np.save(SavePath + 'subgroup_number_' + str(group_number), subgroup_number)
                     np.save(SavePath + 'stellar_data_tmp_' + str(group_number), stellar_data_tmp)
-                    np.save(SavePath + 'glx_angular_momentum_' + str(group_number), glx_angular_momentum)
+                    np.save(SavePath + 'glx_unit_vector_' + str(group_number), glx_unit_vector)
                     print('Masked and saved data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                         round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
@@ -74,7 +74,7 @@ class RADec:
                 elif args.r:  # Read data.
                     start_local_time = time.time()  # Start the local time.
                     
-                    stellar_data_tmp, glx_angular_momentum, unit_vector = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
+                    stellar_data_tmp, glx_unit_vector, unit_vector = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
                     print('Masked data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                         round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
@@ -86,7 +86,7 @@ class RADec:
                     group_number = np.load(SavePath + 'group_number_' + str(group_number) + '.npy')
                     subgroup_number = np.load(SavePath + 'subgroup_number_' + str(group_number) + '.npy')
                     unit_vector = np.load(SavePath + 'unit_vector_' + str(group_number) + '.npy')
-                    glx_angular_momentum = np.load(SavePath + 'glx_angular_momentum_' + str(group_number) + '.npy')
+                    glx_unit_vector = np.load(SavePath + 'glx_unit_vector' + str(group_number) + '.npy')
                     stellar_data_tmp = np.load(SavePath + 'stellar_data_tmp_' + str(group_number) + '.npy', allow_pickle=True)
                     stellar_data_tmp = stellar_data_tmp.item()
                     print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
@@ -96,7 +96,7 @@ class RADec:
                 # Plot the data #
                 start_local_time = time.time()  # Start the local time.
                 
-                self.plot(stellar_data_tmp, glx_angular_momentum, unit_vector, group_number, subgroup_number)
+                self.plot(stellar_data_tmp, glx_unit_vector, unit_vector, group_number, subgroup_number)
                 print('Plotted data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
                 print('–––––––––––––––––––––––––––––––––––––––––')
         
@@ -185,9 +185,10 @@ class RADec:
         prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
                                                                                   stellar_data_tmp['Velocity'])  # Msun kpc km s-1
         glx_angular_momentum = np.sum(prc_angular_momentum, axis=0)  # Msun kpc km s-1
+        glx_unit_vector = np.divide(glx_angular_momentum, np.linalg.norm(glx_angular_momentum))
         unit_vector = np.divide(prc_angular_momentum, np.linalg.norm(prc_angular_momentum, axis=1)[:, np.newaxis])
         
-        return stellar_data_tmp, glx_angular_momentum, unit_vector
+        return stellar_data_tmp, glx_unit_vector, unit_vector
     
     
     @staticmethod
@@ -318,11 +319,11 @@ class RADec:
     
     
     @staticmethod
-    def plot(stellar_data_tmp, glx_angular_momentum, unit_vector, group_number, subgroup_number):
+    def plot(stellar_data_tmp, glx_unit_vector, unit_vector, group_number, subgroup_number):
         """
         A method to plot a hexbin histogram.
         :param stellar_data_tmp: from mask_galaxies
-        :param glx_angular_momentum: from mask_galaxies
+        :param glx_unit_vector: from mask_galaxies
         :param unit_vector: from mask_galaxies
         :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber']))
         :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
@@ -371,7 +372,7 @@ class RADec:
         # Generate the RA and Dec projection #
         hexbin = axupperleft.hexbin(np.arctan2(unit_vector[:, 1], unit_vector[:, 0]), np.arcsin(unit_vector[:, 2]), bins='log', cmap='PuRd',
                                     gridsize=100, edgecolor='none', mincnt=1, zorder=-1)  # Element-wise arctan of x1/x2.
-        axupperleft.scatter(np.arctan2(glx_angular_momentum[1], glx_angular_momentum[0]), np.arcsin(glx_angular_momentum[2]), s=300, color='black',
+        axupperleft.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black',
                             marker='X', zorder=-1)
         
         # Generate the color bar #
@@ -380,9 +381,9 @@ class RADec:
         
         # Generate the RA and Dec projection colour-coded by StellarFormationTime #
         scatter = axupperright.scatter(np.arctan2(unit_vector[:, 1], unit_vector[:, 0]), np.arcsin(unit_vector[:, 2]),
-                                       c=stellar_data_tmp['StellarFormationTime'], cmap='jet', s=1, zorder=-1)
+                                       c=stellar_data_tmp['StellarFormationTime'], cmap='jet_r', s=1, zorder=-1)
         
-        axupperright.scatter(np.arctan2(glx_angular_momentum[1], glx_angular_momentum[0]), np.arcsin(glx_angular_momentum[2]), s=300, color='black',
+        axupperright.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black',
                              marker='X', zorder=-1)
         
         # Generate the color bar #
@@ -399,17 +400,17 @@ class RADec:
         scatter = axlowerleft.scatter(np.arctan2(unit_vector[:, 1], unit_vector[:, 0]), np.arcsin(unit_vector[:, 2]),
                                       c=np.log10(np.divide(beta, np.mean(beta))), cmap='tab20', s=1, zorder=-1)
         
-        axlowerleft.scatter(np.arctan2(glx_angular_momentum[1], glx_angular_momentum[0]), np.arcsin(glx_angular_momentum[2]), s=300, color='black',
+        axlowerleft.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black',
                             marker='X', zorder=-1)
         
         # Generate the color bar #
         cbar = plt.colorbar(scatter, ax=axlowerleft, orientation='horizontal')
-        cbar.set_label(r'$\mathrm{e^{\beta -1}}$')
+        cbar.set_label(r'$\mathrm{log_{10}({\beta/\bar{\beta}})}$')
         
         # Generate the RA and Dec projection colour-coded by BirthDensity #
         scatter = axlowerright.scatter(np.arctan2(unit_vector[:, 1], unit_vector[:, 0]), np.arcsin(unit_vector[:, 2]),
                                        c=stellar_data_tmp['BirthDensity'], cmap='jet', s=1, zorder=-1)
-        axlowerright.scatter(np.arctan2(glx_angular_momentum[1], glx_angular_momentum[0]), np.arcsin(glx_angular_momentum[2]), s=300, color='black',
+        axlowerright.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black',
                              marker='X', zorder=-1)
         
         # Generate the color bar #
@@ -428,12 +429,12 @@ class RADec:
 
 
 if __name__ == '__main__':
-    tag = '010_z005p000'
-    sim = '/cosma7/data/dp004/dc-payy1/G-EAGLE/GEAGLE_06/data/'
-    outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/RD/G-EAGLE/'  # Path to save plots.
-    SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/RD/G-EAGLE/'  # Path to save data.
-    # tag = '027_z000p101'
-    # sim = '/cosma5/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'
-    # outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/RD/EAGLE/'  # Path to save plots.
-    # SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/RD/EAGLE/'  # Path to save data.
+    # tag = '010_z005p000'
+    # sim = '/cosma7/data/dp004/dc-payy1/G-EAGLE/GEAGLE_06/data/'
+    # outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/RD/G-EAGLE/'  # Path to save plots.
+    # SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/RD/G-EAGLE/'  # Path to save data.
+    tag = '027_z000p101'
+    sim = '/cosma5/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'
+    outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/RD/EAGLE/'  # Path to save plots.
+    SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/RD/EAGLE/'  # Path to save data.
     x = RADec(sim, tag)
