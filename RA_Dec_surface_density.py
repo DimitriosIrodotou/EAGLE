@@ -53,7 +53,7 @@ class RADecSurfaceDensity:
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
         
         # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all the accepted haloes
-        for group_number in range(1, 21):  # Loop over all the accepted haloes
+        for group_number in range(1, 2):  # Loop over all the accepted haloes
             for subgroup_number in range(0, 1):
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
@@ -263,11 +263,12 @@ class RADecSurfaceDensity:
         cbar.set_label('$\mathrm{Particles\; per\; hexbin}$')
         
         # Generate the RA and Dec  #
-        # Calculate the angular distance in degrees between two RA ad Dec coordinates #
-        index = np.argsort(-counts)
-        position_maximum = np.vstack([lon[index[0]], lat[index[0]]]).T
+        # Get the positions of all hexbins and of the most dense one #
         position_other = np.vstack([lon, lat]).T
+        index = np.where(counts == max(counts))[0]
+        position_maximum = np.vstack([lon[index[0]], lat[index[0]]]).T
         
+        # Calculate the angular distance in degrees between two RA ad Dec coordinates #
         # ONE
         # distance = np.linalg.norm(np.subtract(position_maximum, position_other), axis=1)
         
@@ -284,24 +285,35 @@ class RADecSurfaceDensity:
             np.cos(90 - position_maximum[:, 0]) * np.cos(90 - position_other[:, 0]) + np.sin(90 - position_maximum[:, 0]) * np.sin(
                 90 - position_other[:, 0]) * np.cos(position_other[:, 1] - position_other[:, 1]))  # In radians.
         
-        axupperright.scatter(angular_theta_from_densest * np.divide(180.0, np.pi), counts, c='blue', s=1)
+        axupperright.scatter(angular_theta_from_densest * np.divide(180.0, np.pi), counts, c='blue', s=10)
+        
+        ####################################################################################################
+        axupperright.axvline(x=30, c='green')
+        index = np.where((angular_theta_from_densest * np.divide(180.0, np.pi)) < 30.0)[0]
+        # axupperleft.scatter(position_other[index, 0], position_other[index, 1], s=50, c='green')
+        phi = np.linspace(0, 2.0 * np.pi, 50)
+        r = np.radians(30)
+        x = position_maximum[0, 0] + r * np.cos(phi)
+        y = position_maximum[0, 1] + r * np.sin(phi)
+        axupperleft.plot(x, y, color="g")
+        ####################################################################################################
         
         # Generate the RA and Dec  #
         position_X = np.vstack([np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2])]).T
         angular_theta_from_X = np.arccos(np.cos(90 - position_X[:, 0]) * np.cos(90 - position_other[:, 0]) + np.sin(90 - position_X[:, 0]) * np.sin(
             90 - position_other[:, 0]) * np.cos(position_other[:, 1] - position_other[:, 1]))  # In radians.
         
-        axlowerleft.scatter(angular_theta_from_X * np.divide(180.0, np.pi), counts, c='red', s=1)
+        axlowerleft.scatter(angular_theta_from_X * np.divide(180.0, np.pi), counts, c='red', s=10)
         
         # Save the plot #
         # plt.title('z ~ ' + re.split('_z0|p000', tag)[1])
         plt.savefig(outdir + str(group_number) + str(subgroup_number) + '-' + 'RDSD' + '-' + date + '.png', bbox_inches='tight')
         
-        kappa, discfrac, orbi, vrotsig, delta, zaxis, Momentum = MorphoKinematics.kinematics_diagnostics(stellar_data_tmp['Coordinates'],
-                                                                                                         stellar_data_tmp['Mass'],
-                                                                                                         stellar_data_tmp['Velocity'],
-                                                                                                         stellar_data_tmp['ParticleBindingEnergy'],
-                                                                                                         aperture=0.03, CoMvelocity=False)
+        # kappa, discfrac, orbi, vrotsig, delta, zaxis, Momentum = MorphoKinematics.kinematics_diagnostics(stellar_data_tmp['Coordinates'],
+        #                                                                                                  stellar_data_tmp['Mass'],
+        #                                                                                                  stellar_data_tmp['Velocity'],
+        #                                                                                                  stellar_data_tmp['ParticleBindingEnergy'],
+        #                                                                                                  aperture=0.03, CoMvelocity=False)
         
         return None
 
