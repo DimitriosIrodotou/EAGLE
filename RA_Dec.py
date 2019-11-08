@@ -345,18 +345,18 @@ class RADec:
         axupperright = plt.subplot(gs[0, 1], projection="mollweide")
         axlowerright = plt.subplot(gs[1, 1], projection="mollweide")
         
-        axupperleft.set_xlabel('RA')
-        axlowerleft.set_xlabel('RA')
-        axupperright.set_xlabel('RA')
-        axlowerright.set_xlabel('RA')
-        axupperleft.set_ylabel('Dec')
-        axlowerleft.set_ylabel('Dec')
-        axupperright.set_ylabel('Dec')
-        axlowerright.set_ylabel('Dec')
         axupperleft.grid(True, color='black')
         axlowerleft.grid(True, color='black')
         axupperright.grid(True, color='black')
         axlowerright.grid(True, color='black')
+        axupperleft.set_xlabel('RA ($\degree$)')
+        axlowerleft.set_xlabel('RA ($\degree$)')
+        axupperright.set_xlabel('RA ($\degree$)')
+        axlowerright.set_xlabel('RA ($\degree$)')
+        axupperleft.set_ylabel('Dec ($\degree$)')
+        axlowerleft.set_ylabel('Dec ($\degree$)')
+        axupperright.set_ylabel('Dec ($\degree$)')
+        axlowerright.set_ylabel('Dec ($\degree$)')
         
         y_tick_labels = np.array(['', '-60', '', '-30', '', 0, '', '30', '', 60])
         x_tick_labels = np.array(['', '-120', '', '-60', '', 0, '', '60', '', 120])
@@ -372,8 +372,8 @@ class RADec:
         # Generate the RA and Dec projection #
         hexbin = axupperleft.hexbin(np.arctan2(unit_vector[:, 1], unit_vector[:, 0]), np.arcsin(unit_vector[:, 2]), bins='log', cmap='PuRd',
                                     gridsize=100, edgecolor='none', mincnt=1, zorder=-1)  # Element-wise arctan of x1/x2.
-        axupperleft.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black',
-                            marker='X', zorder=-1)
+        axupperleft.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black', marker='X',
+                            zorder=-1)
         
         # Generate the color bar #
         cbar = plt.colorbar(hexbin, ax=axupperleft, orientation='horizontal')
@@ -383,8 +383,8 @@ class RADec:
         scatter = axupperright.scatter(np.arctan2(unit_vector[:, 1], unit_vector[:, 0]), np.arcsin(unit_vector[:, 2]),
                                        c=stellar_data_tmp['StellarFormationTime'], cmap='jet_r', s=1, zorder=-1)
         
-        axupperright.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black',
-                             marker='X', zorder=-1)
+        axupperright.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black', marker='X',
+                             zorder=-1)
         
         # Generate the color bar #
         cbar = plt.colorbar(scatter, ax=axupperright, orientation='horizontal')
@@ -400,8 +400,8 @@ class RADec:
         scatter = axlowerleft.scatter(np.arctan2(unit_vector[:, 1], unit_vector[:, 0]), np.arcsin(unit_vector[:, 2]),
                                       c=np.log10(np.divide(beta, np.mean(beta))), cmap='tab20', s=1, zorder=-1)
         
-        axlowerleft.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black',
-                            marker='X', zorder=-1)
+        axlowerleft.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black', marker='X',
+                            zorder=-1)
         
         # Generate the color bar #
         cbar = plt.colorbar(scatter, ax=axlowerleft, orientation='horizontal')
@@ -410,8 +410,8 @@ class RADec:
         # Generate the RA and Dec projection colour-coded by BirthDensity #
         scatter = axlowerright.scatter(np.arctan2(unit_vector[:, 1], unit_vector[:, 0]), np.arcsin(unit_vector[:, 2]),
                                        c=stellar_data_tmp['BirthDensity'], cmap='jet', s=1, zorder=-1)
-        axlowerright.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black',
-                             marker='X', zorder=-1)
+        axlowerright.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black', marker='X',
+                             zorder=-1)
         
         # Generate the color bar #
         cbar = plt.colorbar(scatter, ax=axlowerright, orientation='horizontal')

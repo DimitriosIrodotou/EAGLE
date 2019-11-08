@@ -10,7 +10,6 @@ import astropy.units as u
 import matplotlib.pyplot as plt
 import eagle_IO.eagle_IO.eagle_IO as E
 
-from PyAstronomy import pyasl
 from matplotlib import gridspec
 
 # Create a parser and add argument to read data #
@@ -53,7 +52,7 @@ class RADecSurfaceDensity:
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
         
         # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all the accepted haloes
-        for group_number in range(1, 2):  # Loop over all the accepted haloes
+        for group_number in range(1, 21):  # Loop over all the accepted haloes
             for subgroup_number in range(0, 1):
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
@@ -218,18 +217,26 @@ class RADecSurfaceDensity:
         axupperright = plt.subplot(gs[0, 1])
         axlowerleft = plt.subplot(gs[1, 0])
         
-        axupperleft.set_xlabel('RA')
-        axupperright.set_xlabel('Distance')
-        axupperleft.set_ylabel('Dec')
-        axupperright.set_ylabel('Particles per hexbin')
         axupperleft.grid(True, color='black')
         axlowerleft.grid(True, color='black')
         axupperright.grid(True, color='black')
+        axupperleft.set_xlabel('RA ($\degree$)')
+        axupperleft.set_ylabel('Dec ($\degree$)')
+        axlowerleft.set_ylabel('Particles per hexbin')
+        axupperright.set_ylabel('Particles per hexbin')
+        axlowerleft.set_xlabel('Angular distance from X ($\degree$)')
+        axupperright.set_xlabel('Angular distance from densest hexbin ($\degree$)')
         
-        y_tick_labels = np.array(['', '-60', '', '-30', '', 0, '', '30', '', 60])
-        x_tick_labels = np.array(['', '-120', '', '-60', '', 0, '', '60', '', 120])
+        axupperright.set_xlim(-10, 190)
+        axlowerleft.set_xlim(-10, 190)
+        
+        y_tick_labels = np.array(['', '-60', '', '-30', '', '0', '', '30', '', 60])
+        x_tick_labels = np.array(['', '-120', '', '-60', '', '0', '', '60', '', 120])
         axupperleft.set_xticklabels(x_tick_labels)
         axupperleft.set_yticklabels(y_tick_labels)
+        
+        axupperright.set_xticks(np.arange(0, 181, 20))
+        axlowerleft.set_xticks(np.arange(0, 181, 20))
         
         # Generate the RA and Dec projection #
         hexbin = axupperleft.hexbin(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]), np.arcsin(prc_unit_vector[:, 2]), bins='log',
@@ -244,9 +251,9 @@ class RADecSurfaceDensity:
             binx, biny = verts[offc][0], verts[offc][1]
             if counts[offc]:
                 # Inverse transformation from x/y to lat/long #
-                theta = np.arcsin(biny / np.sqrt(2))
+                theta = np.arcsin(np.divide(biny, np.sqrt(2)))
                 latitude = np.arcsin((2 * theta + np.sin(2 * theta)) / np.pi)
-                longitude = np.pi * binx / (2 * np.sqrt(2) * np.cos(theta))
+                longitude = np.divide(np.pi * binx, (2 * np.sqrt(2) * np.cos(theta)))
                 lat.append(latitude)
                 lon.append(longitude)  # axupperleft.plot(longitude, latitude, 'k.')
         
@@ -264,25 +271,26 @@ class RADecSurfaceDensity:
         # distance = np.linalg.norm(np.subtract(position_maximum, position_other), axis=1)
         
         # TWO
-        delt_lat = (np.subtract(position_maximum[0, 1], position_other[:, 1])) * np.divide(np.pi, 180.0)
-        delta_lon = (np.subtract(position_maximum[0, 0], position_other[:, 0])) * np.divide(np.pi, 180.0)
-        distance = 2.0 * np.arcsin(np.sqrt(np.sin(delt_lat / 2.0) ** 2 + np.cos(position_maximum[0, 1] * np.divide(np.pi, 180.0)) * np.cos(
-            position_other[:, 1] * np.pi / 180.) * np.sin(delta_lon / 2.0) ** 2))
-        distance = distance / np.divide(np.pi, 180.0)
-        
+        # delt_lat = (np.subtract(position_maximum[0, 1], position_other[:, 1])) * np.divide(np.pi, 180.0)
+        # delta_lon = (np.subtract(position_maximum[0, 0], position_other[:, 0])) * np.divide(np.pi, 180.0)
+        # distance = 2.0 * np.arcsin(np.sqrt(np.sin(delt_lat / 2.0) ** 2 + np.cos(position_maximum[0, 1] * np.divide(np.pi, 180.0)) * np.cos(
+        #     position_other[:, 1] * np.pi / 180.) * np.sin(delta_lon / 2.0) ** 2))
+        # distance = distance / np.divide(np.pi, 180.0)
         # axupperright.scatter(distance, counts, c='blue', s=10)
-        # THREE
-        angular_theta = np.arccos(
-            np.cos(90 - position_maximum[:, 1]) * np.cos(90 - position_other[:, 1]) + np.sin(90 - position_maximum[:, 1]) * np.sin(
-                90 - position_other[:, 1])* np.cos(position_other[:, 0] - position_other[:, 0]))
         
-        axupperright.scatter(angular_theta, counts, c='blue', s=10)
+        # THREE
+        angular_theta_from_densest = np.arccos(
+            np.cos(90 - position_maximum[:, 0]) * np.cos(90 - position_other[:, 0]) + np.sin(90 - position_maximum[:, 0]) * np.sin(
+                90 - position_other[:, 0]) * np.cos(position_other[:, 1] - position_other[:, 1]))  # In radians.
+        
+        axupperright.scatter(angular_theta_from_densest * np.divide(180.0, np.pi), counts, c='blue', s=1)
         
         # Generate the RA and Dec  #
         position_X = np.vstack([np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2])]).T
-        position_other = np.vstack([lon, lat]).T
-        distance_from_X = np.linalg.norm(np.subtract(position_X, position_other), axis=1)
-        axlowerleft.scatter(distance_from_X, counts, c='red', s=10)
+        angular_theta_from_X = np.arccos(np.cos(90 - position_X[:, 0]) * np.cos(90 - position_other[:, 0]) + np.sin(90 - position_X[:, 0]) * np.sin(
+            90 - position_other[:, 0]) * np.cos(position_other[:, 1] - position_other[:, 1]))  # In radians.
+        
+        axlowerleft.scatter(angular_theta_from_X * np.divide(180.0, np.pi), counts, c='red', s=1)
         
         # Save the plot #
         # plt.title('z ~ ' + re.split('_z0|p000', tag)[1])
