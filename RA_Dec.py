@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 import eagle_IO.eagle_IO.eagle_IO as E
 
 from matplotlib import gridspec
-from scipy import interpolate, linalg
 
 # Create a parser and add argument to read data #
 parser = argparse.ArgumentParser(description='Create RA and Dec.')
@@ -53,7 +52,7 @@ class RADec:
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
         
         # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all the accepted haloes
-        for group_number in range(1, 20):  # Loop over all the accepted haloes
+        for group_number in range(1, 2):  # Loop over all the accepted haloes
             for subgroup_number in range(0, 1):
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
@@ -86,7 +85,7 @@ class RADec:
                     group_number = np.load(SavePath + 'group_number_' + str(group_number) + '.npy')
                     subgroup_number = np.load(SavePath + 'subgroup_number_' + str(group_number) + '.npy')
                     unit_vector = np.load(SavePath + 'unit_vector_' + str(group_number) + '.npy')
-                    glx_unit_vector = np.load(SavePath + 'glx_unit_vector' + str(group_number) + '.npy')
+                    glx_unit_vector = np.load(SavePath + 'glx_unit_vector_' + str(group_number) + '.npy')
                     stellar_data_tmp = np.load(SavePath + 'stellar_data_tmp_' + str(group_number) + '.npy', allow_pickle=True)
                     stellar_data_tmp = stellar_data_tmp.item()
                     print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
@@ -192,133 +191,6 @@ class RADec:
     
     
     @staticmethod
-    def kinematics_diagnostics(XYZ, mass, Vxyz, PBE, aperture=0.03, CoMvelocity=True):
-        """
-                Compute the various kinematics diagnostics.
-        XYZ : array_like of dtype float, shape (n, 3)
-            Particles coordinates (in unit of length L) such that XYZ[:,0] = X,
-            XYZ[:,1] = Y & XYZ[:,2] = Z
-        mass : array_like of dtype float, shape (n, )
-            Particles masses (in unit of mass M)
-        Vxyz : array_like of dtype float, shape (n, 3)
-            Particles coordinates (in unit of velocity V) such that Vxyz[:,0] = Vx,
-            Vxyz[:,1] = Vy & Vxyz[:,2] = Vz
-        PBE : array_like of dtype float, shape (n, )
-            Particles specific binding energies
-        aperture : float, optional
-            Aperture (in unit of length L) for the computation. Default is 0.03 L
-        CoMvelocity : bool, optional
-            Boolean to allow the centering of velocities by the considered particles
-            centre-of-mass velocity. Default to True
-
-        Returns
-        -------
-        kappa : float
-            The kinetic energy fraction invested in co-rotation.
-        discfrac : float
-            The disc-to-total mass fraction estimated from the counter-rotating
-            bulge.
-        orbi : float
-            The median orbital circularity of the particles values.
-        vrotsig : float
-            The rotation-to-dispersion ratio .
-        delta : float
-            The dispersion anisotropy.
-        zaxis : array of dtype float, shape (3, )
-            The unit vector of the momentum axis (pointing along the momentum direction).
-        Momentum : float
-            The momentum magnitude (in unit M.L.V).
-        :param mass:
-        :param Vxyz:
-        :param PBE:
-        :param aperture:
-        :param CoMvelocity:
-        :return:
-        """
-        particlesall = np.vstack([XYZ.T, mass, Vxyz.T, PBE]).T
-        # Compute distances
-        distancesall = np.linalg.norm(particlesall[:, :3], axis=1)
-        # Restrict particles
-        extract = (distancesall < aperture)
-        particles = particlesall[extract].copy()
-        distances = distancesall[extract].copy()
-        Mass = np.sum(particles[:, 3])
-        if CoMvelocity:
-            # Compute CoM velocty & correct
-            dvVmass = np.nan_to_num(np.sum(particles[:, 3][:, np.newaxis] * particles[:, 4:7], axis=0) / Mass)
-            particlesall[:, 4:7] -= dvVmass
-            particles[:, 4:7] -= dvVmass
-        # Compute momentum
-        smomentums = np.cross(particles[:, :3], particles[:, 4:7])
-        momentum = np.sum(particles[:, 3][:, np.newaxis] * smomentums, axis=0)
-        Momentum = np.linalg.norm(momentum)
-        # Compute cylindrical quantities
-        zaxis = (momentum / Momentum)
-        zheight = np.sum(zaxis * particles[:, :3], axis=1)
-        cylposition = particles[:, :3] - zheight[:, np.newaxis] * [zaxis]
-        cyldistances = np.sqrt(distances ** 2 - zheight ** 2)
-        smomentumz = np.sum(zaxis * smomentums, axis=1)
-        vrots = smomentumz / cyldistances
-        vrads = np.sum(cylposition * particles[:, 4:7] / cyldistances[:, np.newaxis], axis=1)
-        vheis = np.sum(zaxis * particles[:, 4:7], axis=1)
-        # Compute co-rotational kinetic energy fraction
-        Mvrot2 = np.sum((particles[:, 3] * vrots ** 2)[vrots > 0])
-        kappa = Mvrot2 / np.sum(particles[:, 3] * (np.linalg.norm(particles[:, 4:7], axis=1)) ** 2)
-        # Compute disc-to-total ratio
-        discfrac = 1 - 2 * np.sum(particles[vrots <= 0, 3]) / Mass
-        # Compute orbital circularity
-        sbindingenergy = particles[:, 7]
-        sortE = np.argsort(sbindingenergy)
-        unsortE = np.argsort(sortE)
-        jzE = np.vstack([sbindingenergy, smomentumz]).T[sortE]
-        orbital = (jzE[:, 1] / np.maximum.accumulate(np.abs(jzE[:, 1])))[unsortE]
-        orbi = np.median(orbital)
-        # Compute rotation-to-dispersion and dispersion anisotropy
-        Vrot = np.abs(RADec.cumsummedian(vrots, weights=particles[:, 3]))
-        SigmaXY = np.sqrt(np.average(np.sum(particles[:, [3]] * np.vstack([vrads, vrots]).T ** 2, axis=0) / Mass))  #
-        SigmaO = np.sqrt(SigmaXY ** 2 - .5 * Vrot ** 2)
-        SigmaZ = np.sqrt(np.average(vheis ** 2, weights=particles[:, 3]))
-        vrotsig = Vrot / SigmaO
-        delta = 1 - (SigmaZ / SigmaO) ** 2
-        # Return
-        return kappa, discfrac, orbi, vrotsig, delta, zaxis, Momentum
-    
-    
-    @staticmethod
-    def cumsummedian(a, weights=None):
-        """
-        Compute the weighted median.
-
-        Returns the median of the array elements.
-
-        Parameters
-        ----------
-        a : array_like, shape (n, )
-            Input array or object that can be converted to an array.
-        weights : {array_like, shape (n, ), None}, optional
-            Input array or object that can be converted to an array.
-
-        Returns
-        -------
-        median : float
-
-        """
-        if weights is None:
-            weights = np.ones(np.array(a).shape)
-        A = np.array(a).astype('float')
-        W = np.array(weights).astype('float')
-        if not (np.product(np.isnan(A))):
-            I = np.argsort(A)
-            cumweight = np.hstack([0, np.cumsum(W[I])])
-            X = np.hstack([0, (cumweight[:-1] + cumweight[1:]) / (2 * cumweight[-1]), 1])
-            Y = np.hstack([np.min(A), A[I], np.max(A)])
-            P = interpolate.interp1d(X, Y)(0.5)
-            return float(P)
-        else:
-            return np.nan
-    
-    
-    @staticmethod
     def plot(stellar_data_tmp, glx_unit_vector, unit_vector, group_number, subgroup_number):
         """
         A method to plot a hexbin histogram.
@@ -421,20 +293,16 @@ class RADec:
         # plt.title('z ~ ' + re.split('_z0|p000', tag)[1])
         plt.savefig(outdir + str(group_number) + str(subgroup_number) + '-' + 'RD' + '-' + date + '.png', bbox_inches='tight')
         
-        kappa, discfrac, orbi, vrotsig, delta, zaxis, Momentum = RADec.kinematics_diagnostics(stellar_data_tmp['Coordinates'],
-                                                                                              stellar_data_tmp['Mass'], stellar_data_tmp['Velocity'],
-                                                                                              stellar_data_tmp['ParticleBindingEnergy'],
-                                                                                              aperture=0.03, CoMvelocity=False)
         return None
 
 
 if __name__ == '__main__':
-    # tag = '010_z005p000'
-    # sim = '/cosma7/data/dp004/dc-payy1/G-EAGLE/GEAGLE_06/data/'
-    # outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/RD/G-EAGLE/'  # Path to save plots.
-    # SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/RD/G-EAGLE/'  # Path to save data.
-    tag = '027_z000p101'
-    sim = '/cosma5/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'
-    outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/RD/EAGLE/'  # Path to save plots.
-    SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/RD/EAGLE/'  # Path to save data.
+    tag = '010_z005p000'
+    sim = '/cosma7/data/dp004/dc-payy1/G-EAGLE/GEAGLE_06/data/'
+    outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/RD/G-EAGLE/'  # Path to save plots.
+    SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/RD/G-EAGLE/'  # Path to save data.
+    # tag = '027_z000p101'
+    # sim = '/cosma5/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'
+    # outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/RD/EAGLE/'  # Path to save plots.
+    # SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/RD/EAGLE/'  # Path to save data.
     x = RADec(sim, tag)

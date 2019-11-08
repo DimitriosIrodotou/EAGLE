@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import eagle_IO.eagle_IO.eagle_IO as E
 
 from matplotlib import gridspec
+from morpho_kinematics import MorphoKinematics
 
 # Create a parser and add argument to read data #
 parser = argparse.ArgumentParser(description='Create RA and Dec.')
@@ -295,6 +296,12 @@ class RADecSurfaceDensity:
         # Save the plot #
         # plt.title('z ~ ' + re.split('_z0|p000', tag)[1])
         plt.savefig(outdir + str(group_number) + str(subgroup_number) + '-' + 'RDSD' + '-' + date + '.png', bbox_inches='tight')
+        
+        kappa, discfrac, orbi, vrotsig, delta, zaxis, Momentum = MorphoKinematics.kinematics_diagnostics(stellar_data_tmp['Coordinates'],
+                                                                                                         stellar_data_tmp['Mass'],
+                                                                                                         stellar_data_tmp['Velocity'],
+                                                                                                         stellar_data_tmp['ParticleBindingEnergy'],
+                                                                                                         aperture=0.03, CoMvelocity=False)
         
         return None
 
