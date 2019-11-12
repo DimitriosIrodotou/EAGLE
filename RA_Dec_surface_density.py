@@ -245,7 +245,7 @@ class RADecSurfaceDensity:
         
         # Generate the RA and Dec projection #
         hexbin = axupperleft.hexbin(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]), np.arcsin(prc_unit_vector[:, 2]), bins='log',
-                                    cmap='PuRd', gridsize=100, edgecolor='none', mincnt=1, zorder=-1)  # Element-wise arctan of x1/x2.
+                                    cmap='PuRd', gridsize=30, edgecolor='none', mincnt=1, zorder=-1)  # Element-wise arctan of x1/x2.
         axupperleft.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black', marker='X',
                             zorder=-1)
         
@@ -256,9 +256,9 @@ class RADecSurfaceDensity:
             binx, biny = verts[offc][0], verts[offc][1]
             if counts[offc]:
                 # Inverse transformation from x/y to lat/long #
-                theta = np.arcsin(np.divide(biny, np.sqrt(2)))
-                latitude = np.arcsin((2 * theta + np.sin(2 * theta)) / np.pi)
-                longitude = np.divide(np.pi * binx, (2 * np.sqrt(2) * np.cos(theta)))
+                theta = np.arcsin(np.divide(biny, np.sqrt(2)))  # In radians.
+                latitude = np.arcsin((2 * theta + np.sin(2 * theta)) / np.pi)  # In radians.
+                longitude = np.divide(np.pi * binx, (2 * np.sqrt(2) * np.cos(theta)))  # In radians.
                 lat.append(latitude)
                 lon.append(longitude)  # axupperleft.plot(longitude, latitude, 'k.')
         
@@ -268,41 +268,26 @@ class RADecSurfaceDensity:
         
         # Generate the RA and Dec  #
         # Get the positions of all hexbins and of the most dense one #
-        position_other = np.vstack([lon, lat]).T
-        index = np.where(counts == max(counts))[0]
-        position_maximum = np.vstack([lon[index[0]], lat[index[0]]]).T
-        
-        # Calculate the angular distance in degrees between two RA ad Dec coordinates #
-        # ONE
-        # distance = np.linalg.norm(np.subtract(position_maximum, position_other), axis=1)
-        
-        # TWO
-        # delt_lat = (np.subtract(position_maximum[0, 1], position_other[:, 1])) * np.divide(np.pi, 180.0)
-        # delta_lon = (np.subtract(position_maximum[0, 0], position_other[:, 0])) * np.divide(np.pi, 180.0)
-        # distance = 2.0 * np.arcsin(np.sqrt(np.sin(delt_lat / 2.0) ** 2 + np.cos(position_maximum[0, 1] * np.divide(np.pi, 180.0)) * np.cos(
-        #     position_other[:, 1] * np.pi / 180.) * np.sin(delta_lon / 2.0) ** 2))
-        # distance = distance / np.divide(np.pi, 180.0)
-        # axupperright.scatter(distance, counts, c='blue', s=10)
-        
-        # THREE
-        # angular_theta_from_densest = np.arccos(
-        #     np.cos(90 - position_maximum[:, 0]) * np.cos(90 - position_other[:, 0]) + np.sin(90 - position_maximum[:, 0]) * np.sin(
-        #         90 - position_other[:, 0]) * np.cos(position_other[:, 1] - position_other[:, 1]))  # In radians.
+        position_other = np.vstack([lon, lat]).T  # In radians.
+        index = np.where(counts == max(counts))[0]  # In radians.
+        position_densest = np.vstack([lon[index[0]], lat[index[0]]]).T  # In radians.
         
         angular_theta_from_densest = np.arccos(
-            np.cos(position_maximum[:, 0]) * np.cos(position_other[:, 0]) * np.cos(position_maximum[:, 1] - position_other[:, 1]) + np.sin(
-                position_maximum[:, 0]) * np.sin(position_other[:, 0]))  # In radians.
+            np.cos(position_densest[0, 1]) * np.cos(position_other[:, 1]) * np.cos(position_densest[0, 0] - position_other[:, 0]) + np.sin(
+                position_densest[0, 1]) * np.sin(position_other[:, 1]))  # In radians.
         
         axupperright.scatter(angular_theta_from_densest * np.divide(180.0, np.pi), counts, c='blue', s=10)
         
         ####################################################################################################
+        index = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))
+        axupperleft.scatter(position_other[index, 0], position_other[index, 1], s=40, c='green')
+        axupperleft.scatter(position_densest[0, 0], position_densest[0, 1], s=100, c='black', marker='x')
+        
         axupperright.axvline(x=30, c='green', lw=5)
-        index = np.where((angular_theta_from_densest * np.divide(180.0, np.pi)) < 30.0)[0]
-        axupperleft.scatter(position_other[index, 0], position_other[index, 1], s=20, c='green')
         phi = np.linspace(0, 2.0 * np.pi, 50)
         r = np.radians(30)
-        x = position_maximum[0, 0] + r * np.cos(phi)
-        y = position_maximum[0, 1] + r * np.sin(phi)
+        x = position_densest[0, 0] + r * np.cos(phi)
+        y = position_densest[0, 1] + r * np.sin(phi)
         axupperleft.plot(x, y, color="red")
         ####################################################################################################
         
@@ -319,6 +304,7 @@ class RADecSurfaceDensity:
         
         rows = ('discfrac', 'Wind', 'Flood', 'Quake', 'Hail')
         # axlowerright.table()
+        # Calcuate kinematic diagnostics #
         # kappa, discfrac, orbi, vrotsig, vrots, delta, zaxis, Momentum = MorphoKinematics.kinematics_diagnostics(stellar_data_tmp['Coordinates'],
         #                                                                                                         stellar_data_tmp['Mass'],
         #                                                                                                         stellar_data_tmp['Velocity'],

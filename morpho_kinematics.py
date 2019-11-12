@@ -1,21 +1,5 @@
-import time
-import warnings
-import argparse
-
 import numpy as np
-import matplotlib.cbook
 from scipy import interpolate, linalg
-
-# Create a parser and add argument to read data #
-parser = argparse.ArgumentParser(description='Create RA and Dec.')
-parser.add_argument('-r', action='store_true', help='Read data')
-parser.add_argument('-l', action='store_true', help='Load data')
-parser.add_argument('-rs', action='store_true', help='Read data and save to numpy arrays')
-args = parser.parse_args()
-
-date = time.strftime('%d_%m_%y_%H%M')  # Date
-start_global_time = time.time()  # Start the global time.
-warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
 
 
 class MorphoKinematics:
@@ -24,20 +8,9 @@ class MorphoKinematics:
     def cumsummedian(a, weights=None):
         """
         Compute the weighted median.
-
-        Returns the median of the array elements.
-
-        Parameters
-        ----------
-        a : array_like, shape (n, )
-            Input array or object that can be converted to an array.
-        weights : {array_like, shape (n, ), None}, optional
-            Input array or object that can be converted to an array.
-
-        Returns
-        -------
-        median : float
-
+        :param a: Input array.
+        :param weights: Weights.
+        :return: P (median)
         """
         if weights is None:
             weights = np.ones(np.array(a).shape)
@@ -55,86 +28,64 @@ class MorphoKinematics:
     
     
     @staticmethod
-    def kinematics_diagnostics(XYZ, mass, Vxyz, PBE):
+    def kinematics_diagnostics(coordinates, masses, velocities, particlebindingenergy):
         """
-                Compute the various kinematics diagnostics.
-        XYZ : array_like of dtype float, shape (n, 3)
-            Particles coordinates (in unit of length L) such that XYZ[:,0] = X,
-            XYZ[:,1] = Y & XYZ[:,2] = Z
-        mass : array_like of dtype float, shape (n, )
-            Particles masses (in unit of mass M)
-        Vxyz : array_like of dtype float, shape (n, 3)
-            Particles coordinates (in unit of velocity V) such that Vxyz[:,0] = Vx,
-            Vxyz[:,1] = Vy & Vxyz[:,2] = Vz
-        PBE : array_like of dtype float, shape (n, )
-            Particles specific binding energies
-
-        Returns
-        -------
-        kappa : float
-            The kinetic energy fraction invested in co-rotation.
-        discfrac : float
-            The disc-to-total mass fraction estimated from the counter-rotating
-            bulge.
-        orbi : float
-            The median orbital circularity of the particles values.
-        vrotsig : float
-            The rotation-to-dispersion ratio .
-        delta : float
-            The dispersion anisotropy.
-        zaxis : array of dtype float, shape (3, )
-            The unit vector of the momentum axis (pointing along the momentum direction).
-        Momentum : float
-            The momentum magnitude (in unit M.L.V).
-        :param mass:
-        :param Vxyz:
-        :param PBE:
-        :return:
+        Compute various kinematics parameters
+        :param coordinates: Coordinates of particles.
+        :param masses: Masses of particles
+        :param velocities: Velocities of particles
+        :param particlebindingenergy: Specific binding energies of particles.
+        :return: kappa, discfrac, orbi, vrotsig, vrots, delta, zaxis, glx_angular_momentum_magnitude
         """
-        particlesall = np.vstack([XYZ.T, mass, Vxyz.T, PBE]).T
-        # Compute distances
-        distancesall = np.linalg.norm(particlesall[:, :3], axis=1)
-        # Restrict particles
-        particles = particlesall.copy()
-        distances = distancesall.copy()
-        Mass = np.sum(particles[:, 3])
-        # Compute momentum
-        smomentums = np.cross(particles[:, :3], particles[:, 4:7])
-        momentum = np.sum(particles[:, 3][:, np.newaxis] * smomentums, axis=0)
-        Momentum = np.linalg.norm(momentum)
-        # Compute cylindrical quantities
-        zaxis = (momentum / Momentum)
-        zheight = np.sum(zaxis * particles[:, :3], axis=1)
-        cylposition = particles[:, :3] - zheight[:, np.newaxis] * [zaxis]
-        cyldistances = np.sqrt(distances ** 2 - zheight ** 2)
-        smomentumz = np.sum(zaxis * smomentums, axis=1)
+        
+        # Group the properties of the particles #
+        prc_properties = np.vstack([coordinates.T, masses, velocities.T, particlebindingenergy]).T
+        prc_distances = np.linalg.norm(prc_properties[:, :3], axis=1)
+        glx_mass = np.sum(prc_properties[:, 3])
+        
+        # Calculate the angular momenta #
+        prc_s_angular_momentum = np.cross(prc_properties[:, :3], prc_properties[:, 4:7])
+        glx_angular_momentum = np.sum(prc_properties[:, 3][:, np.newaxis] * prc_s_angular_momentum, axis=0)
+        glx_angular_momentum_magnitude = np.linalg.norm(glx_angular_momentum)
+        
+        # Compute cylindrical quantities #
+        zaxis = (glx_angular_momentum / glx_angular_momentum_magnitude)  # Unit vector pointing along the glx_angular_momentum direction.
+        zheight = np.sum(zaxis * prc_properties[:, :3], axis=1)  # Projection of the coordinates vector on the unit vector.
+        cylposition = prc_properties[:, :3] - zheight[:, np.newaxis] * [zaxis]
+        cyldistances = np.sqrt(prc_distances ** 2 - zheight ** 2)
+        smomentumz = np.sum(zaxis * prc_s_angular_momentum, axis=1)
         vrots = smomentumz / cyldistances
-        vrads = np.sum(cylposition * particles[:, 4:7] / cyldistances[:, np.newaxis], axis=1)
-        vheis = np.sum(zaxis * particles[:, 4:7], axis=1)
-        # Compute co-rotational kinetic energy fraction
-        Mvrot2 = np.sum((particles[:, 3] * vrots ** 2)[vrots > 0])
-        kappa = Mvrot2 / np.sum(particles[:, 3] * (np.linalg.norm(particles[:, 4:7], axis=1)) ** 2)
-        # Compute disc-to-total ratio
-        discfrac = 1 - 2 * np.sum(particles[vrots <= 0, 3]) / Mass
-        # Compute orbital circularity
-        sbindingenergy = particles[:, 7]
+        vrads = np.sum(cylposition * prc_properties[:, 4:7] / cyldistances[:, np.newaxis], axis=1)
+        vheis = np.sum(zaxis * prc_properties[:, 4:7], axis=1)
+        
+        # Calculate kinetic energy fraction invested in co-rotation #
+        Mvrot2 = np.sum((prc_properties[:, 3] * vrots ** 2)[vrots > 0])
+        kappa = Mvrot2 / np.sum(prc_properties[:, 3] * (np.linalg.norm(prc_properties[:, 4:7], axis=1)) ** 2)
+        
+        # Compute disc-to-total masses fraction estimated from the counter-rotating bulge #
+        discfrac = 1 - 2 * np.sum(prc_properties[vrots <= 0, 3]) / glx_mass
+        
+        # Calculate the mean orbital circularity #
+        sbindingenergy = prc_properties[:, 7]
         sortE = np.argsort(sbindingenergy)
         unsortE = np.argsort(sortE)
         jzE = np.vstack([sbindingenergy, smomentumz]).T[sortE]
         orbital = (jzE[:, 1] / np.maximum.accumulate(np.abs(jzE[:, 1])))[unsortE]
         orbi = np.median(orbital)
+        
         # Compute rotation-to-dispersion and dispersion anisotropy
-        Vrot = np.abs(MorphoKinematics.cumsummedian(vrots, weights=particles[:, 3]))
-        SigmaXY = np.sqrt(np.average(np.sum(particles[:, [3]] * np.vstack([vrads, vrots]).T ** 2, axis=0) / Mass))  #
+        Vrot = np.abs(MorphoKinematics.cumsummedian(vrots, weights=prc_properties[:, 3]))
+        SigmaXY = np.sqrt(np.average(np.sum(prc_properties[:, [3]] * np.vstack([vrads, vrots]).T ** 2, axis=0) / glx_mass))  #
         SigmaO = np.sqrt(SigmaXY ** 2 - .5 * Vrot ** 2)
-        SigmaZ = np.sqrt(np.average(vheis ** 2, weights=particles[:, 3]))
+        SigmaZ = np.sqrt(np.average(vheis ** 2, weights=prc_properties[:, 3]))
         vrotsig = Vrot / SigmaO
         delta = 1 - (SigmaZ / SigmaO) ** 2
-        # Return
-        return kappa, discfrac, orbi, vrotsig, vrots, delta, zaxis, Momentum
+        
+        return kappa, discfrac, orbi, vrotsig, vrots, delta, zaxis, glx_angular_momentum_magnitude
     
     
-    def morphological_diagnostics(XYZ, mass, Vxyz, aperture=0.03, CoMvelocity=True, reduced_structure=True):
+    @staticmethod
+    def morphological_diagnostics(coordinates, masses, velocities, aperture=0.03, CoMvelocity=True, reduced_structure=True):
         """
                 Compute the morphological diagnostics through the (reduced or not) inertia tensor.
 
@@ -143,19 +94,16 @@ class MorphoKinematics:
         Parameters
         ----------
         ----------
-        XYZ : array_like of dtype float, shape (n, 3)
-            Particles coordinates (in unit of length L) such that XYZ[:,0] = X,
-            XYZ[:,1] = Y & XYZ[:,2] = Z
-        mass : array_like of dtype float, shape (n, )
-            Particles masses (in unit of mass M)
-        Vxyz : array_like of dtype float, shape (n, 3)
-            Particles coordinates (in unit of velocity V) such that Vxyz[:,0] = Vx,
-            Vxyz[:,1] = Vy & Vxyz[:,2] = Vz
+        masses : array_like of dtype float, shape (n, )
+            Particles masses (in unit of masses M)
+        velocities : array_like of dtype float, shape (n, 3)
+            Particles coordinates (in unit of velocity V) such that velocities[:,0] = Vx,
+            velocities[:,1] = Vy & velocities[:,2] = Vz
         aperture : float, optional
             Aperture (in unit of length L) for the computation. Default is 0.03 L
         CoMvelocity : bool, optional
             Boolean to allow the centering of velocities by the considered particles
-            centre-of-mass velocity. Default to True
+            centre-of-masses velocity. Default to True
         reduced_structure : bool, optional
             Boolean to allow the computation to adopt the iterative reduced form of the
             inertia tensor. Default to True
@@ -171,30 +119,31 @@ class MorphoKinematics:
             coordinates, Transform[0] = major, Transform[1] = inter, Transform[2] = minor.
         abc : array of dtype float, shape (3, )
             The corresponding (a,b,c) lengths (in unit of length L).
-        :param mass:
-        :param Vxyz:
+        :param coordinates: Coordinates of the particles
+        :param masses: Masses of particles
+        :param velocities:
         :param aperture:
         :param CoMvelocity:
         :param reduced_structure:
         :return:
         """
-        particlesall = np.vstack([XYZ.T, mass, Vxyz.T]).T
-        # Compute distances
+        particlesall = np.vstack([coordinates.T, masses, velocities.T]).T
+        # Compute prc_distances
         distancesall = np.linalg.norm(particlesall[:, :3], axis=1)
         # Restrict particles
         extract = (distancesall < aperture)
         particles = particlesall[extract].copy()
-        distances = distancesall[extract].copy()
-        Mass = np.sum(particles[:, 3])
+        prc_distances = distancesall[extract].copy()
+        glx_mass = np.sum(particles[:, 3])
         # Compute kinematic diagnostics
         if CoMvelocity:
             # Compute CoM velocty, correct
-            dvVmass = np.nan_to_num(np.sum(particles[:, 3][:, np.newaxis] * particles[:, 4:7], axis=0) / Mass)
+            dvVmass = np.nan_to_num(np.sum(particles[:, 3][:, np.newaxis] * particles[:, 4:7], axis=0) / glx_mass)
             particlesall[:, 4:7] -= dvVmass
             particles[:, 4:7] -= dvVmass
-        # Compute momentum
-        smomentums = np.cross(particlesall[:, :3], particlesall[:, 4:7])
-        momentum = np.sum(particles[:, 3][:, np.newaxis] * smomentums[extract], axis=0)
+        # Compute glx_angular_momentum
+        prc_s_angular_momentum = np.cross(particlesall[:, :3], particlesall[:, 4:7])
+        glx_angular_momentum = np.sum(particles[:, 3][:, np.newaxis] * prc_s_angular_momentum[extract], axis=0)
         # Compute morphological diagnostics
         s = 1
         q = 1
@@ -214,8 +163,8 @@ class MorphoKinematics:
             eigvec[:, 2] *= np.round(np.sum(np.cross(eigvec[:, 0], eigvec[:, 1]) * eigvec[:, 2]))
             # Return minor axe
             structmainaxe = eigvec[:, np.argmin(eigval)].copy()
-            # Permute base and align Y axis with minor axis in momentum direction
-            sign = int(np.sign(np.sum(momentum * structmainaxe) + np.finfo(float).tiny))
+            # Permute base and align Y axis with minor axis in glx_angular_momentum direction
+            sign = int(np.sign(np.sum(glx_angular_momentum * structmainaxe) + np.finfo(float).tiny))
             structmainaxe *= sign
             temp = np.array([1, sign, 1]) * (eigvec[:, (np.argmin(eigval) + np.array([(3 + sign) / 2, 0, (3 - sign) / 2])) % 3])
             eigval = eigval[(np.argmin(eigval) + np.array([(3 + sign) / 2, 0, (3 - sign) / 2])) % 3]
