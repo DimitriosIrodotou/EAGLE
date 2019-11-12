@@ -2,6 +2,9 @@ import re
 import time
 import warnings
 import argparse
+import matplotlib
+
+matplotlib.use('Agg')
 
 import numpy as np
 import seaborn as sns
@@ -13,6 +16,7 @@ import eagle_IO.eagle_IO.eagle_IO as E
 from matplotlib import gridspec
 from matplotlib import animation
 from mpl_toolkits.mplot3d import axes3d
+from morpho_kinematics import MorphoKinematics
 
 # Create a parser and add argument to read data #
 parser = argparse.ArgumentParser(description='Create 2 dimensional histograms of the position of stellar particles.')
@@ -28,7 +32,7 @@ warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # I
 
 class Position3D:
     """
-    A class to create 2 dimensional histograms of the position of stellar particles.
+    A class to create 3 dimensional rotating plots of the position of stellar particles.
     """
     
     
@@ -175,7 +179,7 @@ class Position3D:
     @staticmethod
     def plot(stellar_data_tmp, group_number, subgroup_number):
         """
-        A method to plot a hexbin histogram.
+        A method to plot a rotating 3D scatter.
         :param stellar_data_tmp: temporary data
         :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber']))
         :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
@@ -191,18 +195,28 @@ class Position3D:
         plt.close()
         figure = plt.figure(0, figsize=(20, 15))
         gs = gridspec.GridSpec(2, 1)
-        axupperleft = plt.subplot(gs[0, 0], projection='3d')
-        axlowerleft = plt.subplot(gs[1, 0], projection='3d')
+        axupper = plt.subplot(gs[0, 0], projection='3d')
+        axlower = plt.subplot(gs[1, 0], projection='3d')
         
-        axupperleft.set_xlabel('x/kpc')
-        axlowerleft.set_xlabel('x/kpc')
-        axupperleft.set_ylabel('y/kpc')
-        axlowerleft.set_ylabel('y/kpc')
-        axupperleft.set_zlabel('z/kpc')
-        axlowerleft.set_zlabel('z/kpc')
-        axupperleft.tick_params(direction='in', which='both', top='on', right='on')
-        axlowerleft.tick_params(direction='in', which='both', top='on', right='on')
+        # Set the axes labels #
+        axupper.set_xlabel('x/kpc')
+        axlower.set_xlabel('x/kpc')
+        axupper.set_ylabel('y/kpc')
+        axlower.set_ylabel('y/kpc')
+        axupper.set_zlabel('z/kpc')
+        axlower.set_zlabel('z/kpc')
         
+        # Set tick properties #
+        axupper.tick_params(direction='in', which='both', top='on', right='on')
+        axlower.tick_params(direction='in', which='both', top='on', right='on')
+        
+        
+        # axlower.quiver(0, 0, 0,  # <-- starting point of vector
+        #                20, 20, 20,  # <-- directions of vector
+        #                color='red', lw=3, )
+        # axupper.quiver(0, 0, 0,  # <-- starting point of vector
+        #                20, 20, 20,  # <-- directions of vector
+        #                color='red', lw=3, )
         
         # Generate the 3D plots #
         def init():
@@ -210,11 +224,23 @@ class Position3D:
             Create the 3D scatter of the positions of the particles.
             :return: figure
             """
-            axupperleft.scatter(list(zip(*stellar_data_tmp['Coordinates']))[0], list(zip(*stellar_data_tmp['Coordinates']))[1],
-                                list(zip(*stellar_data_tmp['Coordinates']))[2], s=1)
+            kappa, discfrac, orbi, vrotsig, vrots, delta, zaxis, Momentum = MorphoKinematics.kinematics_diagnostics(stellar_data_tmp['Coordinates'],
+                                                                                                                    stellar_data_tmp['Mass'],
+                                                                                                                    stellar_data_tmp['Velocity'],
+                                                                                                                    stellar_data_tmp[
+                                                                                                                        'ParticleBindingEnergy'])
+            color = []
+            for i in range(len(stellar_data_tmp['Mass'])):
+                if vrots[i] < 0.0:
+                    color.append('red')
+                else:
+                    color.append('blue')
             
-            axlowerleft.scatter(list(zip(*stellar_data_tmp['Coordinates']))[0], list(zip(*stellar_data_tmp['Coordinates']))[1],
-                                list(zip(*stellar_data_tmp['Coordinates']))[2], s=1)
+            axupper.scatter(list(zip(*stellar_data_tmp['Coordinates']))[0], list(zip(*stellar_data_tmp['Coordinates']))[1],
+                            list(zip(*stellar_data_tmp['Coordinates']))[2], s=1, color=color)
+            
+            axlower.scatter(list(zip(*stellar_data_tmp['Coordinates']))[0], list(zip(*stellar_data_tmp['Coordinates']))[1],
+                            list(zip(*stellar_data_tmp['Coordinates']))[2], s=1, color=color)
             return figure,
         
         
@@ -225,26 +251,27 @@ class Position3D:
             :param i: angle
             :return: figure
             """
-            axupperleft.view_init(elev=10., azim=i)
-            axlowerleft.view_init(elev=i, azim=10)
+            axupper.view_init(elev=10.0, azim=i)
+            axlower.view_init(elev=i, azim=0.0)
+            print('Rotated by ' + str(i) + ' degree(s)')
             return figure,
         
         
-        anim = animation.FuncAnimation(figure, animate, init_func=init, frames=45, interval=20, blit=True)
+        anim = animation.FuncAnimation(figure, animate, init_func=init, frames=360, interval=100, blit=True)
         
         # Save the animation #
         # plt.title('z ~ ' + re.split('_z0|p000', tag)[1])
-        anim.save(outdir + str(group_number) + str(subgroup_number) + '-' + 'PH' + '-' + date + '.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
+        anim.save(outdir + str(group_number) + str(subgroup_number) + '-' + 'P3D' + '-' + date + '.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
         return None
 
 
 if __name__ == '__main__':
-    # tag = '010_z005p000'
-    # sim = '/cosma7/data/dp004/dc-payy1/G-EAGLE/GEAGLE_06/data/'
-    # outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/P3D/G-EAGLE/'  # Path to save plots.
-    # SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/P3D/G-EAGLE/'  # Path to save data.
-    tag = '027_z000p101'
-    sim = '/cosma5/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'
-    outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/P3D/EAGLE/'  # Path to save plots.
-    SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/P3D/EAGLE/'  # Path to save data.
+    tag = '010_z005p000'
+    sim = '/cosma7/data/dp004/dc-payy1/G-EAGLE/GEAGLE_06/data/'
+    outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/P3D/G-EAGLE/'  # Path to save plots.
+    SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/RD/G-EAGLE/'  # Path to save/load data.
+    # tag = '027_z000p101'
+    # sim = '/cosma5/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'
+    # outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/P3D/EAGLE/'  # Path to save plots.
+    # SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/RD/EAGLE/'  # Path to save/load data.
     x = Position3D(sim, tag)

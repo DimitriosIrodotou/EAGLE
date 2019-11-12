@@ -1,14 +1,13 @@
 #!/bin/bash -l
 #SBATCH -A dp004
 #SBATCH -p cosma7
-
-# Tell SGE that we are using the bash shell
-#$ -S /bin/bash
+#SBATCH --cpus-per-task=28
 
 # Give the job a name
 #SBATCH --job-name=Python_DI
-#SBATCH -t 0-10:00
+#SBATCH -t 0-01:00
 
+# Folders to save the log files
 #SBATCH -o out/slurm.%N.%j.out
 #SBATCH -e err/slurm.%N.%j.err
 
@@ -35,5 +34,5 @@ source activate my_python
 
 cd /cosma7/data/dp004/dc-irod1/G-EAGLE/python/ || exit
 
-python Ra_Dec.py
-#wait
+#python RA_Dec_surface_density.py -l
+python position_3D.py -l

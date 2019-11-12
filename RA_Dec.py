@@ -2,6 +2,9 @@ import re
 import time
 import warnings
 import argparse
+import matplotlib
+
+matplotlib.use('Agg')
 
 import numpy as np
 import seaborn as sns
@@ -52,7 +55,7 @@ class RADec:
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
         
         # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all the accepted haloes
-        for group_number in range(1, 2):  # Loop over all the accepted haloes
+        for group_number in range(1, 21):  # Loop over all the accepted haloes
             for subgroup_number in range(0, 1):
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
@@ -269,8 +272,8 @@ class RADec:
             np.subtract(np.sum(np.multiply(stellar_data_tmp['Velocity'], stellar_data_tmp['Velocity']), axis=1), velocity_r_sqred),
             2 * velocity_r_sqred))
         
-        scatter = axlowerleft.scatter(np.arctan2(unit_vector[:, 1], unit_vector[:, 0]), np.arcsin(unit_vector[:, 2]),
-                                      c=np.log10(np.divide(beta, np.mean(beta))), cmap='tab20', s=1, zorder=-1)
+        scatter = axlowerleft.scatter(np.arctan2(unit_vector[:, 1], unit_vector[:, 0]), np.arcsin(unit_vector[:, 2]), c=np.exp(beta - 1),
+                                      cmap='tab20', s=1, zorder=-1)
         
         axlowerleft.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black', marker='X',
                             zorder=-1)
@@ -300,9 +303,9 @@ if __name__ == '__main__':
     tag = '010_z005p000'
     sim = '/cosma7/data/dp004/dc-payy1/G-EAGLE/GEAGLE_06/data/'
     outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/RD/G-EAGLE/'  # Path to save plots.
-    SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/RD/G-EAGLE/'  # Path to save data.
+    SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/RD/G-EAGLE/'  # Path to save/load data.
     # tag = '027_z000p101'
     # sim = '/cosma5/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'
     # outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/RD/EAGLE/'  # Path to save plots.
-    # SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/RD/EAGLE/'  # Path to save data.
+    # SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/RD/EAGLE/'  # Path to save/load data.
     x = RADec(sim, tag)

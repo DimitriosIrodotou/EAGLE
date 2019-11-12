@@ -55,7 +55,7 @@ class MorphoKinematics:
     
     
     @staticmethod
-    def kinematics_diagnostics(XYZ, mass, Vxyz, PBE, aperture=0.03, CoMvelocity=True):
+    def kinematics_diagnostics(XYZ, mass, Vxyz, PBE):
         """
                 Compute the various kinematics diagnostics.
         XYZ : array_like of dtype float, shape (n, 3)
@@ -68,11 +68,6 @@ class MorphoKinematics:
             Vxyz[:,1] = Vy & Vxyz[:,2] = Vz
         PBE : array_like of dtype float, shape (n, )
             Particles specific binding energies
-        aperture : float, optional
-            Aperture (in unit of length L) for the computation. Default is 0.03 L
-        CoMvelocity : bool, optional
-            Boolean to allow the centering of velocities by the considered particles
-            centre-of-mass velocity. Default to True
 
         Returns
         -------
@@ -94,23 +89,15 @@ class MorphoKinematics:
         :param mass:
         :param Vxyz:
         :param PBE:
-        :param aperture:
-        :param CoMvelocity:
         :return:
         """
         particlesall = np.vstack([XYZ.T, mass, Vxyz.T, PBE]).T
         # Compute distances
         distancesall = np.linalg.norm(particlesall[:, :3], axis=1)
         # Restrict particles
-        extract = (distancesall < aperture)
-        particles = particlesall[extract].copy()
-        distances = distancesall[extract].copy()
+        particles = particlesall.copy()
+        distances = distancesall.copy()
         Mass = np.sum(particles[:, 3])
-        if CoMvelocity:
-            # Compute CoM velocty & correct
-            dvVmass = np.nan_to_num(np.sum(particles[:, 3][:, np.newaxis] * particles[:, 4:7], axis=0) / Mass)
-            particlesall[:, 4:7] -= dvVmass
-            particles[:, 4:7] -= dvVmass
         # Compute momentum
         smomentums = np.cross(particles[:, :3], particles[:, 4:7])
         momentum = np.sum(particles[:, 3][:, np.newaxis] * smomentums, axis=0)
@@ -144,7 +131,7 @@ class MorphoKinematics:
         vrotsig = Vrot / SigmaO
         delta = 1 - (SigmaZ / SigmaO) ** 2
         # Return
-        return kappa, discfrac, orbi, vrotsig, delta, zaxis, Momentum
+        return kappa, discfrac, orbi, vrotsig, vrots, delta, zaxis, Momentum
     
     
     def morphological_diagnostics(XYZ, mass, Vxyz, aperture=0.03, CoMvelocity=True, reduced_structure=True):

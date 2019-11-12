@@ -2,6 +2,9 @@ import re
 import time
 import warnings
 import argparse
+import matplotlib
+
+matplotlib.use('Agg')
 
 import numpy as np
 import seaborn as sns
@@ -53,7 +56,7 @@ class RADecSurfaceDensity:
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
         
         # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all the accepted haloes
-        for group_number in range(1, 2):  # Loop over all the accepted haloes
+        for group_number in range(1, 21):  # Loop over all the accepted haloes
             for subgroup_number in range(0, 1):
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
@@ -124,7 +127,7 @@ class RADecSurfaceDensity:
         stellar_data = {}
         particle_type = '4'
         file_type = 'PARTDATA'
-        for attribute in ['Coordinates', 'GroupNumber', 'Mass', 'SubGroupNumber', 'Velocity']:
+        for attribute in ['Coordinates', 'GroupNumber', 'Mass', 'ParticleBindingEnergy', 'SubGroupNumber', 'Velocity']:
             stellar_data[attribute] = E.read_array(file_type, sim, tag, '/PartType' + particle_type + '/' + attribute, numThreads=8)
         
         # Convert attributes to astronomical units #
@@ -217,6 +220,7 @@ class RADecSurfaceDensity:
         axupperleft = plt.subplot(gs[0, 0], projection="mollweide")
         axupperright = plt.subplot(gs[0, 1])
         axlowerleft = plt.subplot(gs[1, 0])
+        axlowerright = plt.subplot(gs[1, 1])
         
         axupperleft.grid(True, color='black')
         axlowerleft.grid(True, color='black')
@@ -281,40 +285,46 @@ class RADecSurfaceDensity:
         # axupperright.scatter(distance, counts, c='blue', s=10)
         
         # THREE
+        # angular_theta_from_densest = np.arccos(
+        #     np.cos(90 - position_maximum[:, 0]) * np.cos(90 - position_other[:, 0]) + np.sin(90 - position_maximum[:, 0]) * np.sin(
+        #         90 - position_other[:, 0]) * np.cos(position_other[:, 1] - position_other[:, 1]))  # In radians.
+        
         angular_theta_from_densest = np.arccos(
-            np.cos(90 - position_maximum[:, 0]) * np.cos(90 - position_other[:, 0]) + np.sin(90 - position_maximum[:, 0]) * np.sin(
-                90 - position_other[:, 0]) * np.cos(position_other[:, 1] - position_other[:, 1]))  # In radians.
+            np.cos(position_maximum[:, 0]) * np.cos(position_other[:, 0]) * np.cos(position_maximum[:, 1] - position_other[:, 1]) + np.sin(
+                position_maximum[:, 0]) * np.sin(position_other[:, 0]))  # In radians.
         
         axupperright.scatter(angular_theta_from_densest * np.divide(180.0, np.pi), counts, c='blue', s=10)
         
         ####################################################################################################
-        axupperright.axvline(x=30, c='green')
+        axupperright.axvline(x=30, c='green', lw=5)
         index = np.where((angular_theta_from_densest * np.divide(180.0, np.pi)) < 30.0)[0]
-        # axupperleft.scatter(position_other[index, 0], position_other[index, 1], s=50, c='green')
+        axupperleft.scatter(position_other[index, 0], position_other[index, 1], s=20, c='green')
         phi = np.linspace(0, 2.0 * np.pi, 50)
         r = np.radians(30)
         x = position_maximum[0, 0] + r * np.cos(phi)
         y = position_maximum[0, 1] + r * np.sin(phi)
-        axupperleft.plot(x, y, color="g")
+        axupperleft.plot(x, y, color="red")
         ####################################################################################################
         
         # Generate the RA and Dec  #
         position_X = np.vstack([np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2])]).T
-        angular_theta_from_X = np.arccos(np.cos(90 - position_X[:, 0]) * np.cos(90 - position_other[:, 0]) + np.sin(90 - position_X[:, 0]) * np.sin(
-            90 - position_other[:, 0]) * np.cos(position_other[:, 1] - position_other[:, 1]))  # In radians.
-        
+        angular_theta_from_X = np.arccos(
+            np.cos(position_X[:, 0]) * np.cos(position_other[:, 0]) * np.cos(position_X[:, 1] - position_other[:, 1]) + np.sin(
+                position_X[:, 0]) * np.sin(position_other[:, 0]))  # In radians.
         axlowerleft.scatter(angular_theta_from_X * np.divide(180.0, np.pi), counts, c='red', s=10)
         
         # Save the plot #
         # plt.title('z ~ ' + re.split('_z0|p000', tag)[1])
         plt.savefig(outdir + str(group_number) + str(subgroup_number) + '-' + 'RDSD' + '-' + date + '.png', bbox_inches='tight')
         
-        # kappa, discfrac, orbi, vrotsig, delta, zaxis, Momentum = MorphoKinematics.kinematics_diagnostics(stellar_data_tmp['Coordinates'],
-        #                                                                                                  stellar_data_tmp['Mass'],
-        #                                                                                                  stellar_data_tmp['Velocity'],
-        #                                                                                                  stellar_data_tmp['ParticleBindingEnergy'],
-        #                                                                                                  aperture=0.03, CoMvelocity=False)
-        
+        rows = ('discfrac', 'Wind', 'Flood', 'Quake', 'Hail')
+        # axlowerright.table()
+        # kappa, discfrac, orbi, vrotsig, vrots, delta, zaxis, Momentum = MorphoKinematics.kinematics_diagnostics(stellar_data_tmp['Coordinates'],
+        #                                                                                                         stellar_data_tmp['Mass'],
+        #                                                                                                         stellar_data_tmp['Velocity'],
+        #                                                                                                         stellar_data_tmp[
+        #                                                                                                             'ParticleBindingEnergy'])
+        # print(discfrac)
         return None
 
 
@@ -322,9 +332,9 @@ if __name__ == '__main__':
     tag = '010_z005p000'
     sim = '/cosma7/data/dp004/dc-payy1/G-EAGLE/GEAGLE_06/data/'
     outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/RDSD/G-EAGLE/'  # Path to save plots.
-    SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/RDSD/G-EAGLE/'  # Path to save data.
+    SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/RDSD/G-EAGLE/'  # Path to save/load data.
     # tag = '027_z000p101'
     # sim = '/cosma5/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'
     # outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/RDSD/EAGLE/'  # Path to save plots.
-    # SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/RDSD/EAGLE/'  # Path to save data.
+    # SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/RDSD/EAGLE/'  # Path to save/load data.
     x = RADecSurfaceDensity(sim, tag)

@@ -22,7 +22,7 @@ args = parser.parse_args()
 date = time.strftime('%d_%m_%y_%H%M')  # Date
 start_global_time = time.time()  # Start the global time.
 outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/BDD/'  # Path to save plots.
-SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/BDD/'  # Path to save data.
+SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/BDD/'  # Path to save/load data.
 warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
 
 
