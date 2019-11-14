@@ -56,7 +56,7 @@ class RADecSurfaceDensity:
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
         
         # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all the accepted haloes
-        for group_number in range(1, 21):  # Loop over all the accepted haloes
+        for group_number in range(8, 9):  # Loop over all the accepted haloes
             for subgroup_number in range(0, 1):
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
@@ -266,32 +266,46 @@ class RADecSurfaceDensity:
         cbar = plt.colorbar(hexbin, ax=axupperleft, orientation='horizontal')
         cbar.set_label('$\mathrm{Particles\; per\; hexbin}$')
         
-        # Generate the RA and Dec  #
-        # Get the positions of all hexbins and of the most dense one #
+        # Generate the RA and Dec plots #
+        # Get the positions of all hexbins and of the densest one #
         position_other = np.vstack([lon, lat]).T  # In radians.
         index = np.where(counts == max(counts))[0]  # In radians.
         position_densest = np.vstack([lon[index[0]], lat[index[0]]]).T  # In radians.
         
-        angular_theta_from_densest = np.arccos(
-            np.cos(position_densest[0, 1]) * np.cos(position_other[:, 1]) * np.cos(position_densest[0, 0] - position_other[:, 0]) + np.sin(
-                position_densest[0, 1]) * np.sin(position_other[:, 1]))  # In radians.
-        
-        axupperright.scatter(angular_theta_from_densest * np.divide(180.0, np.pi), counts, c='blue', s=10)
-        
-        ####################################################################################################
-        index = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))
+        # Calculate and plot the angular distance in degrees between two RA/Dec coordinates from the projection plot #
+        distance = np.linalg.norm(np.subtract(position_densest, position_other), axis=1)
+        index = np.where(distance < np.divide(np.pi, 6.0))
         axupperleft.scatter(position_other[index, 0], position_other[index, 1], s=40, c='green')
-        axupperleft.scatter(position_densest[0, 0], position_densest[0, 1], s=100, c='black', marker='x')
+        axupperleft.scatter(position_densest[0, 0], position_densest[0, 1], s=200, c='black', marker='D')
+
+        # Calculate and plot the projection of a circle with radius 30 degrees #
+        phi = np.linspace(0, 2.0 * np.pi, 50)
+        radius = np.radians(30)
+        RA_circle = position_densest[0, 0] + radius * np.cos(phi)
+        Dec_cirlce = position_densest[0, 1] + radius * np.sin(phi)
+        axupperleft.plot(RA_circle, Dec_cirlce, color="red")
+        
+        # Calculate the angular separation again but use angular trigonometry this time#
+        # # TWO
+        # delt_lat = (np.subtract(position_densest[0, 1], position_other[:, 1]))
+        # delta_lon = (np.subtract(position_densest[0, 0], position_other[:, 0]))
+        # distance = 2.0 * np.arcsin(
+        #     np.sqrt(np.sin(delt_lat / 2.0) ** 2 + np.cos(position_densest[0, 1]) * np.cos(position_other[:, 1]) * np.sin(delta_lon / 2.0) ** 2))
+        #
+        # # THREE
+        # angular_theta_from_densest = np.arccos(
+        #     np.cos(position_densest[:, 1]) * np.cos(position_other[:, 1]) + np.sin(position_densest[:, 1]) * np.sin(position_other[:, 1]) * np.cos(
+        #         position_other[:, 0] - position_other[:, 0]))  # In radians.
+        #
+        # # FOUR
+        # angular_theta_from_densest = np.arccos(
+        #     np.cos(position_densest[0, 1]) * np.cos(position_other[:, 1]) * np.cos(position_densest[0, 0] - position_other[:, 0]) + np.sin(
+        #         position_densest[0, 1]) * np.sin(position_other[:, 1]))  # In radians.
         
         axupperright.axvline(x=30, c='green', lw=5)
-        phi = np.linspace(0, 2.0 * np.pi, 50)
-        r = np.radians(30)
-        x = position_densest[0, 0] + r * np.cos(phi)
-        y = position_densest[0, 1] + r * np.sin(phi)
-        axupperleft.plot(x, y, color="red")
-        ####################################################################################################
+        axupperright.scatter(distance, counts, c='blue', s=10)
         
-        # Generate the RA and Dec  #
+        # Calculate and plot the angular distance in degrees between the densest and all the other hexbins #
         position_X = np.vstack([np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2])]).T
         angular_theta_from_X = np.arccos(
             np.cos(position_X[:, 0]) * np.cos(position_other[:, 0]) * np.cos(position_X[:, 1] - position_other[:, 1]) + np.sin(
@@ -302,7 +316,7 @@ class RADecSurfaceDensity:
         # plt.title('z ~ ' + re.split('_z0|p000', tag)[1])
         plt.savefig(outdir + str(group_number) + str(subgroup_number) + '-' + 'RDSD' + '-' + date + '.png', bbox_inches='tight')
         
-        rows = ('discfrac', 'Wind', 'Flood', 'Quake', 'Hail')
+        # rows = ('discfrac', 'Wind', 'Flood', 'Quake', 'Hail')
         # axlowerright.table()
         # Calcuate kinematic diagnostics #
         # kappa, discfrac, orbi, vrotsig, vrots, delta, zaxis, Momentum = MorphoKinematics.kinematics_diagnostics(stellar_data_tmp['Coordinates'],
