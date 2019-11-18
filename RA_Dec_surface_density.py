@@ -44,8 +44,8 @@ class RADecSurfaceDensity:
         p = 1  # Counter.
         # Initialise arrays and a dictionary to store the data #
         prc_unit_vector = []
-        stellar_data_tmp = {}
         glx_unit_vector = []
+        stellar_data_tmp = {}
         
         if not args.l:
             self.Ngroups = E.read_header('SUBFIND', sim, tag, 'TotNgroups')
@@ -56,7 +56,7 @@ class RADecSurfaceDensity:
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
         
         # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all the accepted haloes
-        for group_number in range(8, 9):  # Loop over all the accepted haloes
+        for group_number in range(1, 2):  # Loop over all the accepted haloes
             for subgroup_number in range(0, 1):
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
@@ -147,7 +147,7 @@ class RADecSurfaceDensity:
         """
         
         # Mask the data to select haloes more #
-        mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 1e8)
+        mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 2.5e8)
         
         # Mask the temporary dictionary for each galaxy #
         subhalo_data_tmp = {}
@@ -177,7 +177,7 @@ class RADecSurfaceDensity:
         for attribute in self.stellar_data.keys():
             stellar_data_tmp[attribute] = np.copy(self.stellar_data[attribute])[mask]
         
-        # Normalise the coordinates and velocities wrt the centre of mass of the subhalo #
+        # Normalise the coordinates and velocities wrt the centre of potential of the subhalo #
         stellar_data_tmp['Coordinates'] = np.subtract(stellar_data_tmp['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][index])
         CoM_velocity = np.divide(np.sum(stellar_data_tmp['Mass'][:, np.newaxis] * stellar_data_tmp['Velocity'], axis=0),
                                  np.sum(stellar_data_tmp['Mass']))  # km s-1
@@ -245,9 +245,7 @@ class RADecSurfaceDensity:
         
         # Generate the RA and Dec projection #
         hexbin = axupperleft.hexbin(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]), np.arcsin(prc_unit_vector[:, 2]), bins='log',
-                                    cmap='PuRd', gridsize=30, edgecolor='none', mincnt=1, zorder=-1)  # Element-wise arctan of x1/x2.
-        axupperleft.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black', marker='X',
-                            zorder=-1)
+                                    cmap='PuRd', gridsize=100, edgecolor='none', mincnt=1, zorder=-1)  # Element-wise arctan of x1/x2.
         
         # Get the values of each hexbin, convert their coordinates and plot them #
         counts = hexbin.get_array()
@@ -260,13 +258,13 @@ class RADecSurfaceDensity:
                 latitude = np.arcsin((2 * theta + np.sin(2 * theta)) / np.pi)  # In radians.
                 longitude = np.divide(np.pi * binx, (2 * np.sqrt(2) * np.cos(theta)))  # In radians.
                 lat.append(latitude)
-                lon.append(longitude)  # axupperleft.plot(longitude, latitude, 'k.')
+                lon.append(longitude)
+        #        axupperleft.plot(longitude, latitude, 'k.')
         
         # Generate the color bar #
         cbar = plt.colorbar(hexbin, ax=axupperleft, orientation='horizontal')
         cbar.set_label('$\mathrm{Particles\; per\; hexbin}$')
         
-        # Generate the RA and Dec plots #
         # Get the positions of all hexbins and of the densest one #
         position_other = np.vstack([lon, lat]).T  # In radians.
         index = np.where(counts == max(counts))[0]  # In radians.
@@ -275,45 +273,50 @@ class RADecSurfaceDensity:
         # Calculate and plot the angular distance in degrees between two RA/Dec coordinates from the projection plot #
         distance = np.linalg.norm(np.subtract(position_densest, position_other), axis=1)
         index = np.where(distance < np.divide(np.pi, 6.0))
-        axupperleft.scatter(position_other[index, 0], position_other[index, 1], s=40, c='green')
-        axupperleft.scatter(position_densest[0, 0], position_densest[0, 1], s=200, c='black', marker='D')
-
+        axupperleft.scatter(position_other[index, 0], position_other[index, 1], s=10, c='green')
+        
         # Calculate and plot the projection of a circle with radius 30 degrees #
-        phi = np.linspace(0, 2.0 * np.pi, 50)
         radius = np.radians(30)
+        phi = np.linspace(0, 2.0 * np.pi, 50)
         RA_circle = position_densest[0, 0] + radius * np.cos(phi)
         Dec_cirlce = position_densest[0, 1] + radius * np.sin(phi)
-        axupperleft.plot(RA_circle, Dec_cirlce, color="red")
+        axupperleft.plot(RA_circle, Dec_cirlce, color="blue")
         
-        # Calculate the angular separation again but use angular trigonometry this time#
-        # # TWO
-        # delt_lat = (np.subtract(position_densest[0, 1], position_other[:, 1]))
-        # delta_lon = (np.subtract(position_densest[0, 0], position_other[:, 0]))
-        # distance = 2.0 * np.arcsin(
-        #     np.sqrt(np.sin(delt_lat / 2.0) ** 2 + np.cos(position_densest[0, 1]) * np.cos(position_other[:, 1]) * np.sin(delta_lon / 2.0) ** 2))
-        #
-        # # THREE
-        # angular_theta_from_densest = np.arccos(
-        #     np.cos(position_densest[:, 1]) * np.cos(position_other[:, 1]) + np.sin(position_densest[:, 1]) * np.sin(position_other[:, 1]) * np.cos(
-        #         position_other[:, 0] - position_other[:, 0]))  # In radians.
-        #
-        # # FOUR
-        # angular_theta_from_densest = np.arccos(
-        #     np.cos(position_densest[0, 1]) * np.cos(position_other[:, 1]) * np.cos(position_densest[0, 0] - position_other[:, 0]) + np.sin(
-        #         position_densest[0, 1]) * np.sin(position_other[:, 1]))  # In radians.
+        axupperleft.scatter(position_densest[0, 0], position_densest[0, 1], s=300, c='blue', marker='X')  # Position of the denset hexbin.
+        axupperleft.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='red',
+                            marker='X',zorder=5)  # Position of the galactic angular momentum.
         
-        axupperright.axvline(x=30, c='green', lw=5)
-        axupperright.scatter(distance, counts, c='blue', s=10)
+        # Calculate and plot the angular separation again but use angular trigonometry this time #
+        angular_theta_from_densest = np.arccos(
+            np.sin(position_densest[0, 1]) * np.sin(position_other[:, 1]) + np.cos(position_densest[0, 1]) * np.cos(position_other[:, 1]) * np.cos(
+                position_densest[0, 0] - position_other[:, 0]))  # In radians.
+        axupperright.scatter(angular_theta_from_densest * np.divide(180.0, np.pi), counts, c='black', s=10)  # In degrees.
+        
+        axupperright.axvline(x=30, c='blue', lw=3, linestyle='dashed')  # Vertical line at 30 degrees.
         
         # Calculate and plot the angular distance in degrees between the densest and all the other hexbins #
         position_X = np.vstack([np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2])]).T
+        
         angular_theta_from_X = np.arccos(
-            np.cos(position_X[:, 0]) * np.cos(position_other[:, 0]) * np.cos(position_X[:, 1] - position_other[:, 1]) + np.sin(
-                position_X[:, 0]) * np.sin(position_other[:, 0]))  # In radians.
-        axlowerleft.scatter(angular_theta_from_X * np.divide(180.0, np.pi), counts, c='red', s=10)
+            np.sin(position_X[0, 1]) * np.sin(position_other[:, 1]) + np.cos(position_X[0, 1]) * np.cos(position_other[:, 1]) * np.cos(
+                position_X[0, 0] - position_other[:, 0]))  # In radians.
+        axlowerleft.scatter(angular_theta_from_X * np.divide(180.0, np.pi), counts, c='black', s=10)  # In degrees.
+        
+        distance = np.linalg.norm(np.subtract(position_X, position_other), axis=1)
+        index = np.where(distance < np.divide(np.pi, 6.0))
+        axupperleft.scatter(position_other[index, 0], position_other[index, 1], s=10, c='pink')
+        
+        # Calculate and plot the projection of a circle with radius 30 degrees #
+        phi = np.linspace(0, 2.0 * np.pi, 50)
+        radius = np.radians(30)
+        RA_circle = position_X[0, 0] + radius * np.cos(phi)
+        Dec_cirlce = position_X[0, 1] + radius * np.sin(phi)
+        axupperleft.plot(RA_circle, Dec_cirlce, color="red")
+        
+        axlowerleft.axvline(x=30, c='red', lw=3, linestyle='dashed')  # Vertical line at 30 degrees.
         
         # Save the plot #
-        # plt.title('z ~ ' + re.split('_z0|p000', tag)[1])
+        # figure.text(0.5, 0.5, 'z ~ ' + re.split('_z0|p000', tag)[1])
         plt.savefig(outdir + str(group_number) + str(subgroup_number) + '-' + 'RDSD' + '-' + date + '.png', bbox_inches='tight')
         
         # rows = ('discfrac', 'Wind', 'Flood', 'Quake', 'Hail')

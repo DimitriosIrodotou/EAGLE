@@ -52,7 +52,7 @@ class PositionHistogram:
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
         
         # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all the accepted haloes
-        for group_number in range(1, 21):  # Loop over all the accepted haloes
+        for group_number in range(42, 43):  # Loop over all the accepted haloes
             for subgroup_number in range(0, 1):
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
@@ -137,7 +137,7 @@ class PositionHistogram:
         """
         
         # Mask the data to select haloes more #
-        mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 1e8)
+        mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 2.5e8)
         
         # Mask the temporary dictionary for each galaxy #
         subhalo_data_tmp = {}
@@ -160,8 +160,7 @@ class PositionHistogram:
         
         # Mask the data to select galaxies with a given GroupNumber and SubGroupNumber and particles inside a 30kpc sphere #
         mask = np.where((self.stellar_data['GroupNumber'] == group_number) & (self.stellar_data['SubGroupNumber'] == subgroup_number) & (
-            np.linalg.norm(np.subtract(self.stellar_data['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][index]), axis=1) <= 30.0) & (
-                            self.subhalo_data_tmp['ApertureMeasurements/Mass/030kpc'][:, 4][index] > 1e8))
+            np.linalg.norm(np.subtract(self.stellar_data['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][index]), axis=1) <= 30.0))
         
         # Mask the temporary dictionary for each galaxy #
         stellar_data_tmp = {}
@@ -203,8 +202,8 @@ class PositionHistogram:
         axcbar3 = plt.subplot(gs[0, 2])
         
         # Generate the XY projection #
-        axleft.set_xlim(-10, 10)
-        axleft.set_ylim(-10, 10)
+        # axleft.set_xlim(-10, 10)
+        # axleft.set_ylim(-10, 10)
         axleft.set_xlabel(r'$\mathrm{x/kpc}$')
         axleft.set_ylabel(r'$\mathrm{y/kpc}$')
         axleft.tick_params(direction='in', which='both', top='on', right='on')
@@ -213,8 +212,8 @@ class PositionHistogram:
                                cmap='bone', gridsize=300, edgecolor='none')
         
         # Generate the XZ projection #
-        axmid.set_xlim(-10, 10)
-        axmid.set_ylim(-10, 10)
+        # axmid.set_xlim(-10, 10)
+        # axmid.set_ylim(-10, 10)
         axmid.set_xlabel(r'$\mathrm{x/kpc}$')
         axmid.set_ylabel(r'$\mathrm{z/kpc}$')
         axmid.set_facecolor('k')
@@ -222,8 +221,8 @@ class PositionHistogram:
                              gridsize=300, edgecolor='none')
         
         # Generate the ZY projection #
-        axright.set_xlim(-10, 10)
-        axright.set_ylim(-10, 10)
+        # axright.set_xlim(-10, 10)
+        # axright.set_ylim(-10, 10)
         axright.set_xlabel(r'$\mathrm{y/kpc}$')
         axright.set_ylabel(r'$\mathrm{z/kpc}$')
         axright.set_facecolor('k')
@@ -246,12 +245,12 @@ class PositionHistogram:
 
 
 if __name__ == '__main__':
-    tag = '010_z005p000'
-    sim = '/cosma7/data/dp004/dc-payy1/G-EAGLE/GEAGLE_06/data/'
-    outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/PH/G-EAGLE/'  # Path to save plots.
-    SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/PH/G-EAGLE/'  # Path to save/load data.
-    # tag = '027_z000p101'
-    # sim = '/cosma5/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'
-    # outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/PH/EAGLE/'  # Path to save plots.
-    # SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/PH/EAGLE/'  # Path to save/load data.
+    # tag = '010_z005p000'
+    # sim = '/cosma7/data/dp004/dc-payy1/G-EAGLE/GEAGLE_06/data/'
+    # outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/PH/G-EAGLE/'  # Path to save plots.
+    # SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/PH/G-EAGLE/'  # Path to save/load data.
+    tag = '027_z000p101'
+    sim = '/cosma5/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'
+    outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/PH/EAGLE/'  # Path to save plots.
+    SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/PH/EAGLE/'  # Path to save/load data.
     x = PositionHistogram(sim, tag)

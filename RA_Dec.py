@@ -147,7 +147,7 @@ class RADec:
         """
         
         # Mask the data to select haloes more #
-        mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 1e8)
+        mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 2.5e8)
         
         # Mask the temporary dictionary for each galaxy #
         subhalo_data_tmp = {}
