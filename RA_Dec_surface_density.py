@@ -270,28 +270,19 @@ class RADecSurfaceDensity:
         index = np.where(counts == max(counts))[0]  # In radians.
         position_densest = np.vstack([lon[index[0]], lat[index[0]]]).T  # In radians.
         
-        # Calculate and plot the angular distance in degrees between two RA/Dec coordinates from the projection plot #
-        distance = np.linalg.norm(np.subtract(position_densest, position_other), axis=1)
-        index = np.where(distance < np.divide(np.pi, 6.0))
-        axupperleft.scatter(position_other[index, 0], position_other[index, 1], s=10, c='green')
-        
-        # Calculate and plot the projection of a circle with radius 30 degrees #
-        radius = np.radians(30)
-        phi = np.linspace(0, 2.0 * np.pi, 50)
-        RA_circle = position_densest[0, 0] + radius * np.cos(phi)
-        Dec_cirlce = position_densest[0, 1] + radius * np.sin(phi)
-        axupperleft.plot(RA_circle, Dec_cirlce, color="blue")
-        
-        axupperleft.scatter(position_densest[0, 0], position_densest[0, 1], s=300, c='blue', marker='X')  # Position of the denset hexbin.
-        axupperleft.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='red',
-                            marker='X',zorder=5)  # Position of the galactic angular momentum.
-        
-        # Calculate and plot the angular separation again but use angular trigonometry this time (identical to haversine formula) #
+        # Calculate and plot the angular distance between two RA/Dec coordinates using angular trigonometry (identical to haversine formula) #
         angular_theta_from_densest = np.arccos(
             np.sin(position_densest[0, 1]) * np.sin(position_other[:, 1]) + np.cos(position_densest[0, 1]) * np.cos(position_other[:, 1]) * np.cos(
                 position_densest[0, 0] - position_other[:, 0]))  # In radians.
-        axupperright.scatter(angular_theta_from_densest * np.divide(180.0, np.pi), counts, c='black', s=10)  # In degrees.
         
+        index = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))
+        axupperleft.scatter(position_other[index, 0], position_other[index, 1], s=10, c='blue')
+        
+        axupperleft.scatter(position_densest[0, 0], position_densest[0, 1], s=300, c='black', marker='D')  # Position of the denset hexbin.
+        axupperleft.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black', marker='X',
+                            zorder=5)  # Position of the galactic angular momentum.
+        
+        axupperright.scatter(angular_theta_from_densest * np.divide(180.0, np.pi), counts, c='black', s=10)  # In degrees.
         axupperright.axvline(x=30, c='blue', lw=3, linestyle='dashed')  # Vertical line at 30 degrees.
         
         # Calculate and plot the angular distance in degrees between the densest and all the other hexbins #
@@ -302,16 +293,8 @@ class RADecSurfaceDensity:
                 position_X[0, 0] - position_other[:, 0]))  # In radians.
         axlowerleft.scatter(angular_theta_from_X * np.divide(180.0, np.pi), counts, c='black', s=10)  # In degrees.
         
-        distance = np.linalg.norm(np.subtract(position_X, position_other), axis=1)
-        index = np.where(distance < np.divide(np.pi, 6.0))
-        axupperleft.scatter(position_other[index, 0], position_other[index, 1], s=10, c='pink')
-        
-        # Calculate and plot the projection of a circle with radius 30 degrees #
-        phi = np.linspace(0, 2.0 * np.pi, 50)
-        radius = np.radians(30)
-        RA_circle = position_X[0, 0] + radius * np.cos(phi)
-        Dec_cirlce = position_X[0, 1] + radius * np.sin(phi)
-        axupperleft.plot(RA_circle, Dec_cirlce, color="red")
+        index = np.where(angular_theta_from_X < np.divide(np.pi, 6.0))
+        axupperleft.scatter(position_other[index, 0], position_other[index, 1], s=10, c='red')
         
         axlowerleft.axvline(x=30, c='red', lw=3, linestyle='dashed')  # Vertical line at 30 degrees.
         
