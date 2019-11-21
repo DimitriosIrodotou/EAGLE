@@ -50,7 +50,7 @@ class MorphoKinematics:
         
         # Compute cylindrical quantities #
         zaxis = (glx_angular_momentum / glx_angular_momentum_magnitude)  # Unit vector pointing along the glx_angular_momentum direction.
-        zheight = np.sum(zaxis * prc_properties[:, :3], axis=1)  # Projection of the coordinates vector on the unit vector.
+        zheight = np.sum(zaxis * prc_properties[:, :3], axis=1)  # Projection of the coordinate vectors on the unit vector.
         cylposition = prc_properties[:, :3] - zheight[:, np.newaxis] * [zaxis]
         cyldistances = np.sqrt(prc_distances ** 2 - zheight ** 2)
         smomentumz = np.sum(zaxis * prc_s_angular_momentum, axis=1)

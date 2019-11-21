@@ -21,8 +21,6 @@ args = parser.parse_args()
 
 date = time.strftime('%d_%m_%y_%H%M')  # Date
 start_global_time = time.time()  # Start the global time.
-outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/BDD/'  # Path to save plots.
-SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/BDD/'  # Path to save/load data.
 warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
 
 
@@ -40,66 +38,61 @@ class BulgeDiscDecomposition:
         """
         
         p = 1  # Counter.
-        # Define empty arrays to hold the data #
-        disc_fraction = []
-        glx_stellar_mass = []
+        # Initialise empty arrays to hold the data #
+        disc_fractions = []
+        glx_stellar_masses = []
         
-        if args.rs:  # Read and save data.
-            
-            self.stellar_data, self.subhalo_data = self.read_galaxies(sim, tag)  # Extract particle and halo attributes.
-            self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
+        if not args.l:
+            self.Ngroups = E.read_header('SUBFIND', sim, tag, 'TotNgroups')
+            self.stellar_data, self.subhalo_data = self.read_galaxies(sim, tag)
             print('Read data for ' + re.split('G-EAGLE/|/data', sim)[2] + ' in %.4s s' % (time.time() - start_global_time))
             print('–––––––––––––––––––––––––––––––––––––––––')
             
-            # Loop over all distinct GroupNumber and SubGroupNumber, mask the data and save to numpy arrays #
-            for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all the masked haloes.
-                for subgroup_number in range(0, 1):
+            self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
+        
+        # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all the accepted haloes
+        for group_number in range(1, 5):  # Loop over all masked haloes.
+            for subgroup_number in range(0, 1):
+                if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
                     
-                    self.stellar_data_tmp, self.disc_fraction = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
-                    disc_fraction.append(self.disc_fraction)
-                    glx_stellar_mass.append(np.sum(self.stellar_data_tmp['Mass']))
+                    stellar_data_tmp, disc_fraction = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
+                    disc_fractions.append(disc_fraction)
+                    glx_stellar_masses.append(np.sum(stellar_data_tmp['Mass']))
                     
                     # Save data in numpy arrays #
-                    np.save(SavePath + 'disc_fraction', disc_fraction)
-                    np.save(SavePath + 'glx_stellar_mass', glx_stellar_mass)
+                    if group_number == 4:
+                        np.save(SavePath + 'disc_fractions', disc_fractions)
+                        np.save(SavePath + 'glx_stellar_masses', glx_stellar_masses)
                     print('Masked and saved data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                         round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
-                    p += 1  # Increace the count by one.
-        
-        elif args.r:  # Read data.
-            
-            self.stellar_data, self.subhalo_data = self.read_galaxies(sim, tag)  # Extract particle and halo attributes.
-            self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
-            print('Read data for ' + re.split('G-EAGLE/|/data', sim)[2] + ' in %.4s s' % (time.time() - start_global_time))
-            print('–––––––––––––––––––––––––––––––––––––––––')
-            
-            # Loop over all distinct GroupNumber and SubGroupNumber, mask the data and save to numpy arrays #
-            for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all the accepted haloes
-            # for group_number in range(1, 21):
-                for subgroup_number in range(0, 1):
+                    p += 1
+                
+                elif args.r:  # Read data.
                     start_local_time = time.time()  # Start the local time.
                     
-                    self.stellar_data_tmp, self.disc_fraction = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
+                    stellar_data_tmp, disc_fraction = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
+                    disc_fractions.append(disc_fraction)
+                    glx_stellar_masses.append(np.sum(stellar_data_tmp['Mass']))
                     print('Masked data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                         round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
                     p += 1  # Increace the count by one.
-        
-        elif args.l:  # Load data.
-            start_local_time = time.time()  # Start the local time.
-            
-            disc_fraction = np.load(SavePath + 'disc_fraction.npy')
-            glx_stellar_mass = np.load(SavePath + 'glx_stellar_mass.npy')
-            print('Loaded data for ' + re.split('G-EAGLE/|/data', sim)[2] + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
-                round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
-            print('–––––––––––––––––––––––––––––––––––––––––––––')
+                
+                elif args.l:  # Load data.
+                    start_local_time = time.time()  # Start the local time.
+                    
+                    disc_fractions = np.load(SavePath + 'disc_fractions' + '.npy')
+                    glx_stellar_masses = np.load(SavePath + 'glx_stellar_masses' +  '.npy')
+                    print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
+                    # + ' (' + str(round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
+                    print('–––––––––––––––––––––––––––––––––––––––––––––')
         
         # Plot the data #
         start_local_time = time.time()  # Start the local time.
         
-        # self.plot(glx_stellar_mass, disc_fraction)
+        self.plot(glx_stellar_masses, disc_fractions)
         print('Plotted data for ' + re.split('G-EAGLE/|/data', sim)[2] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
@@ -194,22 +187,23 @@ class BulgeDiscDecomposition:
         norm_projection = np.sum(np.multiply(prc_unit_vector, glx_unit_vector), axis=1)
         index = np.where(np.arccos(norm_projection) > np.pi / 2)
         disc_fraction = 1 - np.divide(2 * np.sum(stellar_data_tmp['Mass'][index]), np.sum(stellar_data_tmp['Mass']))
-        if disc_fraction < 0.0:
-            print(len(norm_projection))
-            print(len(index[0]))
-            print(len(stellar_data_tmp['Mass']))
-            print(disc_fraction)
-
-            plt.close()
-            figure = plt.figure(0, figsize=(10, 10))
-            plt.text(0,1,disc_fraction)
-            plt.hist(norm_projection)
-            plt.savefig(outdir + 'BDD' + '-' + str(group_number) + '.png', bbox_inches='tight')
+        # if disc_fraction < 0.0:
+        #     print(len(norm_projection))
+        #     print(len(index[0]))
+        #     print(len(stellar_data_tmp['Mass']))
+        #     print(disc_fraction)
+        #     print(glx_unit_vector)
+        #
+        #     plt.close()
+        #     figure = plt.figure(0, figsize=(10, 10))
+        #     plt.text(0.0, 100, disc_fraction)
+        #     plt.hist(norm_projection)
+        #     plt.savefig(outdir + 'BDD' + '-' + str(group_number) + '.png', bbox_inches='tight')
         
         return stellar_data_tmp, disc_fraction
     
     
-    def plot(self, glx_stellar_mass, disc_fraction):
+    def plot(self, glx_stellar_masses, disc_fractions):
         """
         A method to plot a hexbin histogram.
         :return: None
@@ -235,11 +229,11 @@ class BulgeDiscDecomposition:
         ax.tick_params(direction='in', which='both', top='on', right='on')
         
         # Generate the XY projection #
-        hexbin = ax.hexbin(glx_stellar_mass, disc_fraction, xscale='log', cmap='bone', gridsize=50, edgecolor='none', mincnt=1)
+        hexbin = ax.scatter(glx_stellar_masses, disc_fractions)  # , xscale='log', cmap='bone', gridsize=50, edgecolor='none', mincnt=1)
         
         # Generate the color bar #
-        cbar = plt.colorbar(hexbin, cax=axcbar)
-        cbar.set_label('$\mathrm{Particles\; per\; hexbin}$')
+        # cbar = plt.colorbar(hexbin, cax=axcbar)
+        # cbar.set_label('$\mathrm{Particles\; per\; hexbin}$')
         
         # Save the plot #
         plt.title('z ~ ' + re.split('_z0|p000', tag)[1])
@@ -250,6 +244,11 @@ class BulgeDiscDecomposition:
 
 if __name__ == '__main__':
     tag = '010_z005p000'
-    for i in range(15, 16):
-        sim = '/cosma7/data/dp004/dc-payy1/G-EAGLE/GEAGLE_' + str(i) + '/data/'
-        x = BulgeDiscDecomposition(sim, tag)
+    sim = '/cosma7/data/dp004/dc-payy1/G-EAGLE/GEAGLE_16/data/'
+    outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/BDD/G-EAGLE/'  # Path to save plots.
+    SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/BDD/G-EAGLE/'  # Path to save/load data.
+    # tag = '027_z000p101'
+    # sim = '/cosma5/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'
+    # outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/RDSD/EAGLE/'  # Path to save plots.
+    # SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/RDSD/EAGLE/'  # Path to save/load data.
+    x = BulgeDiscDecomposition(sim, tag)

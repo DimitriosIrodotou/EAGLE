@@ -55,8 +55,8 @@ class RADecSurfaceDensity:
             
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
         
-        # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all the accepted haloes
-        for group_number in range(1, 2):  # Loop over all the accepted haloes
+        # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all masked haloes.
+        for group_number in range(1, 2):  # Loop over all masked haloes.
             for subgroup_number in range(0, 1):
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
@@ -333,7 +333,7 @@ class RADecSurfaceDensity:
 
 if __name__ == '__main__':
     tag = '010_z005p000'
-    sim = '/cosma7/data/dp004/dc-payy1/G-EAGLE/GEAGLE_06/data/'
+    sim = '/cosma7/data/dp004/dc-payy1/G-EAGLE/GEAGLE_16/data/'
     outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/RDSD/G-EAGLE/'  # Path to save plots.
     SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/RDSD/G-EAGLE/'  # Path to save/load data.
     # tag = '027_z000p101'
