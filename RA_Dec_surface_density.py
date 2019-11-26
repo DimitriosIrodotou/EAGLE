@@ -56,7 +56,7 @@ class RADecSurfaceDensity:
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
         
         # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all masked haloes.
-        for group_number in range(1, 2):  # Loop over all masked haloes.
+        for group_number in range(21, 22):  # Loop over all masked haloes.
             for subgroup_number in range(0, 1):
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
@@ -239,6 +239,7 @@ class RADecSurfaceDensity:
         x_tick_labels = np.array(['', '-120', '', '-60', '', '0', '', '60', '', 120])
         axupperleft.set_xticklabels(x_tick_labels)
         axupperleft.set_yticklabels(y_tick_labels)
+        axlowerright.axis('off')
         
         axupperright.set_xticks(np.arange(0, 181, 20))
         axlowerleft.set_xticks(np.arange(0, 181, 20))
@@ -270,20 +271,59 @@ class RADecSurfaceDensity:
         index = np.where(counts == max(counts))[0]  # In radians.
         position_densest = np.vstack([lon[index[0]], lat[index[0]]]).T  # In radians.
         
-        # Calculate and plot the angular distance between two RA/Dec coordinates using angular trigonometry (identical to haversine formula) #
-        angular_theta_from_densest = np.arccos(
-            np.sin(position_densest[0, 1]) * np.sin(position_other[:, 1]) + np.cos(position_densest[0, 1]) * np.cos(position_other[:, 1]) * np.cos(
-                position_densest[0, 0] - position_other[:, 0]))  # In radians.
+        # Calculate and plot the angular distance between two RA/Dec coordinates - all methods are identical #
+        # 1) Spherical law of cosines https://en.wikipedia.org/wiki/Spherical_law_of_cosines
+        # angular_theta_from_densest = np.arccos(
+        #     np.sin(position_densest[0, 1]) * np.sin(position_other[:, 1]) + np.cos(position_densest[0, 1]) * np.cos(position_other[:, 1]) * np.cos(
+        #         position_densest[0, 0] - position_other[:, 0]))  # In radians.
+        
+        # 2) Haversine formula https://en.wikipedia.org/wiki/Haversine_formula
+        # delt_lat = (np.subtract(position_densest[0, 1], position_other[:, 1]))
+        # delta_lon = (np.subtract(position_densest[0, 0], position_other[:, 0]))
+        # angular_theta_from_densest = 2.0 * np.arcsin(
+        #     np.sqrt(np.sin(delt_lat / 2.0) ** 2 + np.cos(position_densest[0, 1]) * np.cos(position_other[:, 1]) * np.sin(delta_lon / 2.0) ** 2))
+        
+        # 3) Vincenty's formula https://en.wikipedia.org/wiki/Vincenty%27s_formulae
+        # sdlon = np.sin(position_densest[0, 0] - position_other[:, 0])
+        # cdlon = np.cos(position_densest[0, 0] - position_other[:, 0])
+        # slat1 = np.sin(position_densest[0, 1])
+        # slat2 = np.sin(position_other[:, 1])
+        # clat1 = np.cos(position_densest[0, 1])
+        # clat2 = np.cos(position_other[:, 1])
+        # num1 = clat2 * sdlon
+        # num2 = clat1 * slat2 - slat1 * clat2 * cdlon
+        # denominator = slat1 * slat2 + clat1 * clat2 * cdlon
+        # angular_theta_from_densest = np.arctan2(np.hypot(num1, num2), denominator)
+        
+        # 4) Chord length
+        # deltax = np.cos(position_densest[0, 1]) * np.cos(position_densest[0, 0]) - np.cos(position_other[:, 1]) * np.cos(position_other[:, 0])
+        # deltay = np.cos(position_densest[0, 1]) * np.sin(position_densest[0, 0]) - np.cos(position_other[:, 1]) * np.sin(position_other[:, 0])
+        # deltaz = np.sin(position_densest[0, 1]) - np.sin(position_other[:, 1])
+        # c = np.sqrt(deltax * deltax + deltay * deltay + deltaz * deltaz)
+        # angular_theta_from_densest = 2 * np.arcsin(c / 2)
+        
+        # 5) n-vector https://en.wikipedia.org/wiki/N-vector
+        # n_densest = [np.cos(position_densest[0, 1]) * np.cos(position_densest[0, 0]), np.cos(position_densest[0, 1]) * np.sin(position_densest[0,
+        # 0]),
+        #              np.sin(position_densest[0, 1])]
+        # n_other = [np.cos(position_other[:, 1]) * np.cos(position_other[:, 0]), np.cos(position_other[:, 1]) * np.sin(position_other[:, 0]),
+        #            np.sin(position_other[:, 1])]
+        # n_other2 = np.reshape(n_other, (6220, 3))
+        # n_densest2 = np.resize(n_densest, np.shape(n_other2))
+        # angular_theta_from_densest = np.arccos(np.dot(n_densest, n_other))  # (same as all of the above)
+        # angular_theta_from_densest = np.arcsin(np.linalg.norm(np.cross(n_densest2, n_other2), axis=1))
+        # angular_theta_from_densest = np.divide(np.linalg.norm(np.cross(n_densest2, n_other2), axis=1), np.dot(n_densest, n_other))
         
         index = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))
         axupperleft.scatter(position_other[index, 0], position_other[index, 1], s=10, c='blue')
         
-        axupperleft.scatter(position_densest[0, 0], position_densest[0, 1], s=300, c='black', marker='D')  # Position of the denset hexbin.
+        axupperleft.scatter(position_densest[0, 0], position_densest[0, 1], s=200, c='black', marker='D', zorder=5)  # Position of the denset hexbin.
         axupperleft.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black', marker='X',
                             zorder=5)  # Position of the galactic angular momentum.
         
         axupperright.scatter(angular_theta_from_densest * np.divide(180.0, np.pi), counts, c='black', s=10)  # In degrees.
         axupperright.axvline(x=30, c='blue', lw=3, linestyle='dashed')  # Vertical line at 30 degrees.
+        axupperright.axvspan(0, 30, facecolor='0.2', alpha=0.5)
         
         # Calculate and plot the angular distance in degrees between the densest and all the other hexbins #
         position_X = np.vstack([np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2])]).T
@@ -293,30 +333,36 @@ class RADecSurfaceDensity:
                 position_X[0, 0] - position_other[:, 0]))  # In radians.
         axlowerleft.scatter(angular_theta_from_X * np.divide(180.0, np.pi), counts, c='black', s=10)  # In degrees.
         
-        index = np.where(angular_theta_from_X < np.divide(np.pi, 6.0))
+        index = np.where(angular_theta_from_X > np.divide(np.pi, 2.0))
         axupperleft.scatter(position_other[index, 0], position_other[index, 1], s=10, c='red')
         
-        axlowerleft.axvline(x=30, c='red', lw=3, linestyle='dashed')  # Vertical line at 30 degrees.
-        
-        # Save the plot #
-        # figure.text(0.5, 0.5, 'z ~ ' + re.split('_z0|p000', tag)[1])
-        plt.savefig(outdir + str(group_number) + str(subgroup_number) + '-' + 'RDSD' + '-' + date + '.png', bbox_inches='tight')
-        
-        # rows = ('discfrac', 'Wind', 'Flood', 'Quake', 'Hail')
-        # axlowerright.table()
+        axlowerleft.axvline(x=90, c='red', lw=3, linestyle='dashed')  # Vertical line at 30 degrees.
+        axlowerleft.axvspan(90, 180, facecolor='0.2', alpha=0.5)
         # Calcuate kinematic diagnostics #
-        # kappa, discfrac, orbi, vrotsig, vrots, delta, zaxis, Momentum = MorphoKinematics.kinematics_diagnostics(stellar_data_tmp['Coordinates'],
-        #                                                                                                         stellar_data_tmp['Mass'],
-        #                                                                                                         stellar_data_tmp['Velocity'],
-        #                                                                                                         stellar_data_tmp[
-        #                                                                                                             'ParticleBindingEnergy'])
-        # print(discfrac)
+        kappa, discfrac, orbi, vrotsig, vrots, delta, zaxis, Momentum = MorphoKinematics.kinematics_diagnostics(stellar_data_tmp['Coordinates'],
+                                                                                                                stellar_data_tmp['Mass'],
+                                                                                                                stellar_data_tmp['Velocity'],
+                                                                                                                stellar_data_tmp[
+                                                                                                                    'ParticleBindingEnergy'])
+        
+        angular_theta_from_densest = np.arccos(
+            np.sin(position_densest[0, 1]) * np.sin(np.arcsin(prc_unit_vector[:, 2])) + np.cos(position_densest[0, 1]) * np.cos(
+                np.arcsin(prc_unit_vector[:, 2])) * np.cos(
+                position_densest[0, 0] - np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0])))  # In radians.
+        index = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))
+        discfrac2 = np.divide(np.sum(stellar_data_tmp['Mass'][index]), np.sum(stellar_data_tmp['Mass']))
+        
+        # figure.text(0.5, 0.5, 'z ~ ' + re.split('_z0|p000', tag)[1])
+        figure.text(0.65, 0.3, 'discfrac= %.6s ' % discfrac, color='red')
+        figure.text(0.65, 0.25, 'discfrac= %.6s ' % discfrac2, color='blue')
+        # Save the plot #2
+        plt.savefig(outdir + str(group_number) + str(subgroup_number) + '-' + 'RDSD' + '-' + date + '.png', bbox_inches='tight')
         return None
 
 
 if __name__ == '__main__':
     tag = '010_z005p000'
-    sim = '/cosma7/data/dp004/dc-payy1/G-EAGLE/GEAGLE_16/data/'
+    sim = '/cosma7/data/dp004/dc-payy1/G-EAGLE/GEAGLE_06/data/'
     outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/RDSD/G-EAGLE/'  # Path to save plots.
     SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/RDSD/G-EAGLE/'  # Path to save/load data.
     # tag = '027_z000p101'
