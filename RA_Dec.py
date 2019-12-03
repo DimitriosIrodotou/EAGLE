@@ -55,7 +55,7 @@ class RADec:
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
         
         # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all masked haloes.
-        for group_number in range(1, 51):  # Loop over all masked haloes.
+        for group_number in range(21, 22):  # Loop over all masked haloes.
             for subgroup_number in range(0, 1):
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
@@ -245,6 +245,14 @@ class RADec:
         axupperright.set_yticklabels(y_tick_labels)
         
         # Generate the RA and Dec projection #
+        # from scipy.ndimage import zoom
+        # Nparticles = len(stellar_data_tmp['Mass'])
+        # Nbins = [int((np.pi - (-np.pi)) / 0.1), int((np.pi / 2 - (-np.pi / 2)) / 0.05)]
+        # H, xedges, yedges = np.histogram2d(np.arctan2(unit_vector[:, 1], unit_vector[:, 0]), np.arcsin(unit_vector[:, 2]), bins=Nbins)
+        # H = zoom(H, 20)
+        # extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
+        # mylevels = np.linspace(1.0, Nbins[1], Nbins[1]) * Nparticles / (Nbins[1] ** 2 / 0.7)
+        # hexbin = axupperleft.contourf(H.transpose()[::], origin='lower', cmap='inferno', levels=mylevels, extent=extent)
         hexbin = axupperleft.hexbin(np.arctan2(unit_vector[:, 1], unit_vector[:, 0]), np.arcsin(unit_vector[:, 2]), bins='log', cmap='PuRd',
                                     gridsize=100, edgecolor='none', mincnt=1, zorder=-1)  # Element-wise arctan of x1/x2.
         axupperleft.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black', marker='X',

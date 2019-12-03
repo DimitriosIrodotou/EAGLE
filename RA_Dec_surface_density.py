@@ -217,7 +217,7 @@ class RADecSurfaceDensity:
         figure = plt.figure(0, figsize=(20, 15))
         
         gs = gridspec.GridSpec(2, 2)
-        axupperleft = plt.subplot(gs[0, 0], projection="mollweide")
+        axupperleft = plt.subplot(gs[0, 0], projection='mollweide')
         axupperright = plt.subplot(gs[0, 1])
         axlowerleft = plt.subplot(gs[1, 0])
         axlowerright = plt.subplot(gs[1, 1])
@@ -246,7 +246,11 @@ class RADecSurfaceDensity:
         
         # Generate the RA and Dec projection #
         hexbin = axupperleft.hexbin(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]), np.arcsin(prc_unit_vector[:, 2]), bins='log',
-                                    cmap='PuRd', gridsize=100, edgecolor='none', mincnt=1, zorder=-1)  # Element-wise arctan of x1/x2.
+                                    cmap='PuRd', gridsize=6, edgecolor='none', mincnt=1, zorder=-1)  # Element-wise arctan of x1/x2.
+        
+        # Generate the color bar #
+        cbar = plt.colorbar(hexbin, ax=axupperleft, orientation='horizontal')
+        cbar.set_label('$\mathrm{Particles\; per\; hexbin}$')
         
         # Get the values of each hexbin, convert their coordinates and plot them #
         counts = hexbin.get_array()
@@ -256,26 +260,25 @@ class RADecSurfaceDensity:
             if counts[offc]:
                 # Inverse transformation from x/y to lat/long #
                 theta = np.arcsin(np.divide(biny, np.sqrt(2)))  # In radians.
-                latitude = np.arcsin((2 * theta + np.sin(2 * theta)) / np.pi)  # In radians.
+                latitude = np.arcsin(np.divide((2 * theta + np.sin(2 * theta)), np.pi))  # In radians.
                 longitude = np.divide(np.pi * binx, (2 * np.sqrt(2) * np.cos(theta)))  # In radians.
                 lat.append(latitude)
                 lon.append(longitude)
-        #        axupperleft.plot(longitude, latitude, 'k.')
+                axupperleft.plot(longitude, latitude, 'k.')
         
-        # Generate the color bar #
-        cbar = plt.colorbar(hexbin, ax=axupperleft, orientation='horizontal')
-        cbar.set_label('$\mathrm{Particles\; per\; hexbin}$')
-        
-        # Get the positions of all hexbins and of the densest one #
+        # Plot the positions of all hexbins, of the densest one and of the galactic angular momentum #
         position_other = np.vstack([lon, lat]).T  # In radians.
         index = np.where(counts == max(counts))[0]  # In radians.
         position_densest = np.vstack([lon[index[0]], lat[index[0]]]).T  # In radians.
+        axupperleft.scatter(position_densest[0, 0], position_densest[0, 1], s=200, c='black', marker='D', zorder=5)  # Position of the denset hexbin.
+        axupperleft.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black', marker='X',
+                            zorder=5)  # Position of the galactic angular momentum.
         
         # Calculate and plot the angular distance between two RA/Dec coordinates - all methods are identical #
         # 1) Spherical law of cosines https://en.wikipedia.org/wiki/Spherical_law_of_cosines
-        # angular_theta_from_densest = np.arccos(
-        #     np.sin(position_densest[0, 1]) * np.sin(position_other[:, 1]) + np.cos(position_densest[0, 1]) * np.cos(position_other[:, 1]) * np.cos(
-        #         position_densest[0, 0] - position_other[:, 0]))  # In radians.
+        angular_theta_from_densest = np.arccos(
+            np.sin(position_densest[0, 1]) * np.sin(position_other[:, 1]) + np.cos(position_densest[0, 1]) * np.cos(position_other[:, 1]) * np.cos(
+                position_densest[0, 0] - position_other[:, 0]))  # In radians.
         
         # 2) Haversine formula https://en.wikipedia.org/wiki/Haversine_formula
         # delt_lat = (np.subtract(position_densest[0, 1], position_other[:, 1]))
@@ -315,11 +318,7 @@ class RADecSurfaceDensity:
         # angular_theta_from_densest = np.divide(np.linalg.norm(np.cross(n_densest2, n_other2), axis=1), np.dot(n_densest, n_other))
         
         index = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))
-        axupperleft.scatter(position_other[index, 0], position_other[index, 1], s=10, c='blue')
-        
-        axupperleft.scatter(position_densest[0, 0], position_densest[0, 1], s=200, c='black', marker='D', zorder=5)  # Position of the denset hexbin.
-        axupperleft.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black', marker='X',
-                            zorder=5)  # Position of the galactic angular momentum.
+        # axupperleft.scatter(position_other[index, 0], position_other[index, 1], s=10, c='blue')
         
         axupperright.scatter(angular_theta_from_densest * np.divide(180.0, np.pi), counts, c='black', s=10)  # In degrees.
         axupperright.axvline(x=30, c='blue', lw=3, linestyle='dashed')  # Vertical line at 30 degrees.
@@ -334,7 +333,7 @@ class RADecSurfaceDensity:
         axlowerleft.scatter(angular_theta_from_X * np.divide(180.0, np.pi), counts, c='black', s=10)  # In degrees.
         
         index = np.where(angular_theta_from_X > np.divide(np.pi, 2.0))
-        axupperleft.scatter(position_other[index, 0], position_other[index, 1], s=10, c='red')
+        # axupperleft.scatter(position_other[index, 0], position_other[index, 1], s=10, c='red')
         
         axlowerleft.axvline(x=90, c='red', lw=3, linestyle='dashed')  # Vertical line at 30 degrees.
         axlowerleft.axvspan(90, 180, facecolor='0.2', alpha=0.5)
