@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import eagle_IO.eagle_IO.eagle_IO as E
 
 from matplotlib import gridspec
+from astropy_healpix import HEALPix
 from morpho_kinematics import MorphoKinematics
 
 # Create a parser and add argument to read data #
@@ -56,7 +57,7 @@ class RADecSurfaceDensity:
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
         
         # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all masked haloes.
-        for group_number in range(21, 22):  # Loop over all masked haloes.
+        for group_number in range(1, 2):  # Loop over all masked haloes.
             for subgroup_number in range(0, 1):
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
@@ -196,7 +197,7 @@ class RADecSurfaceDensity:
     @staticmethod
     def plot(stellar_data_tmp, glx_unit_vector, prc_unit_vector, group_number, subgroup_number):
         """
-        A method to plot a hexbin histogram.
+        A method to plot a HealPix histogram.
         :param stellar_data_tmp: from mask_galaxies
         :param glx_unit_vector: from mask_galaxies
         :param prc_unit_vector: from mask_galaxies
@@ -227,13 +228,13 @@ class RADecSurfaceDensity:
         axupperright.grid(True, color='black')
         axupperleft.set_xlabel('RA ($\degree$)')
         axupperleft.set_ylabel('Dec ($\degree$)')
-        axlowerleft.set_ylabel('Particles per hexbin')
-        axupperright.set_ylabel('Particles per hexbin')
+        axlowerleft.set_ylabel('Particles per pixel')
+        axupperright.set_ylabel('Particles per pixel')
         axlowerleft.set_xlabel('Angular distance from X ($\degree$)')
-        axupperright.set_xlabel('Angular distance from densest hexbin ($\degree$)')
+        axupperright.set_xlabel('Angular distance from densest pixel ($\degree$)')
         
-        axupperright.set_xlim(-10, 190)
         axlowerleft.set_xlim(-10, 190)
+        axupperright.set_xlim(-10, 190)
         
         y_tick_labels = np.array(['', '-60', '', '-30', '', '0', '', '30', '', 60])
         x_tick_labels = np.array(['', '-120', '', '-60', '', '0', '', '60', '', 120])
@@ -241,100 +242,96 @@ class RADecSurfaceDensity:
         axupperleft.set_yticklabels(y_tick_labels)
         axlowerright.axis('off')
         
-        axupperright.set_xticks(np.arange(0, 181, 20))
+        axupperright.set_yscale('log')
+        axlowerleft.set_yscale('log')
         axlowerleft.set_xticks(np.arange(0, 181, 20))
+        axupperright.set_xticks(np.arange(0, 181, 20))
         
         # Generate the RA and Dec projection #
-        hexbin = axupperleft.hexbin(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]), np.arcsin(prc_unit_vector[:, 2]), bins='log',
-                                    cmap='PuRd', gridsize=6, edgecolor='none', mincnt=1, zorder=-1)  # Element-wise arctan of x1/x2.
+        RA = np.degrees(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]))
+        dec = np.degrees(np.arcsin(prc_unit_vector[:, 2]))
+        degToRad = np.pi / 180.0
         
-        # Generate the color bar #
-        cbar = plt.colorbar(hexbin, ax=axupperleft, orientation='horizontal')
-        cbar.set_label('$\mathrm{Particles\; per\; hexbin}$')
+        # Create Healpix map
+        # Define size of HEALpix grid: deliberately crude (Must be a power of 2).
+        hp_nside = 2 ** 5
         
-        # Get the values of each hexbin, convert their coordinates and plot them #
-        counts = hexbin.get_array()
-        verts = hexbin.get_offsets()
-        for offc in range(verts.shape[0]):
-            binx, biny = verts[offc][0], verts[offc][1]
-            if counts[offc]:
-                # Inverse transformation from x/y to lat/long #
-                theta = np.arcsin(np.divide(biny, np.sqrt(2)))  # In radians.
-                latitude = np.arcsin(np.divide((2 * theta + np.sin(2 * theta)), np.pi))  # In radians.
-                longitude = np.divide(np.pi * binx, (2 * np.sqrt(2) * np.cos(theta)))  # In radians.
-                lat.append(latitude)
-                lon.append(longitude)
-                axupperleft.plot(longitude, latitude, 'k.')
+        hp = HEALPix(nside=hp_nside)
+        hp_npix = hp.npix
+        hp_pixelArea = hp.pixel_area
         
-        # Plot the positions of all hexbins, of the densest one and of the galactic angular momentum #
-        position_other = np.vstack([lon, lat]).T  # In radians.
-        index = np.where(counts == max(counts))[0]  # In radians.
-        position_densest = np.vstack([lon[index[0]], lat[index[0]]]).T  # In radians.
-        axupperleft.scatter(position_densest[0, 0], position_densest[0, 1], s=200, c='black', marker='D', zorder=5)  # Position of the denset hexbin.
+        # Create list of HealPix indices for particles
+        index = hp.lonlat_to_healpix(RA * u.deg, dec * u.deg)
+        
+        # Count number of points in each HEALpix pixel (and divide by area to get density in counts/ster)
+        density = np.bincount(index, minlength=hp_npix) / hp_pixelArea
+        # Find location of density maximum and plot its positions and the Ra and dec the galactic angular momentum #
+        indexMax = np.argmax(density)
+        lon_densest = (hp.healpix_to_lonlat([indexMax])[0].value + np.pi) % (2 * np.pi) - np.pi
+        lat_densest = (hp.healpix_to_lonlat([indexMax])[1].value + np.pi / 2) % (2 * np.pi) - np.pi / 2
+        axupperleft.scatter(lon_densest, lat_densest, s=100, color='black', marker='D', zorder=5)  # Position of the denset pixel.
         axupperleft.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black', marker='X',
                             zorder=5)  # Position of the galactic angular momentum.
         
+        # Interpolate back to RA, dec grid and plot #
+        ra = np.linspace(-180.0, 180.0, num=360) * u.deg
+        dec = np.linspace(-90.0, 90.0, num=180) * u.deg
+        ra_grid, dec_grid = np.meshgrid(ra, dec)
+        
+        # Find density at each co-ordinate position #
+        coordsIndex = hp.lonlat_to_healpix(ra_grid, dec_grid)
+        densityMap = density[coordsIndex]
+        densityMap = densityMap.reshape([180, 360])
+        
+        im = axupperleft.imshow(densityMap.value, cmap='nipy_spectral_r', aspect='auto', norm=matplotlib.colors.LogNorm(vmin=1))
+        cbar = plt.colorbar(im, ax=axupperleft, orientation='horizontal')
+        cbar.set_label('$\mathrm{Particles\; per\; pixel}$')
+        axupperleft.pcolormesh(ra * degToRad, dec * degToRad, densityMap, cmap='nipy_spectral_r')
+        
         # Calculate and plot the angular distance between two RA/Dec coordinates - all methods are identical #
         # 1) Spherical law of cosines https://en.wikipedia.org/wiki/Spherical_law_of_cosines
+        lon_pixel = (hp.healpix_to_lonlat([indexMax])[0].value + np.pi) % (2 * np.pi) - np.pi
+        lat_pixel = (hp.healpix_to_lonlat([indexMax])[1].value + np.pi / 2) % (2 * np.pi) - np.pi / 2
         angular_theta_from_densest = np.arccos(
-            np.sin(position_densest[0, 1]) * np.sin(position_other[:, 1]) + np.cos(position_densest[0, 1]) * np.cos(position_other[:, 1]) * np.cos(
-                position_densest[0, 0] - position_other[:, 0]))  # In radians.
+            np.sin(lat_densest) * np.sin(lat_pixel) + np.cos(lat_densest) * np.cos(lat_pixel) * np.cos(lon_densest - lon_pixel))  # In radians.
         
-        # 2) Haversine formula https://en.wikipedia.org/wiki/Haversine_formula
-        # delt_lat = (np.subtract(position_densest[0, 1], position_other[:, 1]))
-        # delta_lon = (np.subtract(position_densest[0, 0], position_other[:, 0]))
-        # angular_theta_from_densest = 2.0 * np.arcsin(
-        #     np.sqrt(np.sin(delt_lat / 2.0) ** 2 + np.cos(position_densest[0, 1]) * np.cos(position_other[:, 1]) * np.sin(delta_lon / 2.0) ** 2))
+        # # 2) Haversine formula https://en.wikipedia.org/wiki/Haversine_formula
+        # # delt_lat = (np.subtract(position_densest[0, 1], position_other[:, 1]))
+        # # delta_lon = (np.subtract(position_densest[0, 0], position_other[:, 0]))
+        # # angular_theta_from_densest = 2.0 * np.arcsin(
+        # #     np.sqrt(np.sin(delt_lat / 2.0) ** 2 + np.cos(position_densest[0, 1]) * np.cos(position_other[:, 1]) * np.sin(delta_lon / 2.0) ** 2))
+        #
+        # # 3) Vincenty's formula https://en.wikipedia.org/wiki/Vincenty%27s_formulae
+        # # sdlon = np.sin(position_densest[0, 0] - position_other[:, 0])
+        # # cdlon = np.cos(position_densest[0, 0] - position_other[:, 0])
+        # # slat1 = np.sin(position_densest[0, 1])
+        # # slat2 = np.sin(position_other[:, 1])
+        # # clat1 = np.cos(position_densest[0, 1])
+        # # clat2 = np.cos(position_other[:, 1])
+        # # num1 = clat2 * sdlon
+        # # num2 = clat1 * slat2 - slat1 * clat2 * cdlon
+        # # denominator = slat1 * slat2 + clat1 * clat2 * cdlon
+        # # angular_theta_from_densest = np.arctan2(np.hypot(num1, num2), denominator)
+        #
+        # # 4) Chord length
+        # # deltax = np.cos(position_densest[0, 1]) * np.cos(position_densest[0, 0]) - np.cos(position_other[:, 1]) * np.cos(position_other[:, 0])
+        # # deltay = np.cos(position_densest[0, 1]) * np.sin(position_densest[0, 0]) - np.cos(position_other[:, 1]) * np.sin(position_other[:, 0])
+        # # deltaz = np.sin(position_densest[0, 1]) - np.sin(position_other[:, 1])
+        # # c = np.sqrt(deltax * deltax + deltay * deltay + deltaz * deltaz)
+        # # angular_theta_from_densest = 2 * np.arcsin(c / 2)
         
-        # 3) Vincenty's formula https://en.wikipedia.org/wiki/Vincenty%27s_formulae
-        # sdlon = np.sin(position_densest[0, 0] - position_other[:, 0])
-        # cdlon = np.cos(position_densest[0, 0] - position_other[:, 0])
-        # slat1 = np.sin(position_densest[0, 1])
-        # slat2 = np.sin(position_other[:, 1])
-        # clat1 = np.cos(position_densest[0, 1])
-        # clat2 = np.cos(position_other[:, 1])
-        # num1 = clat2 * sdlon
-        # num2 = clat1 * slat2 - slat1 * clat2 * cdlon
-        # denominator = slat1 * slat2 + clat1 * clat2 * cdlon
-        # angular_theta_from_densest = np.arctan2(np.hypot(num1, num2), denominator)
-        
-        # 4) Chord length
-        # deltax = np.cos(position_densest[0, 1]) * np.cos(position_densest[0, 0]) - np.cos(position_other[:, 1]) * np.cos(position_other[:, 0])
-        # deltay = np.cos(position_densest[0, 1]) * np.sin(position_densest[0, 0]) - np.cos(position_other[:, 1]) * np.sin(position_other[:, 0])
-        # deltaz = np.sin(position_densest[0, 1]) - np.sin(position_other[:, 1])
-        # c = np.sqrt(deltax * deltax + deltay * deltay + deltaz * deltaz)
-        # angular_theta_from_densest = 2 * np.arcsin(c / 2)
-        
-        # 5) n-vector https://en.wikipedia.org/wiki/N-vector
-        # n_densest = [np.cos(position_densest[0, 1]) * np.cos(position_densest[0, 0]), np.cos(position_densest[0, 1]) * np.sin(position_densest[0,
-        # 0]),
-        #              np.sin(position_densest[0, 1])]
-        # n_other = [np.cos(position_other[:, 1]) * np.cos(position_other[:, 0]), np.cos(position_other[:, 1]) * np.sin(position_other[:, 0]),
-        #            np.sin(position_other[:, 1])]
-        # n_other2 = np.reshape(n_other, (6220, 3))
-        # n_densest2 = np.resize(n_densest, np.shape(n_other2))
-        # angular_theta_from_densest = np.arccos(np.dot(n_densest, n_other))  # (same as all of the above)
-        # angular_theta_from_densest = np.arcsin(np.linalg.norm(np.cross(n_densest2, n_other2), axis=1))
-        # angular_theta_from_densest = np.divide(np.linalg.norm(np.cross(n_densest2, n_other2), axis=1), np.dot(n_densest, n_other))
-        
-        index = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))
-        # axupperleft.scatter(position_other[index, 0], position_other[index, 1], s=10, c='blue')
-        
-        axupperright.scatter(angular_theta_from_densest * np.divide(180.0, np.pi), counts, c='black', s=10)  # In degrees.
+        axupperright.scatter(angular_theta_from_densest * np.divide(180.0, np.pi), density[indexMax], c='black', s=10)  # In degrees.
         axupperright.axvline(x=30, c='blue', lw=3, linestyle='dashed')  # Vertical line at 30 degrees.
         axupperright.axvspan(0, 30, facecolor='0.2', alpha=0.5)
-        
-        # Calculate and plot the angular distance in degrees between the densest and all the other hexbins #
+
+        # Calculate and plot the angular distance in degrees between the densest and all the other pixels #
         position_X = np.vstack([np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2])]).T
-        
+
         angular_theta_from_X = np.arccos(
-            np.sin(position_X[0, 1]) * np.sin(position_other[:, 1]) + np.cos(position_X[0, 1]) * np.cos(position_other[:, 1]) * np.cos(
-                position_X[0, 0] - position_other[:, 0]))  # In radians.
-        axlowerleft.scatter(angular_theta_from_X * np.divide(180.0, np.pi), counts, c='black', s=10)  # In degrees.
-        
-        index = np.where(angular_theta_from_X > np.divide(np.pi, 2.0))
-        # axupperleft.scatter(position_other[index, 0], position_other[index, 1], s=10, c='red')
-        
+            np.sin(position_X[0, 1]) * np.sin(lat_pixel) + np.cos(position_X[0, 1]) * np.cos(lat_pixel) * np.cos(
+                position_X[0, 0] - lon_pixel))  # In radians.
+        axlowerleft.scatter(angular_theta_from_X * np.divide(180.0, np.pi), density[indexMax], c='black', s=10)  # In degrees.
+
         axlowerleft.axvline(x=90, c='red', lw=3, linestyle='dashed')  # Vertical line at 30 degrees.
         axlowerleft.axvspan(90, 180, facecolor='0.2', alpha=0.5)
         # Calcuate kinematic diagnostics #
@@ -343,18 +340,19 @@ class RADecSurfaceDensity:
                                                                                                                 stellar_data_tmp['Velocity'],
                                                                                                                 stellar_data_tmp[
                                                                                                                     'ParticleBindingEnergy'])
-        
+
         angular_theta_from_densest = np.arccos(
-            np.sin(position_densest[0, 1]) * np.sin(np.arcsin(prc_unit_vector[:, 2])) + np.cos(position_densest[0, 1]) * np.cos(
+            np.sin(lat_densest) * np.sin(np.arcsin(prc_unit_vector[:, 2])) + np.cos(lat_densest) * np.cos(
                 np.arcsin(prc_unit_vector[:, 2])) * np.cos(
-                position_densest[0, 0] - np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0])))  # In radians.
+                lon_densest - np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0])))  # In radians.
         index = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))
         discfrac2 = np.divide(np.sum(stellar_data_tmp['Mass'][index]), np.sum(stellar_data_tmp['Mass']))
-        
-        # figure.text(0.5, 0.5, 'z ~ ' + re.split('_z0|p000', tag)[1])
+
+        figure.text(0.5, 0.5, 'z ~ ' + re.split('_z0|p000', tag)[1])
         figure.text(0.65, 0.3, 'discfrac= %.6s ' % discfrac, color='red')
         figure.text(0.65, 0.25, 'discfrac= %.6s ' % discfrac2, color='blue')
-        # Save the plot #2
+        
+        # Save the plot #
         plt.savefig(outdir + str(group_number) + str(subgroup_number) + '-' + 'RDSD' + '-' + date + '.png', bbox_inches='tight')
         return None
 
