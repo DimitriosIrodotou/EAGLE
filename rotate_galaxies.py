@@ -1,24 +1,17 @@
+import scipy
 import pylab
 
 import numpy as np
-import scipy.linalg
-
-from const import *
-from utilities import *
-from cosmological_factors import *
 
 
 class RotateGalaxies:
     
     @staticmethod
-    def get_principal_axis(coordinates, masses, velocities):
-        
-        L = np.cross(coordinates.astype('float64'), (velocities.astype('float64') * masses[:, None].astype('float64')))
-        Ltot = L.sum(axis=0)
-        Ldir = Ltot / np.sqrt((Ltot ** 2).sum())
+    def get_principal_axis(coordinates, masses, Ldir):
         
         px, py, pz = coordinates[:, 0], coordinates[:, 1], coordinates[:, 2]
         
+        # Calculate the components of the moment of inertia tensor #
         tensor = pylab.zeros((3, 3))
         tensor[0, 0] = (masses * (py * py + pz * pz)).sum()
         tensor[1, 1] = (masses * (px * px + pz * pz)).sum()
@@ -31,6 +24,7 @@ class RotateGalaxies:
         tensor[1, 2] = - (masses * py * pz).sum()
         tensor[2, 1] = tensor[1, 2]
         
+        # Get the eigenvalues and eigenvectors and calculate the principle axes #
         eigval, eigvec = scipy.linalg.eig(tensor)
         
         A1 = (Ldir * eigvec[:, 0]).sum()
@@ -56,24 +50,11 @@ class RotateGalaxies:
         return xdir, ydir, zdir
     
     
-    def rotateto(dir, dir2=None, dir3=None):
-        if dir2 is None or dir3 is None:
-            # get normals
-            dir2 = pylab.zeros(3)
-            if dir[0] != 0 and dir[1] != 0:
-                dir2[0] = -dir[1]
-                dir2[1] = dir[0]
-            else:
-                dir2[0] = 1
-            dir2 /= np.sqrt((dir2 ** 2).sum())
-            dir3 = np.cross(dir, dir2)
+    @staticmethod
+    def rotate(coordinates, dir1, dir2, dir3):
+        matrix = np.array([dir1, dir2, dir3])
+        rotmat = np.array(matrix.transpose())
         
-        matrix = np.array([dir, dir2, dir3])
+        rotated_coordinates = np.dot(coordinates, rotmat)
         
-        for value in data:
-            if value == 'bhts' or value == 'bpos' or value == 'bvel':  # do not rotate the BH time step field
-                continue
-            if data[value] is not None and data[value].ndim == 2 and pylab.shape(data[value])[1] == 3:
-                rotate_value(value, matrix)
-        convenience()
-        return
+        return rotated_coordinates

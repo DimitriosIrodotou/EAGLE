@@ -15,6 +15,7 @@ import eagle_IO.eagle_IO.eagle_IO as E
 
 from matplotlib import gridspec
 from astropy_healpix import HEALPix
+from rotate_galaxies import RotateGalaxies
 from morpho_kinematics import MorphoKinematics
 
 # Create a parser and add argument to read data #
@@ -64,7 +65,7 @@ class RADecSurfaceDensity:
                     
                     stellar_data_tmp, glx_unit_vector, prc_unit_vector = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
                     
-                    # Save data in nampy arrays #
+                    # Save data in numpy arrays #
                     np.save(SavePath + 'unit_vector_' + str(group_number), prc_unit_vector)
                     np.save(SavePath + 'group_number_' + str(group_number), group_number)
                     np.save(SavePath + 'subgroup_number_' + str(group_number), subgroup_number)
@@ -191,6 +192,16 @@ class RADecSurfaceDensity:
         glx_unit_vector = np.divide(glx_angular_momentum, np.linalg.norm(glx_angular_momentum))
         prc_unit_vector = np.divide(prc_angular_momentum, np.linalg.norm(prc_angular_momentum, axis=1)[:, np.newaxis])
         
+        xdir, ydir, zdir = RotateGalaxies.get_principal_axis(stellar_data_tmp['Coordinates'], stellar_data_tmp['Mass'], glx_unit_vector)
+        stellar_data_tmp['Coordinates'] = RotateGalaxies.rotate(stellar_data_tmp['Coordinates'], xdir, ydir, zdir)
+        stellar_data_tmp['Velocity'] = RotateGalaxies.rotate(stellar_data_tmp['Velocity'], xdir, ydir, zdir)
+        
+        prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
+                                                                                  stellar_data_tmp['Velocity'])  # Msun kpc km s-1
+        glx_angular_momentum = np.sum(prc_angular_momentum, axis=0)  # Msun kpc km s-1
+        glx_unit_vector = np.divide(glx_angular_momentum, np.linalg.norm(glx_angular_momentum))
+        prc_unit_vector = np.divide(prc_angular_momentum, np.linalg.norm(prc_angular_momentum, axis=1)[:, np.newaxis])
+        
         return stellar_data_tmp, glx_unit_vector, prc_unit_vector
     
     
@@ -205,9 +216,6 @@ class RADecSurfaceDensity:
         :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
         :return: None
         """
-        lon = []
-        lat = []
-        
         # Set the style of the plots #
         sns.set()
         sns.set_style('ticks')
@@ -265,19 +273,28 @@ class RADecSurfaceDensity:
         print(index)
         x = np.sort(index)
         
-        for i in range(0,10): print(x[i])
+        for i in range(0, 10):
+            print(x[i])
         # Count number of points in each HEALpix pixel (and divide by area to get density in counts/ster)
         density = np.bincount(index, minlength=hp_npix) / hp_pixelArea
+        
         # Find location of density maximum and plot its positions and the Ra and dec the galactic angular momentum #
         indexMax = np.argmax(density)
         print(density[indexMax])
         print(density[12287])
         lon_densest = (hp.healpix_to_lonlat([indexMax])[0].value + np.pi) % (2 * np.pi) - np.pi
         lat_densest = (hp.healpix_to_lonlat([indexMax])[1].value + np.pi / 2) % (2 * np.pi) - np.pi / 2
-        axupperleft.annotate(r'Density maximum', xy=(lon_densest, lat_densest), xycoords='data', xytext=(-0.1, 1.0), textcoords='axes fraction',
+        axupperleft.annotate(r'Density maximum', xy=(lon_densest, lat_densest), xycoords='data', xytext=(0.8, 1.0), textcoords='axes fraction',
                              arrowprops=dict(arrowstyle="-", color='black', connectionstyle="arc3,rad=0"))  # Position of the denset pixel.
         axupperleft.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black', marker='X',
                             zorder=5)  # Position of the galactic angular momentum.
+        
+        # Use text to display the values of the RA axis #
+        axupperleft.annotate(r'0', xy=(0, 0), xycoords='data', size=18)  # Position of 0 degrees.
+        axupperleft.annotate(r'60', xy=(np.pi / 3, 0), xycoords='data', size=18)  # Position of 60 degrees.
+        axupperleft.annotate(r'-60', xy=(-np.pi / 3, 0), xycoords='data', size=18)  # Position of -60 degrees.
+        axupperleft.annotate(r'120', xy=(2 * np.pi / 3, 0), xycoords='data', size=18)  # Position of 120 degrees.
+        axupperleft.annotate(r'-120', xy=(-2 * np.pi / 3, 0), xycoords='data', size=18)  # Position of -120 degrees.
         
         # Interpolate back to RA, dec grid and plot #
         ra = np.linspace(-180.0, 180.0, num=360) * u.deg

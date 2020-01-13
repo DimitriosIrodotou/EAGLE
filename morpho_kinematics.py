@@ -147,11 +147,11 @@ class MorphoKinematics:
         # Compute morphological diagnostics
         s = 1
         q = 1
-        Rsphall = 1 + reduced_structure * (distancesall - 1);
+        Rsphall = 1 + reduced_structure * (distancesall - 1)
         stop = False
         while not ('structure' in locals()) or (reduced_structure and not (stop)):
             particles = particlesall[extract].copy()
-            Rsph = Rsphall[extract];
+            Rsph = Rsphall[extract]
             Rsph /= np.median(Rsph)
             # Compute structure tensor
             structure = np.sum(
