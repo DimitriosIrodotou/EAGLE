@@ -1,4 +1,3 @@
-import scipy
 import pylab
 
 import numpy as np
@@ -13,34 +12,36 @@ class RotateGalaxies:
         
         # Calculate the components of the moment of inertia tensor #
         tensor = pylab.zeros((3, 3))
-        tensor[0, 0] = (masses * (py * py + pz * pz)).sum()
-        tensor[1, 1] = (masses * (px * px + pz * pz)).sum()
-        tensor[2, 2] = (masses * (px * px + py * py)).sum()
+        tensor[0, 0] = np.sum(masses * (py * py + pz * pz))
+        tensor[1, 1] = np.sum(masses * (px * px + pz * pz))
+        tensor[2, 2] = np.sum(masses * (px * px + py * py))
         
-        tensor[0, 1] = - (masses * px * py).sum()
+        tensor[0, 1] = - np.sum(masses * px * py)
         tensor[1, 0] = tensor[0, 1]
-        tensor[0, 2] = - (masses * px * pz).sum()
+        tensor[0, 2] = - np.sum(masses * px * pz)
         tensor[2, 0] = tensor[0, 2]
-        tensor[1, 2] = - (masses * py * pz).sum()
+        tensor[1, 2] = - np.sum(masses * py * pz)
         tensor[2, 1] = tensor[1, 2]
         
-        # Get the eigenvalues and eigenvectors and calculate the principle axes #
-        eigval, eigvec = scipy.linalg.eig(tensor)
+        # Get the eigenvalues and eigenvectors and calculate the principal axe #
+        eigvalues, eigvectors = np.linalg.eig(tensor)
         
-        A1 = (Ldir * eigvec[:, 0]).sum()
-        A2 = (Ldir * eigvec[:, 1]).sum()
-        A3 = (Ldir * eigvec[:, 2]).sum()
-        
+        A1 = np.sum(Ldir * eigvectors[:, 0])
+        A2 = np.sum(Ldir * eigvectors[:, 1])
+        A3 = np.sum(Ldir * eigvectors[:, 2])
         A = np.abs(np.array([A1, A2, A3]))
+        print(A)
+        # Align X axis with the major axis #
         i, = np.where(A == A.max())
-        xdir = eigvec[:, i[0]]
+        xdir = eigvectors[:, i[0]]
         
-        if (xdir * Ldir).sum() < 0:
+        if np.sum(xdir * Ldir) < 0:
             xdir *= -1.0
-        
-        j, = np.where(A != A.max())
-        i2 = eigval[j].argsort()
-        ydir = eigvec[:, j[i2[1]]]
+
+        # Align y-axis with the intermediate axis #
+        j, = np.where(A != max(A))
+        i2 = eigvalues[j].argsort()
+        ydir = eigvectors[:, j[i2[1]]]
         
         if ydir[0] < 0:
             ydir *= -1.0

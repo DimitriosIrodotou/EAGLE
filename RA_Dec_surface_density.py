@@ -58,7 +58,7 @@ class RADecSurfaceDensity:
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
         
         # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all masked haloes.
-        for group_number in range(1, 2):  # Loop over all masked haloes.
+        for group_number in range(1, 101):  # Loop over all masked haloes.
             for subgroup_number in range(0, 1):
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
@@ -192,15 +192,15 @@ class RADecSurfaceDensity:
         glx_unit_vector = np.divide(glx_angular_momentum, np.linalg.norm(glx_angular_momentum))
         prc_unit_vector = np.divide(prc_angular_momentum, np.linalg.norm(prc_angular_momentum, axis=1)[:, np.newaxis])
         
-        xdir, ydir, zdir = RotateGalaxies.get_principal_axis(stellar_data_tmp['Coordinates'], stellar_data_tmp['Mass'], glx_unit_vector)
-        stellar_data_tmp['Coordinates'] = RotateGalaxies.rotate(stellar_data_tmp['Coordinates'], xdir, ydir, zdir)
-        stellar_data_tmp['Velocity'] = RotateGalaxies.rotate(stellar_data_tmp['Velocity'], xdir, ydir, zdir)
+        # xdir, ydir, zdir = RotateGalaxies.get_principal_axis(stellar_data_tmp['Coordinates'], stellar_data_tmp['Mass'], glx_unit_vector)
+        # stellar_data_tmp['Coordinates'] = RotateGalaxies.rotate(stellar_data_tmp['Coordinates'], xdir, ydir, zdir)
+        # stellar_data_tmp['Velocity'] = RotateGalaxies.rotate(stellar_data_tmp['Velocity'], xdir, ydir, zdir)
         
-        prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
-                                                                                  stellar_data_tmp['Velocity'])  # Msun kpc km s-1
-        glx_angular_momentum = np.sum(prc_angular_momentum, axis=0)  # Msun kpc km s-1
-        glx_unit_vector = np.divide(glx_angular_momentum, np.linalg.norm(glx_angular_momentum))
-        prc_unit_vector = np.divide(prc_angular_momentum, np.linalg.norm(prc_angular_momentum, axis=1)[:, np.newaxis])
+        # prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
+        #                                                                           stellar_data_tmp['Velocity'])  # Msun kpc km s-1
+        # glx_angular_momentum = np.sum(prc_angular_momentum, axis=0)  # Msun kpc km s-1
+        # glx_unit_vector = np.divide(glx_angular_momentum, np.linalg.norm(glx_angular_momentum))
+        # prc_unit_vector = np.divide(prc_angular_momentum, np.linalg.norm(prc_angular_momentum, axis=1)[:, np.newaxis])
         
         return stellar_data_tmp, glx_unit_vector, prc_unit_vector
     
@@ -208,7 +208,7 @@ class RADecSurfaceDensity:
     @staticmethod
     def plot(stellar_data_tmp, glx_unit_vector, prc_unit_vector, group_number, subgroup_number):
         """
-        A method to plot a HealPix histogram.
+        A method to plot a HEALPix histogram.
         :param stellar_data_tmp: from mask_galaxies
         :param glx_unit_vector: from mask_galaxies
         :param prc_unit_vector: from mask_galaxies
@@ -259,29 +259,17 @@ class RADecSurfaceDensity:
         RA = np.degrees(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]))
         dec = np.degrees(np.arcsin(prc_unit_vector[:, 2]))
         
-        # Create Healpix map
-        # Define size of HEALpix grid: deliberately crude (Must be a power of 2).
-        hp_nside = 2 ** 5
+        # Create HEALPix map #
+        nside = 2 ** 5  # Define the resolution of the grid (number of divisions along the side of a base-resolution pixel).
+        hp = HEALPix(nside=nside, order='nested')
         
-        hp = HEALPix(nside=hp_nside)
-        hp_npix = hp.npix
-        hp_pixelArea = hp.pixel_area
-        
-        # Create list of HealPix indices for particles
+        # Create list of HEALPix indices for particles
         index = hp.lonlat_to_healpix(RA * u.deg, dec * u.deg)
         
-        print(index)
-        x = np.sort(index)
-        
-        for i in range(0, 10):
-            print(x[i])
-        # Count number of points in each HEALpix pixel (and divide by area to get density in counts/ster)
-        density = np.bincount(index, minlength=hp_npix) / hp_pixelArea
-        
+        # Count number of points in each HEALPix pixel (and divide by area to get density in counts/ster)
+        density = np.bincount(index, minlength=hp.npix) / hp.pixel_area  # npix denotes the total number of pixels (npix=12 nside^2)
         # Find location of density maximum and plot its positions and the Ra and dec the galactic angular momentum #
         indexMax = np.argmax(density)
-        print(density[indexMax])
-        print(density[12287])
         lon_densest = (hp.healpix_to_lonlat([indexMax])[0].value + np.pi) % (2 * np.pi) - np.pi
         lat_densest = (hp.healpix_to_lonlat([indexMax])[1].value + np.pi / 2) % (2 * np.pi) - np.pi / 2
         axupperleft.annotate(r'Density maximum', xy=(lon_densest, lat_densest), xycoords='data', xytext=(0.8, 1.0), textcoords='axes fraction',
@@ -342,7 +330,6 @@ class RADecSurfaceDensity:
         # # deltaz = np.sin(position_densest[0, 1]) - np.sin(position_other[:, 1])
         # # c = np.sqrt(deltax * deltax + deltay * deltay + deltaz * deltaz)
         # # angular_theta_from_densest = 2 * np.arcsin(c / 2)
-        
         # axupperright.scatter(angular_theta_from_densest * np.divide(180.0, np.pi), density, c='black', s=10)  # In degrees.
         axupperright.axvline(x=30, c='blue', lw=3, linestyle='dashed')  # Vertical line at 30 degrees.
         axupperright.axvspan(0, 30, facecolor='0.2', alpha=0.5)
@@ -379,12 +366,12 @@ class RADecSurfaceDensity:
 
 
 if __name__ == '__main__':
-    tag = '010_z005p000'
-    sim = '/cosma7/data/dp004/dc-payy1/G-EAGLE/GEAGLE_06/data/'
-    outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/RDSD/G-EAGLE/'  # Path to save plots.
-    SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/RDSD/G-EAGLE/'  # Path to save/load data.
-    # tag = '027_z000p101'
-    # sim = '/cosma5/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'
-    # outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/RDSD/EAGLE/'  # Path to save plots.
-    # SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/RDSD/EAGLE/'  # Path to save/load data.
+    # tag = '010_z005p000'
+    # sim = '/cosma7/data/dp004/dc-payy1/G-EAGLE/GEAGLE_06/data/'
+    # outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/RDSD/G-EAGLE/'  # Path to save plots.
+    # SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/RDSD/G-EAGLE/'  # Path to save/load data.
+    tag = '027_z000p101'
+    sim = '/cosma5/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'
+    outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/RDSD/EAGLE/'  # Path to save plots.
+    SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/RDSD/EAGLE/'  # Path to save/load data.
     x = RADecSurfaceDensity(sim, tag)
