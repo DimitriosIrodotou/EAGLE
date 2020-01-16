@@ -32,7 +32,7 @@ module load anaconda3/5.2.0
 
 source activate my_python
 
-cd /cosma7/data/dp004/dc-irod1/G-EAGLE/python/ || exit
+cd /cosma7/data/dp004/dc-irod1/EAGLE/python/ || exit
 
 #python RA_Dec_surface_density.py -l
 python position_3D.py -l

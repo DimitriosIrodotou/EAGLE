@@ -52,7 +52,7 @@ class RADecSurfaceDensity:
         if not args.l:
             self.Ngroups = E.read_header('SUBFIND', sim, tag, 'TotNgroups')
             self.stellar_data, self.subhalo_data = self.read_galaxies(sim, tag)
-            print('Read data for ' + re.split('G-EAGLE/|/data', sim)[2] + ' in %.4s s' % (time.time() - start_global_time))
+            print('Read data for ' + re.split('EAGLE/|/data', sim)[2] + ' in %.4s s' % (time.time() - start_global_time))
             print('–––––––––––––––––––––––––––––––––––––––––')
             
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
@@ -105,7 +105,7 @@ class RADecSurfaceDensity:
                 print('Plotted data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
                 print('–––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished RADecSurfaceDensity for ' + re.split('G-EAGLE/|/data', sim)[2] + ' in %.4s s' % (
+        print('Finished RADecSurfaceDensity for ' + re.split('EAGLE/|/data', sim)[2] + ' in %.4s s' % (
             time.time() - start_global_time))  # Print total time.
         print('–––––––––––––––––––––––––––––––––––––––––')
     
@@ -236,13 +236,14 @@ class RADecSurfaceDensity:
         axupperright.grid(True, color='black')
         axupperleft.set_xlabel('RA ($\degree$)')
         axupperleft.set_ylabel('Dec ($\degree$)')
-        axlowerleft.set_ylabel('Particles per pixel')
-        axupperright.set_ylabel('Particles per pixel')
+        axlowerleft.set_ylabel('Particles per grid cell')
+        axupperright.set_ylabel('Particles per grid cell')
         axlowerleft.set_xlabel('Angular distance from X ($\degree$)')
-        axupperright.set_xlabel('Angular distance from densest pixel ($\degree$)')
+        axupperright.set_xlabel('Angular distance from densest grid cell ($\degree$)')
         
         axlowerleft.set_xlim(-10, 190)
         axupperright.set_xlim(-10, 190)
+        axupperright.set_ylim(-10, 1000)
         
         y_tick_labels = np.array(['', '-60', '', '-30', '', '0', '', '30', '', 60])
         x_tick_labels = np.array(['', '-120', '', '-60', '', '0', '', '60', '', 120])
@@ -250,8 +251,8 @@ class RADecSurfaceDensity:
         axupperleft.set_yticklabels(y_tick_labels)
         axlowerright.axis('off')
         
-        # axupperright.set_yscale('log')
         axlowerleft.set_yscale('log')
+        # axupperright.set_yscale('log')
         axlowerleft.set_xticks(np.arange(0, 181, 20))
         axupperright.set_xticks(np.arange(0, 181, 20))
         
@@ -283,21 +284,21 @@ class RADecSurfaceDensity:
         axupperleft.annotate(r'120', xy=(2 * np.pi / 3, 0), xycoords='data', size=18)  # Position of 120 degrees.
         axupperleft.annotate(r'-120', xy=(-2 * np.pi / 3, 0), xycoords='data', size=18)  # Position of -120 degrees.
         
-        # Interpolate back to RA, dec grid and plot #
+        # Sample a 360x180 grid in RA/Dec #
         ra = np.linspace(-180.0, 180.0, num=360) * u.deg
         dec = np.linspace(-90.0, 90.0, num=180) * u.deg
         ra_grid, dec_grid = np.meshgrid(ra, dec)
         
         # Find density at each coordinate position #
-        coordsIndex = hp.lonlat_to_healpix(ra_grid, dec_grid)
-        densityMap = density[coordsIndex]
-        densityMap = densityMap.reshape([180, 360])
+        coordinate_index = hp.lonlat_to_healpix(ra_grid, dec_grid)
+        density_map = density[coordinate_index]
+        density_map = density_map.reshape([180, 360])
         
         # Display data on a 2D regular raster and create a pseudo-color plot #
-        im = axupperleft.imshow(densityMap.value, cmap='nipy_spectral_r', aspect='auto', norm=matplotlib.colors.LogNorm(vmin=1))
+        im = axupperleft.imshow(density_map.value, cmap='nipy_spectral_r', aspect='auto', norm=matplotlib.colors.LogNorm(vmin=1))
         cbar = plt.colorbar(im, ax=axupperleft, orientation='horizontal')
-        cbar.set_label('$\mathrm{Particles\; per\; pixel}$')
-        axupperleft.pcolormesh(np.radians(ra), np.radians(dec), densityMap, cmap='nipy_spectral_r')
+        cbar.set_label('$\mathrm{Particles\; per\; grid\; cell}$')
+        axupperleft.pcolormesh(np.radians(ra), np.radians(dec), density_map, cmap='nipy_spectral_r')
         
         # Calculate and plot the angular distance between two RA/Dec coordinates - all methods are identical #
         # 1) Spherical law of cosines https://en.wikipedia.org/wiki/Spherical_law_of_cosines
@@ -331,11 +332,8 @@ class RADecSurfaceDensity:
         # # deltaz = np.sin(position_densest[0, 1]) - np.sin(position_other[:, 1])
         # # c = np.sqrt(deltax * deltax + deltay * deltay + deltaz * deltaz)
         # # angular_theta_from_densest = 2 * np.arcsin(c / 2)
-        
-        print(densityMap.value)
-        print(ra_grid)
-        
-        axupperright.scatter(angular_theta_from_densest * np.divide(180.0, np.pi), densityMap.value, c='black', s=10)  # In degrees.
+   
+        axupperright.scatter(angular_theta_from_densest * np.divide(180.0, np.pi), density_map.value, c='black', s=10)  # In degrees.
         axupperright.axvline(x=30, c='blue', lw=3, linestyle='dashed')  # Vertical line at 30 degrees.
         axupperright.axvspan(0, 30, facecolor='0.2', alpha=0.5)
         
@@ -374,10 +372,10 @@ class RADecSurfaceDensity:
 if __name__ == '__main__':
     # tag = '010_z005p000'
     # sim = '/cosma7/data/dp004/dc-payy1/G-EAGLE/GEAGLE_06/data/'
-    # outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/RDSD/G-EAGLE/'  # Path to save plots.
-    # SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/RDSD/G-EAGLE/'  # Path to save/load data.
+    # outdir = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/RDSD/G-EAGLE/'  # Path to save plots.
+    # SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/RDSD/G-EAGLE/'  # Path to save/load data.
     tag = '027_z000p101'
     sim = '/cosma5/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'
-    outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/RDSD/EAGLE/'  # Path to save plots.
-    SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/RDSD/EAGLE/'  # Path to save/load data.
+    outdir = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/RDSD/EAGLE/'  # Path to save plots.
+    SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/RDSD/EAGLE/'  # Path to save/load data.
     x = RADecSurfaceDensity(sim, tag)

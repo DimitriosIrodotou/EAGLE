@@ -100,6 +100,6 @@ print(glx_angular_momentum, np.shape(glx_angular_momentum))
 # axlowerleft.axvline(x=30, c='red', lw=3, linestyle='dashed')  # Vertical line at 30 degrees.
 
 # Save the plot #
-outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/RDSD/G-EAGLE/'  # Path to save plots.
-SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/RDSD/G-EAGLE/'  # Path to save/load data.
+outdir = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/RDSD/G-EAGLE/'  # Path to save plots.
+SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/RDSD/G-EAGLE/'  # Path to save/load data.
 plt.savefig(outdir + 'Test' + '-' + date + '.png', bbox_inches='tight')

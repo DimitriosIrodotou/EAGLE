@@ -46,7 +46,7 @@ class PositionHistogram:
         if not args.l:
             self.Ngroups = E.read_header('SUBFIND', sim, tag, 'TotNgroups')
             self.stellar_data, self.subhalo_data = self.read_galaxies(sim, tag)
-            print('Read data for ' + re.split('G-EAGLE/|/data', sim)[2] + ' in %.4s s' % (time.time() - start_global_time))
+            print('Read data for ' + re.split('EAGLE/|/data', sim)[2] + ' in %.4s s' % (time.time() - start_global_time))
             print('–––––––––––––––––––––––––––––––––––––––––')
             
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
@@ -95,7 +95,7 @@ class PositionHistogram:
                 print('Plotted data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
                 print('–––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished PositionHistogram for ' + re.split('G-EAGLE/|/data', sim)[2] + ' in %.4s s' % (
+        print('Finished PositionHistogram for ' + re.split('EAGLE/|/data', sim)[2] + ' in %.4s s' % (
             time.time() - start_global_time))  # Print total time.
         print('–––––––––––––––––––––––––––––––––––––––––')
     
@@ -247,10 +247,10 @@ class PositionHistogram:
 if __name__ == '__main__':
     tag = '010_z005p000'
     sim = '/cosma7/data/dp004/dc-payy1/G-EAGLE/GEAGLE_06/data/'
-    outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/PH/G-EAGLE/'  # Path to save plots.
-    SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/PH/G-EAGLE/'  # Path to save/load data.
+    outdir = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/PH/G-EAGLE/'  # Path to save plots.
+    SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/PH/G-EAGLE/'  # Path to save/load data.
     # tag = '027_z000p101'
     # sim = '/cosma5/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'
-    # outdir = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/plots/PH/EAGLE/'  # Path to save plots.
-    # SavePath = '/cosma7/data/dp004/dc-irod1/G-EAGLE/python/data/PH/EAGLE/'  # Path to save/load data.
+    # outdir = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/PH/EAGLE/'  # Path to save plots.
+    # SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/PH/EAGLE/'  # Path to save/load data.
     x = PositionHistogram(sim, tag)
