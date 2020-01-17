@@ -58,7 +58,7 @@ class RADecSurfaceDensity:
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
         
         # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all masked haloes.
-        for group_number in range(1, 2):  # Loop over all masked haloes.
+        for group_number in range(1, 150):  # Loop over all masked haloes.
             for subgroup_number in range(0, 1):
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
@@ -243,7 +243,6 @@ class RADecSurfaceDensity:
         
         axlowerleft.set_xlim(-10, 190)
         axupperright.set_xlim(-10, 190)
-        axupperright.set_ylim(-10, 1000)
         
         y_tick_labels = np.array(['', '-60', '', '-30', '', '0', '', '30', '', 60])
         x_tick_labels = np.array(['', '-120', '', '-60', '', '0', '', '60', '', 120])
@@ -251,8 +250,6 @@ class RADecSurfaceDensity:
         axupperleft.set_yticklabels(y_tick_labels)
         axlowerright.axis('off')
         
-        axlowerleft.set_yscale('log')
-        # axupperright.set_yscale('log')
         axlowerleft.set_xticks(np.arange(0, 181, 20))
         axupperright.set_xticks(np.arange(0, 181, 20))
         
@@ -266,7 +263,7 @@ class RADecSurfaceDensity:
         indices = hp.lonlat_to_healpix(RA * u.deg, dec * u.deg)  # Create list of HEALPix indices from particles' RA and dec.
         
         # Count number of points in each HEALPix pixel (and divide by area to get density in counts/ster)
-        density = np.bincount(indices, minlength=hp.npix) / hp.pixel_area  # npix denotes the total number of pixels (npix=12 nside^2)
+        density = np.bincount(indices, minlength=hp.npix)  # npix denotes the total number of pixels (npix=12 nside^2)
         
         # Find location of density maximum and plot its positions and the Ra and dec of the galactic angular momentum #
         indexMax = np.argmax(density)
@@ -292,21 +289,18 @@ class RADecSurfaceDensity:
         # Find density at each coordinate position #
         coordinate_index = hp.lonlat_to_healpix(ra_grid, dec_grid)
         density_map = density[coordinate_index]
-        density_map = density_map.reshape([180, 360])
         
         # Display data on a 2D regular raster and create a pseudo-color plot #
-        im = axupperleft.imshow(density_map.value, cmap='nipy_spectral_r', aspect='auto', norm=matplotlib.colors.LogNorm(vmin=1))
+        im = axupperleft.imshow(density_map, cmap='nipy_spectral_r', aspect='auto', norm=matplotlib.colors.LogNorm(vmin=1))
         cbar = plt.colorbar(im, ax=axupperleft, orientation='horizontal')
         cbar.set_label('$\mathrm{Particles\; per\; grid\; cell}$')
         axupperleft.pcolormesh(np.radians(ra), np.radians(dec), density_map, cmap='nipy_spectral_r')
         
         # Calculate and plot the angular distance between two RA/Dec coordinates - all methods are identical #
         # 1) Spherical law of cosines https://en.wikipedia.org/wiki/Spherical_law_of_cosines
-        lon_pixel = (hp.healpix_to_lonlat([indices])[0][0, :].value + np.pi) % (2 * np.pi) - np.pi
-        lat_pixel = (hp.healpix_to_lonlat([indices])[1][0, :].value + np.pi / 2) % (2 * np.pi) - np.pi / 2
         angular_theta_from_densest = np.arccos(
-            np.sin(lat_densest) * np.sin(np.radians(ra_grid.value)) + np.cos(lat_densest) * np.cos(np.radians(ra_grid.value)) * np.cos(
-                lon_densest - np.radians(dec_grid.value)))  # In radians.
+            np.sin(lat_densest) * np.sin(np.radians(dec_grid.value)) + np.cos(lat_densest) * np.cos(np.radians(dec_grid.value)) * np.cos(
+                lon_densest - np.radians(ra_grid.value)))  # In radians.
         
         # # 2) Haversine formula https://en.wikipedia.org/wiki/Haversine_formula
         # # delt_lat = (np.subtract(position_densest[0, 1], position_other[:, 1]))
@@ -332,17 +326,19 @@ class RADecSurfaceDensity:
         # # deltaz = np.sin(position_densest[0, 1]) - np.sin(position_other[:, 1])
         # # c = np.sqrt(deltax * deltax + deltay * deltay + deltaz * deltaz)
         # # angular_theta_from_densest = 2 * np.arcsin(c / 2)
-   
-        axupperright.scatter(angular_theta_from_densest * np.divide(180.0, np.pi), density_map.value, c='black', s=10)  # In degrees.
+        
+        axupperright.scatter(angular_theta_from_densest[density_map.nonzero()] * np.divide(180.0, np.pi), density_map[density_map.nonzero()],
+                             c='black', s=10)  # In degrees.
         axupperright.axvline(x=30, c='blue', lw=3, linestyle='dashed')  # Vertical line at 30 degrees.
         axupperright.axvspan(0, 30, facecolor='0.2', alpha=0.5)
         
         # Calculate and plot the angular distance in degrees between the densest and all the other pixels #
         position_X = np.vstack([np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2])]).T
         
-        angular_theta_from_X = np.arccos(np.sin(position_X[0, 1]) * np.sin(lat_pixel) + np.cos(position_X[0, 1]) * np.cos(lat_pixel) * np.cos(
-            position_X[0, 0] - lon_pixel))  # In radians.
-        # axlowerleft.scatter(angular_theta_from_X * np.divide(180.0, np.pi), density[indexMax], c='black', s=10)  # In degrees.
+        angular_theta_from_X = np.arccos(
+            np.sin(position_X[0, 1]) * np.sin(np.radians(dec_grid.value)) + np.cos(position_X[0, 1]) * np.cos(np.radians(dec_grid.value)) * np.cos(
+                position_X[0, 0] - np.radians(ra_grid.value)))  # In radians.
+        axlowerleft.scatter(angular_theta_from_X[density_map.nonzero()] * np.divide(180.0, np.pi), density_map[density_map.nonzero()], c='black', s=10)  # In degrees.
         axlowerleft.axvline(x=90, c='red', lw=3, linestyle='dashed')  # Vertical line at 30 degrees.
         axlowerleft.axvspan(90, 180, facecolor='0.2', alpha=0.5)
         
