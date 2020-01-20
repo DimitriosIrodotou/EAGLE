@@ -19,7 +19,7 @@ from rotate_galaxies import RotateGalaxies
 from morpho_kinematics import MorphoKinematics
 
 # Create a parser and add argument to read data #
-parser = argparse.ArgumentParser(description='Create RA and Dec.')
+parser = argparse.ArgumentParser(description='Create ra and dec.')
 parser.add_argument('-r', action='store_true', help='Read data')
 parser.add_argument('-l', action='store_true', help='Load data')
 parser.add_argument('-rs', action='store_true', help='Read data and save to numpy arrays')
@@ -32,7 +32,7 @@ warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # I
 
 class RADecSurfaceDensity:
     """
-    Create a RA and Dec plot with the angular momemntum of particles for each galaxy.
+    Create a ra and dec plot with the angular momentum of particles for each galaxy.
     """
     
     
@@ -58,7 +58,7 @@ class RADecSurfaceDensity:
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
         
         # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all masked haloes.
-        for group_number in range(1, 150):  # Loop over all masked haloes.
+        for group_number in range(8, 9):  # Loop over all masked haloes.
             for subgroup_number in range(0, 1):
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
@@ -192,15 +192,16 @@ class RADecSurfaceDensity:
         glx_unit_vector = np.divide(glx_angular_momentum, np.linalg.norm(glx_angular_momentum))
         prc_unit_vector = np.divide(prc_angular_momentum, np.linalg.norm(prc_angular_momentum, axis=1)[:, np.newaxis])
         
-        # xdir, ydir, zdir = RotateGalaxies.get_principal_axis(stellar_data_tmp['Coordinates'], stellar_data_tmp['Mass'], glx_unit_vector)
-        # stellar_data_tmp['Coordinates'] = RotateGalaxies.rotate(stellar_data_tmp['Coordinates'], xdir, ydir, zdir)
-        # stellar_data_tmp['Velocity'] = RotateGalaxies.rotate(stellar_data_tmp['Velocity'], xdir, ydir, zdir)
+        # Rotate galaxies #
+        xdir, ydir, zdir = RotateGalaxies.get_principal_axis(stellar_data_tmp['Coordinates'], stellar_data_tmp['Mass'], glx_unit_vector)
+        stellar_data_tmp['Coordinates'] = RotateGalaxies.rotate(stellar_data_tmp['Coordinates'], xdir, ydir, zdir)
+        stellar_data_tmp['Velocity'] = RotateGalaxies.rotate(stellar_data_tmp['Velocity'], xdir, ydir, zdir)
         
-        # prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
-        #                                                                           stellar_data_tmp['Velocity'])  # Msun kpc km s-1
-        # glx_angular_momentum = np.sum(prc_angular_momentum, axis=0)  # Msun kpc km s-1
-        # glx_unit_vector = np.divide(glx_angular_momentum, np.linalg.norm(glx_angular_momentum))
-        # prc_unit_vector = np.divide(prc_angular_momentum, np.linalg.norm(prc_angular_momentum, axis=1)[:, np.newaxis])
+        prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
+                                                                                  stellar_data_tmp['Velocity'])  # Msun kpc km s-1
+        glx_angular_momentum = np.sum(prc_angular_momentum, axis=0)  # Msun kpc km s-1
+        glx_unit_vector = np.divide(glx_angular_momentum, np.linalg.norm(glx_angular_momentum))
+        prc_unit_vector = np.divide(prc_angular_momentum, np.linalg.norm(prc_angular_momentum, axis=1)[:, np.newaxis])
         
         return stellar_data_tmp, glx_unit_vector, prc_unit_vector
     
@@ -223,65 +224,69 @@ class RADecSurfaceDensity:
         
         # Generate the figure #
         plt.close()
-        figure = plt.figure(0, figsize=(20, 15))
+        figure = plt.figure(0, figsize=(20, 22.5))
         
-        gs = gridspec.GridSpec(2, 2)
+        gs = gridspec.GridSpec(3, 2)
         axupperleft = plt.subplot(gs[0, 0], projection='mollweide')
         axupperright = plt.subplot(gs[0, 1])
-        axlowerleft = plt.subplot(gs[1, 0])
-        axlowerright = plt.subplot(gs[1, 1])
+        axmiddleleft = plt.subplot(gs[1, 0])
+        axmiddleright = plt.subplot(gs[1, 1])
+        axlowerleft = plt.subplot(gs[2, 0])
+        axlowerright = plt.subplot(gs[2, 1])
         
-        axupperleft.grid(True, color='black')
-        axlowerleft.grid(True, color='black')
-        axupperright.grid(True, color='black')
+        axupperright.grid(True)
+        axmiddleleft.grid(True)
+        axmiddleright.grid(True)
+        axlowerleft.grid(True)
+        axlowerright.grid(True)
         axupperleft.set_xlabel('RA ($\degree$)')
         axupperleft.set_ylabel('Dec ($\degree$)')
-        axlowerleft.set_ylabel('Particles per grid cell')
+        axmiddleleft.set_ylabel('Particles per grid cell')
+        axmiddleleft.set_xlabel('Angular distance from X ($\degree$)')
         axupperright.set_ylabel('Particles per grid cell')
-        axlowerleft.set_xlabel('Angular distance from X ($\degree$)')
         axupperright.set_xlabel('Angular distance from densest grid cell ($\degree$)')
+        axlowerleft.set_ylabel('$\mathrm{A_{2}}$')
+        axlowerleft.set_xlabel('R [kpc]')
         
-        axlowerleft.set_xlim(-10, 190)
         axupperright.set_xlim(-10, 190)
+        axmiddleleft.set_xlim(-10, 190)
+        axlowerleft.set_ylim(-0.2, 1.2)
+        axlowerleft.set_xlim(0.0, 10.0)
         
         y_tick_labels = np.array(['', '-60', '', '-30', '', '0', '', '30', '', 60])
         x_tick_labels = np.array(['', '-120', '', '-60', '', '0', '', '60', '', 120])
         axupperleft.set_xticklabels(x_tick_labels)
         axupperleft.set_yticklabels(y_tick_labels)
-        axlowerright.axis('off')
         
-        axlowerleft.set_xticks(np.arange(0, 181, 20))
-        axupperright.set_xticks(np.arange(0, 181, 20))
-        
-        # Generate the RA and Dec projection #
-        RA = np.degrees(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]))
-        dec = np.degrees(np.arcsin(prc_unit_vector[:, 2]))
-        
-        # Create HEALPix map #
-        nside = 2 ** 5  # Define the resolution of the grid (number of divisions along the side of a base-resolution pixel).
-        hp = HEALPix(nside=nside)  # Initialise the HEALPix pixellisation class.
-        indices = hp.lonlat_to_healpix(RA * u.deg, dec * u.deg)  # Create list of HEALPix indices from particles' RA and dec.
-        
-        # Count number of points in each HEALPix pixel (and divide by area to get density in counts/ster)
-        density = np.bincount(indices, minlength=hp.npix)  # npix denotes the total number of pixels (npix=12 nside^2)
-        
-        # Find location of density maximum and plot its positions and the Ra and dec of the galactic angular momentum #
-        indexMax = np.argmax(density)
-        lon_densest = (hp.healpix_to_lonlat([indexMax])[0].value + np.pi) % (2 * np.pi) - np.pi
-        lat_densest = (hp.healpix_to_lonlat([indexMax])[1].value + np.pi / 2) % (2 * np.pi) - np.pi / 2
-        axupperleft.annotate(r'Density maximum', xy=(lon_densest, lat_densest), xycoords='data', xytext=(0.8, 1.0), textcoords='axes fraction',
-                             arrowprops=dict(arrowstyle="-", color='black', connectionstyle="arc3,rad=0"))  # Position of the denset pixel.
-        axupperleft.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black', marker='X',
-                            zorder=5)  # Position of the galactic angular momentum.
-        
-        # Use text to display the values of the RA axis #
         axupperleft.annotate(r'0', xy=(0, 0), xycoords='data', size=18)  # Position of 0 degrees.
         axupperleft.annotate(r'60', xy=(np.pi / 3, 0), xycoords='data', size=18)  # Position of 60 degrees.
         axupperleft.annotate(r'-60', xy=(-np.pi / 3, 0), xycoords='data', size=18)  # Position of -60 degrees.
         axupperleft.annotate(r'120', xy=(2 * np.pi / 3, 0), xycoords='data', size=18)  # Position of 120 degrees.
         axupperleft.annotate(r'-120', xy=(-2 * np.pi / 3, 0), xycoords='data', size=18)  # Position of -120 degrees.
         
-        # Sample a 360x180 grid in RA/Dec #
+        axmiddleleft.set_xticks(np.arange(0, 181, 20))
+        axupperright.set_xticks(np.arange(0, 181, 20))
+        
+        # Calculate the ra and dec of the (unit vector of) angular momentum for each particle #
+        ra = np.degrees(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]))
+        dec = np.degrees(np.arcsin(prc_unit_vector[:, 2]))
+        
+        # Create HEALPix map #
+        nside = 2 ** 5  # Define the resolution of the grid (number of divisions along the side of a base-resolution pixel).
+        hp = HEALPix(nside=nside)  # Initialise the HEALPix pixellisation class.
+        indices = hp.lonlat_to_healpix(ra * u.deg, dec * u.deg)  # Create list of HEALPix indices from particles' ra and dec.
+        density = np.bincount(indices, minlength=hp.npix)  # Count number of points in each HEALPix pixel.
+        
+        # Find location of density maximum and plot its positions and the ra and dec of the galactic angular momentum #
+        index_densest = np.argmax(density)
+        lon_densest = (hp.healpix_to_lonlat([index_densest])[0].value + np.pi) % (2 * np.pi) - np.pi
+        lat_densest = (hp.healpix_to_lonlat([index_densest])[1].value + np.pi / 2) % (2 * np.pi) - np.pi / 2
+        axupperleft.annotate(r'Density maximum', xy=(lon_densest, lat_densest), xycoords='data', xytext=(0.78, 1.00), textcoords='axes fraction',
+                             arrowprops=dict(arrowstyle="-", color='black', connectionstyle="arc3,rad=0"))  # Position of the denset pixel.
+        axupperleft.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black', marker='X',
+                            zorder=5)  # Position of the galactic angular momentum.
+        
+        # Sample a 360x180 grid in ra/dec #
         ra = np.linspace(-180.0, 180.0, num=360) * u.deg
         dec = np.linspace(-90.0, 90.0, num=180) * u.deg
         ra_grid, dec_grid = np.meshgrid(ra, dec)
@@ -296,7 +301,14 @@ class RADecSurfaceDensity:
         cbar.set_label('$\mathrm{Particles\; per\; grid\; cell}$')
         axupperleft.pcolormesh(np.radians(ra), np.radians(dec), density_map, cmap='nipy_spectral_r')
         
-        # Calculate and plot the angular distance between two RA/Dec coordinates - all methods are identical #
+        # Calculate disc mass fraction as the mass within 30 degrees from the densest pixel #
+        angular_theta_from_densest = np.arccos(
+            np.sin(lat_densest) * np.sin(np.arcsin(prc_unit_vector[:, 2])) + np.cos(lat_densest) * np.cos(np.arcsin(prc_unit_vector[:, 2])) * np.cos(
+                lon_densest - np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0])))  # In radians.
+        index = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))
+        disc_fraction_IT20 = np.divide(np.sum(stellar_data_tmp['Mass'][index]), np.sum(stellar_data_tmp['Mass']))
+        
+        # Calculate and plot the angular distance between the densest and all the other grid cells - all methods are identical #
         # 1) Spherical law of cosines https://en.wikipedia.org/wiki/Spherical_law_of_cosines
         angular_theta_from_densest = np.arccos(
             np.sin(lat_densest) * np.sin(np.radians(dec_grid.value)) + np.cos(lat_densest) * np.cos(np.radians(dec_grid.value)) * np.cos(
@@ -329,36 +341,68 @@ class RADecSurfaceDensity:
         
         axupperright.scatter(angular_theta_from_densest[density_map.nonzero()] * np.divide(180.0, np.pi), density_map[density_map.nonzero()],
                              c='black', s=10)  # In degrees.
-        axupperright.axvline(x=30, c='blue', lw=3, linestyle='dashed')  # Vertical line at 30 degrees.
-        axupperright.axvspan(0, 30, facecolor='0.2', alpha=0.5)
+        axupperright.axvline(x=30, c='blue', lw=3, linestyle='dashed', label='D/T= %.3f ' % disc_fraction_IT20)  # Vertical line at 30 degrees.
+        axupperright.axvspan(0, 30, facecolor='0.2', alpha=0.5)  # Draw a vertical span.
+        axupperright.legend(loc='upper center', fontsize=16, frameon=False, numpoints=1)
         
-        # Calculate and plot the angular distance in degrees between the densest and all the other pixels #
-        position_X = np.vstack([np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2])]).T
+        # Calculate and plot the angular distance between the (unit vector of) the galactic angular momentum and all the other grid cells #
+        position_of_X = np.vstack([np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2])]).T
         
-        angular_theta_from_X = np.arccos(
-            np.sin(position_X[0, 1]) * np.sin(np.radians(dec_grid.value)) + np.cos(position_X[0, 1]) * np.cos(np.radians(dec_grid.value)) * np.cos(
-                position_X[0, 0] - np.radians(ra_grid.value)))  # In radians.
-        axlowerleft.scatter(angular_theta_from_X[density_map.nonzero()] * np.divide(180.0, np.pi), density_map[density_map.nonzero()], c='black', s=10)  # In degrees.
-        axlowerleft.axvline(x=90, c='red', lw=3, linestyle='dashed')  # Vertical line at 30 degrees.
-        axlowerleft.axvspan(90, 180, facecolor='0.2', alpha=0.5)
+        angular_theta_from_X = np.arccos(np.sin(position_of_X[0, 1]) * np.sin(np.radians(dec_grid.value)) + np.cos(position_of_X[0, 1]) * np.cos(
+            np.radians(dec_grid.value)) * np.cos(position_of_X[0, 0] - np.radians(ra_grid.value)))  # In radians.
+        axmiddleleft.scatter(angular_theta_from_X[density_map.nonzero()] * np.divide(180.0, np.pi), density_map[density_map.nonzero()], c='black',
+                             s=10)  # In degrees.
+        axmiddleleft.axvline(x=90, c='red', lw=3, linestyle='dashed')  # Vertical line at 30 degrees.
+        axmiddleleft.axvspan(90, 180, facecolor='0.2', alpha=0.5)  # Draw a vertical span.
         
         # Calculate kinematic diagnostics #
-        kappa, discfrac, orbi, vrotsig, vrots, delta, zaxis, Momentum = MorphoKinematics.kinematics_diagnostics(stellar_data_tmp['Coordinates'],
-                                                                                                                stellar_data_tmp['Mass'],
-                                                                                                                stellar_data_tmp['Velocity'],
-                                                                                                                stellar_data_tmp[
-                                                                                                                    'ParticleBindingEnergy'])
+        kappa, discfrac, orbital, vrotsig, vrots, delta, zaxis, momentum = MorphoKinematics.kinematics_diagnostics(stellar_data_tmp['Coordinates'],
+                                                                                                                   stellar_data_tmp['Mass'],
+                                                                                                                   stellar_data_tmp['Velocity'],
+                                                                                                                   stellar_data_tmp[
+                                                                                                                       'ParticleBindingEnergy'])
         
-        # Calculate disc mass fraction as the mass within 30 degrees from the densest pixel #
-        angular_theta_from_densest = np.arccos(
-            np.sin(lat_densest) * np.sin(np.arcsin(prc_unit_vector[:, 2])) + np.cos(lat_densest) * np.cos(np.arcsin(prc_unit_vector[:, 2])) * np.cos(
-                lon_densest - np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0])))  # In radians.
-        index = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))
-        discfrac2 = np.divide(np.sum(stellar_data_tmp['Mass'][index]), np.sum(stellar_data_tmp['Mass']))
+        # Calculate the distribution of orbital circularity #
+        j, = np.where((orbital < 0.0))
+        k, = np.where((orbital > 0.7) & (orbital < 1.7))
+        l, = np.where((orbital > -1.7) & (orbital < 1.7))
+        disc_fraction_00 = 1 - 2 * np.sum(stellar_data_tmp['Mass'][j]) / np.sum(stellar_data_tmp['Mass'][l])
+        disc_fraction_07 = np.sum(stellar_data_tmp['Mass'][k]) / np.sum(stellar_data_tmp['Mass'][l])
         
-        # Display as text the two different disc fractions #
-        figure.text(0.65, 0.3, 'discfrac= %.6s ' % discfrac, color='red')
-        figure.text(0.65, 0.25, 'discfrac= %.6s ' % discfrac2, color='blue')
+        ydata, edges = np.histogram(orbital, bins=100, range=[-1.7, 1.7], weights=stellar_data_tmp['Mass'] / np.sum(stellar_data_tmp['Mass']))
+        ydata /= edges[1:] - edges[:-1]
+        axmiddleright.plot(0.5 * (edges[1:] + edges[:-1]), ydata, label='D/T = %.3f [%.3f]' % (disc_fraction_07, disc_fraction_00))
+        axmiddleright.legend(loc='upper left', fontsize=16, frameon=False, numpoints=1)
+        
+        # Calculate bar strength from Fourier modes of surface density as a function of radius plot #
+        nbins = 40  # Number of radial bins.
+        r = np.sqrt(stellar_data_tmp['Coordinates'][:, 0] ** 2 + stellar_data_tmp['Coordinates'][:, 1] ** 2)  # Radius of each particle.
+        
+        # Initialise Fourier components #
+        r_m = np.zeros(nbins)
+        beta_2 = np.zeros(nbins)
+        alpha_0 = np.zeros(nbins)
+        alpha_2 = np.zeros(nbins)
+        
+        # Split up galaxy in radius bins and calculate Fourier components #
+        for i in range(0, nbins):
+            r_s = float(i) * 0.25
+            r_b = float(i) * 0.25 + 0.25
+            r_m[i] = float(i) * 0.25 + 0.125
+            xfit = stellar_data_tmp['Coordinates'][:, 0][(r < r_b) & (r > r_s)]
+            yfit = stellar_data_tmp['Coordinates'][:, 1][(r < r_b) & (r > r_s)]
+            for k in range(0, len(xfit)):
+                th_i = np.arctan2(yfit[k], xfit[k])
+                alpha_0[i] = alpha_0[i] + 1
+                alpha_2[i] = alpha_2[i] + np.cos(2 * th_i)
+                beta_2[i] = beta_2[i] + np.sin(2 * th_i)
+        
+        # Calculate bar strength A_2 #
+        a2 = np.divide(np.sqrt(alpha_2[:] ** 2 + beta_2[:] ** 2), alpha_0[:])
+        
+        # Plot bar strength #
+        axlowerleft.plot(r_m, a2, label="bar strength: %.2f" % max(a2))
+        axlowerleft.legend(loc='upper left', fontsize=12, frameon=False, numpoints=1)
         
         # Save the plot #
         plt.savefig(outdir + str(group_number) + str(subgroup_number) + '-' + 'RDSD' + '-' + date + '.png', bbox_inches='tight')

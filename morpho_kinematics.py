@@ -81,7 +81,7 @@ class MorphoKinematics:
         vrotsig = Vrot / SigmaO
         delta = 1 - (SigmaZ / SigmaO) ** 2
         
-        return kappa, discfrac, orbi, vrotsig, vrots, delta, zaxis, glx_angular_momentum_magnitude
+        return kappa, discfrac, orbital, vrotsig, vrots, delta, zaxis, glx_angular_momentum_magnitude
     
     
     @staticmethod

@@ -37,7 +37,7 @@ class RotateGalaxies:
         
         if np.sum(xdir * Ldir) < 0:
             xdir *= -1.0
-
+        
         # Align y-axis with the intermediate axis #
         j, = np.where(A != max(A))
         i2 = eigvalues[j].argsort()
@@ -52,10 +52,10 @@ class RotateGalaxies:
     
     
     @staticmethod
-    def rotate(coordinates, dir1, dir2, dir3):
+    def rotate(property, dir1, dir2, dir3):
         matrix = np.array([dir1, dir2, dir3])
         rotmat = np.array(matrix.transpose())
         
-        rotated_coordinates = np.dot(coordinates, rotmat)
+        rotated_property = np.dot(property, rotmat)
         
-        return rotated_coordinates
+        return rotated_property
