@@ -11,6 +11,7 @@ import seaborn as sns
 import matplotlib.cbook
 import astropy.units as u
 import matplotlib.pyplot as plt
+from astropy_healpix import HEALPix
 import eagle_IO.eagle_IO.eagle_IO as E
 
 from matplotlib import gridspec
@@ -42,7 +43,7 @@ class RADec:
         
         p = 1  # Counter.
         # Initialise arrays and a dictionary to store the data #
-        unit_vector = []
+        prc_unit_vector = []
         stellar_data_tmp = {}
         glx_unit_vector = []
         
@@ -60,14 +61,14 @@ class RADec:
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
                     
-                    stellar_data_tmp, glx_unit_vector, unit_vector = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
+                    stellar_data_tmp, glx_unit_vector, prc_unit_vector = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
                     
-                    # Save data in nampy arrays #
-                    np.save(SavePath + 'unit_vector_' + str(group_number), unit_vector)
+                    # Save data in numpy arrays #
                     np.save(SavePath + 'group_number_' + str(group_number), group_number)
+                    np.save(SavePath + 'prc_unit_vector_' + str(group_number), prc_unit_vector)
                     np.save(SavePath + 'subgroup_number_' + str(group_number), subgroup_number)
-                    np.save(SavePath + 'stellar_data_tmp_' + str(group_number), stellar_data_tmp)
                     np.save(SavePath + 'glx_unit_vector_' + str(group_number), glx_unit_vector)
+                    np.save(SavePath + 'stellar_data_tmp_' + str(group_number), stellar_data_tmp)
                     print('Masked and saved data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                         round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
@@ -76,7 +77,7 @@ class RADec:
                 elif args.r:  # Read data.
                     start_local_time = time.time()  # Start the local time.
                     
-                    stellar_data_tmp, glx_unit_vector, unit_vector = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
+                    stellar_data_tmp, glx_unit_vector, prc_unit_vector = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
                     print('Masked data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                         round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
@@ -86,8 +87,8 @@ class RADec:
                     start_local_time = time.time()  # Start the local time.
                     
                     group_number = np.load(SavePath + 'group_number_' + str(group_number) + '.npy')
+                    prc_unit_vector = np.load(SavePath + 'unit_vector_' + str(group_number) + '.npy')
                     subgroup_number = np.load(SavePath + 'subgroup_number_' + str(group_number) + '.npy')
-                    unit_vector = np.load(SavePath + 'unit_vector_' + str(group_number) + '.npy')
                     glx_unit_vector = np.load(SavePath + 'glx_unit_vector_' + str(group_number) + '.npy')
                     stellar_data_tmp = np.load(SavePath + 'stellar_data_tmp_' + str(group_number) + '.npy', allow_pickle=True)
                     stellar_data_tmp = stellar_data_tmp.item()
@@ -98,7 +99,7 @@ class RADec:
                 # Plot the data #
                 start_local_time = time.time()  # Start the local time.
                 
-                self.plot(stellar_data_tmp, glx_unit_vector, unit_vector, group_number, subgroup_number)
+                self.plot(stellar_data_tmp, glx_unit_vector, prc_unit_vector, group_number, subgroup_number)
                 print('Plotted data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
                 print('–––––––––––––––––––––––––––––––––––––––––')
         
@@ -162,7 +163,7 @@ class RADec:
         A method to mask galaxies.
         :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber']))
         :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
-        :return: stellar_data_tmp, unit_vector
+        :return: stellar_data_tmp, prc_unit_vector
         """
         
         # Select the corresponding halo in order to get its centre of potential #
@@ -188,18 +189,18 @@ class RADec:
                                                                                   stellar_data_tmp['Velocity'])  # Msun kpc km s-1
         glx_angular_momentum = np.sum(prc_angular_momentum, axis=0)  # Msun kpc km s-1
         glx_unit_vector = np.divide(glx_angular_momentum, np.linalg.norm(glx_angular_momentum))
-        unit_vector = np.divide(prc_angular_momentum, np.linalg.norm(prc_angular_momentum, axis=1)[:, np.newaxis])
+        prc_unit_vector = np.divide(prc_angular_momentum, np.linalg.norm(prc_angular_momentum, axis=1)[:, np.newaxis])
         
-        return stellar_data_tmp, glx_unit_vector, unit_vector
+        return stellar_data_tmp, glx_unit_vector, prc_unit_vector
     
     
     @staticmethod
-    def plot(stellar_data_tmp, glx_unit_vector, unit_vector, group_number, subgroup_number):
+    def plot(stellar_data_tmp, glx_unit_vector, prc_unit_vector, group_number, subgroup_number):
         """
-        A method to plot a hexbin histogram.
+        A method to plot a HEALPix histogram and ra and dec for different properties.
         :param stellar_data_tmp: from mask_galaxies
         :param glx_unit_vector: from mask_galaxies
-        :param unit_vector: from mask_galaxies
+        :param prc_unit_vector: from mask_galaxies
         :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber']))
         :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
         :return: None
@@ -244,26 +245,42 @@ class RADec:
         axupperright.set_xticklabels(x_tick_labels)
         axupperright.set_yticklabels(y_tick_labels)
         
-        # Generate the RA and Dec projection #
-        # from scipy.ndimage import zoom
-        # Nparticles = len(stellar_data_tmp['Mass'])
-        # Nbins = [int((np.pi - (-np.pi)) / 0.1), int((np.pi / 2 - (-np.pi / 2)) / 0.05)]
-        # H, xedges, yedges = np.histogram2d(np.arctan2(unit_vector[:, 1], unit_vector[:, 0]), np.arcsin(unit_vector[:, 2]), bins=Nbins)
-        # H = zoom(H, 20)
-        # extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
-        # mylevels = np.linspace(1.0, Nbins[1], Nbins[1]) * Nparticles / (Nbins[1] ** 2 / 0.7)
-        # hexbin = axupperleft.contourf(H.transpose()[::], origin='lower', cmap='inferno', levels=mylevels, extent=extent)
-        hexbin = axupperleft.hexbin(np.arctan2(unit_vector[:, 1], unit_vector[:, 0]), np.arcsin(unit_vector[:, 2]), bins='log', cmap='PuRd',
-                                    gridsize=100, edgecolor='none', mincnt=1, zorder=-1)  # Element-wise arctan of x1/x2.
-        axupperleft.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black', marker='X',
-                            zorder=-1)
+        # Calculate the ra and dec of the (unit vector of) angular momentum for each particle #
+        ra = np.degrees(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]))
+        dec = np.degrees(np.arcsin(prc_unit_vector[:, 2]))
         
-        # Generate the color bar #
-        cbar = plt.colorbar(hexbin, ax=axupperleft, orientation='horizontal')
-        cbar.set_label('$\mathrm{Particles\; per\; hexbin}$')
+        # Create HEALPix map #
+        nside = 2 ** 5  # Define the resolution of the grid (number of divisions along the side of a base-resolution pixel).
+        hp = HEALPix(nside=nside)  # Initialise the HEALPix pixellisation class.
+        indices = hp.lonlat_to_healpix(ra * u.deg, dec * u.deg)  # Create list of HEALPix indices from particles' ra and dec.
+        density = np.bincount(indices, minlength=hp.npix)  # Count number of points in each HEALPix pixel.
+        
+        # Find location of density maximum and plot its positions and the ra and dec of the galactic angular momentum #
+        index_densest = np.argmax(density)
+        lon_densest = (hp.healpix_to_lonlat([index_densest])[0].value + np.pi) % (2 * np.pi) - np.pi
+        lat_densest = (hp.healpix_to_lonlat([index_densest])[1].value + np.pi / 2) % (2 * np.pi) - np.pi / 2
+        axupperleft.annotate(r'Density maximum', xy=(lon_densest, lat_densest), xycoords='data', xytext=(0.78, 1.00), textcoords='axes fraction',
+                             arrowprops=dict(arrowstyle="-", color='black', connectionstyle="arc3,rad=0"))  # Position of the denset pixel.
+        axupperleft.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black', marker='X',
+                            zorder=5)  # Position of the galactic angular momentum.
+        
+        # Sample a 360x180 grid in ra/dec #
+        ra = np.linspace(-180.0, 180.0, num=360) * u.deg
+        dec = np.linspace(-90.0, 90.0, num=180) * u.deg
+        ra_grid, dec_grid = np.meshgrid(ra, dec)
+        
+        # Find density at each coordinate position #
+        coordinate_index = hp.lonlat_to_healpix(ra_grid, dec_grid)
+        density_map = density[coordinate_index]
+        
+        # Display data on a 2D regular raster and create a pseudo-color plot #
+        im = axupperleft.imshow(density_map, cmap='nipy_spectral_r', aspect='auto', norm=matplotlib.colors.LogNorm(vmin=1))
+        cbar = plt.colorbar(im, ax=axupperleft, orientation='horizontal')
+        cbar.set_label('$\mathrm{Particles\; per\; grid\; cell}$')
+        axupperleft.pcolormesh(np.radians(ra), np.radians(dec), density_map, cmap='nipy_spectral_r')
         
         # Generate the RA and Dec projection colour-coded by StellarFormationTime #
-        scatter = axupperright.scatter(np.arctan2(unit_vector[:, 1], unit_vector[:, 0]), np.arcsin(unit_vector[:, 2]),
+        scatter = axupperright.scatter(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]), np.arcsin(prc_unit_vector[:, 2]),
                                        c=stellar_data_tmp['StellarFormationTime'], cmap='jet_r', s=1, zorder=-1)
         
         axupperright.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black', marker='X',
@@ -280,7 +297,7 @@ class RADec:
             np.subtract(np.sum(np.multiply(stellar_data_tmp['Velocity'], stellar_data_tmp['Velocity']), axis=1), velocity_r_sqred),
             2 * velocity_r_sqred))
         
-        scatter = axlowerleft.scatter(np.arctan2(unit_vector[:, 1], unit_vector[:, 0]), np.arcsin(unit_vector[:, 2]), c=np.exp(beta - 1),
+        scatter = axlowerleft.scatter(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]), np.arcsin(prc_unit_vector[:, 2]), c=np.exp(beta - 1),
                                       cmap='tab20', s=1, zorder=-1)
         
         axlowerleft.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black', marker='X',
@@ -291,7 +308,7 @@ class RADec:
         cbar.set_label(r'$\mathrm{log_{10}({\beta/\bar{\beta}})}$')
         
         # Generate the RA and Dec projection colour-coded by BirthDensity #
-        scatter = axlowerright.scatter(np.arctan2(unit_vector[:, 1], unit_vector[:, 0]), np.arcsin(unit_vector[:, 2]),
+        scatter = axlowerright.scatter(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]), np.arcsin(prc_unit_vector[:, 2]),
                                        c=stellar_data_tmp['BirthDensity'], cmap='jet', s=1, zorder=-1)
         axlowerright.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black', marker='X',
                              zorder=-1)
@@ -309,11 +326,11 @@ class RADec:
 
 if __name__ == '__main__':
     # tag = '010_z005p000'
-    # sim = '/cosma7/data/dp004/dc-payy1/G-EAGLE/GEAGLE_06/data/'
+    # sim = '/cosma7/data/dp004/dc-payy1/G-EAGLE/GEAGLE_06/data/'  # Path to G-EAGLE data.
     # outdir = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/RD/G-EAGLE/'  # Path to save plots.
     # SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/RD/G-EAGLE/'  # Path to save/load data.
     tag = '027_z000p101'
-    sim = '/cosma5/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'
+    sim = '/cosma5/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
     outdir = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/RD/EAGLE/'  # Path to save plots.
     SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/RD/EAGLE/'  # Path to save/load data.
     x = RADec(sim, tag)

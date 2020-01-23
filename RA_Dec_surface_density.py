@@ -192,17 +192,6 @@ class RADecSurfaceDensity:
         glx_unit_vector = np.divide(glx_angular_momentum, np.linalg.norm(glx_angular_momentum))
         prc_unit_vector = np.divide(prc_angular_momentum, np.linalg.norm(prc_angular_momentum, axis=1)[:, np.newaxis])
         
-        # Rotate galaxies #
-        xdir, ydir, zdir = RotateGalaxies.get_principal_axis(stellar_data_tmp['Coordinates'], stellar_data_tmp['Mass'], glx_unit_vector)
-        stellar_data_tmp['Coordinates'] = RotateGalaxies.rotate(stellar_data_tmp['Coordinates'], xdir, ydir, zdir)
-        stellar_data_tmp['Velocity'] = RotateGalaxies.rotate(stellar_data_tmp['Velocity'], xdir, ydir, zdir)
-        
-        prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
-                                                                                  stellar_data_tmp['Velocity'])  # Msun kpc km s-1
-        glx_angular_momentum = np.sum(prc_angular_momentum, axis=0)  # Msun kpc km s-1
-        glx_unit_vector = np.divide(glx_angular_momentum, np.linalg.norm(glx_angular_momentum))
-        prc_unit_vector = np.divide(prc_angular_momentum, np.linalg.norm(prc_angular_momentum, axis=1)[:, np.newaxis])
-        
         return stellar_data_tmp, glx_unit_vector, prc_unit_vector
     
     
@@ -217,6 +206,7 @@ class RADecSurfaceDensity:
         :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
         :return: None
         """
+        
         # Set the style of the plots #
         sns.set()
         sns.set_style('ticks')
@@ -234,21 +224,23 @@ class RADecSurfaceDensity:
         axlowerleft = plt.subplot(gs[2, 0])
         axlowerright = plt.subplot(gs[2, 1])
         
-        axupperright.grid(True)
+        axlowerright.grid(True)
         axmiddleleft.grid(True)
         axmiddleright.grid(True)
         axlowerleft.grid(True)
-        axlowerright.grid(True)
+        axupperright.grid(False)
         axupperleft.set_xlabel('RA ($\degree$)')
         axupperleft.set_ylabel('Dec ($\degree$)')
         axmiddleleft.set_ylabel('Particles per grid cell')
         axmiddleleft.set_xlabel('Angular distance from X ($\degree$)')
-        axupperright.set_ylabel('Particles per grid cell')
-        axupperright.set_xlabel('Angular distance from densest grid cell ($\degree$)')
-        axlowerleft.set_ylabel('$\mathrm{A_{2}}$')
+        axmiddleright.set_ylabel('Particles per grid cell')
+        axmiddleright.set_xlabel('Angular distance from densest grid cell ($\degree$)')
         axlowerleft.set_xlabel('R [kpc]')
+        axlowerleft.set_ylabel('$\mathrm{A_{2}}$')
+        axlowerright.set_xlabel('$\mathrm{\epsilon}$')
+        axlowerright.set_ylabel('$\mathrm{f(\epsilon)}$')
         
-        axupperright.set_xlim(-10, 190)
+        axmiddleright.set_xlim(-10, 190)
         axmiddleleft.set_xlim(-10, 190)
         axlowerleft.set_ylim(-0.2, 1.2)
         axlowerleft.set_xlim(0.0, 10.0)
@@ -265,7 +257,18 @@ class RADecSurfaceDensity:
         axupperleft.annotate(r'-120', xy=(-2 * np.pi / 3, 0), xycoords='data', size=18)  # Position of -120 degrees.
         
         axmiddleleft.set_xticks(np.arange(0, 181, 20))
-        axupperright.set_xticks(np.arange(0, 181, 20))
+        axmiddleright.set_xticks(np.arange(0, 181, 20))
+        
+        # Rotate galaxies #
+        # xdir, ydir, zdir = RotateGalaxies.get_principal_axis(stellar_data_tmp['Coordinates'], stellar_data_tmp['Mass'], glx_unit_vector)
+        # stellar_data_tmp['Coordinates'] = RotateGalaxies.rotate(stellar_data_tmp['Coordinates'], xdir, ydir, zdir, glx_unit_vector)
+        # stellar_data_tmp['Velocity'] = RotateGalaxies.rotate(stellar_data_tmp['Velocity'], xdir, ydir, zdir, glx_unit_vector)
+        #
+        # prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
+        #                                                                           stellar_data_tmp['Velocity'])  # Msun kpc km s-1
+        # glx_angular_momentum = np.sum(prc_angular_momentum, axis=0)  # Msun kpc km s-1
+        # glx_unit_vector = np.divide(glx_angular_momentum, np.linalg.norm(glx_angular_momentum))
+        # prc_unit_vector = np.divide(prc_angular_momentum, np.linalg.norm(prc_angular_momentum, axis=1)[:, np.newaxis])
         
         # Calculate the ra and dec of the (unit vector of) angular momentum for each particle #
         ra = np.degrees(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]))
@@ -295,6 +298,13 @@ class RADecSurfaceDensity:
         coordinate_index = hp.lonlat_to_healpix(ra_grid, dec_grid)
         density_map = density[coordinate_index]
         
+        # Calculate and plot the projection of a circle with radius 30 degrees #
+        # phi = np.linspace(0, 2.0 * np.pi, 50)
+        # radius = np.radians(30)
+        # RA_circle = lat_densest + radius * np.cos(phi)
+        # Dec_cirlce = lon_densest + radius * np.sin(phi)
+        # axupperleft.plot(RA_circle, Dec_cirlce, color="black")
+        
         # Display data on a 2D regular raster and create a pseudo-color plot #
         im = axupperleft.imshow(density_map, cmap='nipy_spectral_r', aspect='auto', norm=matplotlib.colors.LogNorm(vmin=1))
         cbar = plt.colorbar(im, ax=axupperleft, orientation='horizontal')
@@ -307,6 +317,12 @@ class RADecSurfaceDensity:
                 lon_densest - np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0])))  # In radians.
         index = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))
         disc_fraction_IT20 = np.divide(np.sum(stellar_data_tmp['Mass'][index]), np.sum(stellar_data_tmp['Mass']))
+        
+        # Plot the 2D surface density projection and the contours #
+        count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][:, 1], stellar_data_tmp['Coordinates'][:, 2], bins=30,
+                                               range=[[-15, 15], [-15, 15]])
+        axupperright.imshow(np.ma.log10(count).T, extent=[-15, 15, -15, 15], origin='lower', cmap='bone', interpolation='bicubic')
+        # axupperright.contour(np.ma.log10(count).T, colors="k", extent=[-15, 15, -15, 15], levels=np.arange(0, 5 + 0.5, 0.25))
         
         # Calculate and plot the angular distance between the densest and all the other grid cells - all methods are identical #
         # 1) Spherical law of cosines https://en.wikipedia.org/wiki/Spherical_law_of_cosines
@@ -339,11 +355,11 @@ class RADecSurfaceDensity:
         # # c = np.sqrt(deltax * deltax + deltay * deltay + deltaz * deltaz)
         # # angular_theta_from_densest = 2 * np.arcsin(c / 2)
         
-        axupperright.scatter(angular_theta_from_densest[density_map.nonzero()] * np.divide(180.0, np.pi), density_map[density_map.nonzero()],
+        axmiddleright.scatter(angular_theta_from_densest[density_map.nonzero()] * np.divide(180.0, np.pi), density_map[density_map.nonzero()],
                              c='black', s=10)  # In degrees.
-        axupperright.axvline(x=30, c='blue', lw=3, linestyle='dashed', label='D/T= %.3f ' % disc_fraction_IT20)  # Vertical line at 30 degrees.
-        axupperright.axvspan(0, 30, facecolor='0.2', alpha=0.5)  # Draw a vertical span.
-        axupperright.legend(loc='upper center', fontsize=16, frameon=False, numpoints=1)
+        axmiddleright.axvline(x=30, c='blue', lw=3, linestyle='dashed', label='D/T= %.3f ' % disc_fraction_IT20)  # Vertical line at 30 degrees.
+        axmiddleright.axvspan(0, 30, facecolor='0.2', alpha=0.5)  # Draw a vertical span.
+        axmiddleright.legend(loc='upper center', fontsize=16, frameon=False, numpoints=1)
         
         # Calculate and plot the angular distance between the (unit vector of) the galactic angular momentum and all the other grid cells #
         position_of_X = np.vstack([np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2])]).T
@@ -371,8 +387,8 @@ class RADecSurfaceDensity:
         
         ydata, edges = np.histogram(orbital, bins=100, range=[-1.7, 1.7], weights=stellar_data_tmp['Mass'] / np.sum(stellar_data_tmp['Mass']))
         ydata /= edges[1:] - edges[:-1]
-        axmiddleright.plot(0.5 * (edges[1:] + edges[:-1]), ydata, label='D/T = %.3f [%.3f]' % (disc_fraction_07, disc_fraction_00))
-        axmiddleright.legend(loc='upper left', fontsize=16, frameon=False, numpoints=1)
+        axlowerright.plot(0.5 * (edges[1:] + edges[:-1]), ydata, label='D/T = %.3f [%.3f]' % (disc_fraction_07, disc_fraction_00))
+        axlowerright.legend(loc='upper left', fontsize=16, frameon=False, numpoints=1)
         
         # Calculate bar strength from Fourier modes of surface density as a function of radius plot #
         nbins = 40  # Number of radial bins.
@@ -401,8 +417,8 @@ class RADecSurfaceDensity:
         a2 = np.divide(np.sqrt(alpha_2[:] ** 2 + beta_2[:] ** 2), alpha_0[:])
         
         # Plot bar strength #
-        axlowerleft.plot(r_m, a2, label="bar strength: %.2f" % max(a2))
-        axlowerleft.legend(loc='upper left', fontsize=12, frameon=False, numpoints=1)
+        axlowerleft.plot(r_m, a2, label="Bar strength: %.2f" % max(a2))
+        axlowerleft.legend(loc='upper left', fontsize=16, frameon=False, numpoints=1)
         
         # Save the plot #
         plt.savefig(outdir + str(group_number) + str(subgroup_number) + '-' + 'RDSD' + '-' + date + '.png', bbox_inches='tight')
@@ -411,11 +427,11 @@ class RADecSurfaceDensity:
 
 if __name__ == '__main__':
     # tag = '010_z005p000'
-    # sim = '/cosma7/data/dp004/dc-payy1/G-EAGLE/GEAGLE_06/data/'
+    # sim = '/cosma7/data/dp004/dc-payy1/G-EAGLE/GEAGLE_06/data/'  # Path to G-EAGLE data.
     # outdir = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/RDSD/G-EAGLE/'  # Path to save plots.
     # SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/RDSD/G-EAGLE/'  # Path to save/load data.
     tag = '027_z000p101'
-    sim = '/cosma5/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'
+    sim = '/cosma5/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
     outdir = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/RDSD/EAGLE/'  # Path to save plots.
     SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/RDSD/EAGLE/'  # Path to save/load data.
     x = RADecSurfaceDensity(sim, tag)

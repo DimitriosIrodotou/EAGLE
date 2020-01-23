@@ -23,14 +23,14 @@ class RotateGalaxies:
         tensor[1, 2] = - np.sum(masses * py * pz)
         tensor[2, 1] = tensor[1, 2]
         
-        # Get the eigenvalues and eigenvectors and calculate the principal axe #
+        # Get the eigenvalues and eigenvectors and calculate the principal axes #
         eigvalues, eigvectors = np.linalg.eig(tensor)
         
         A1 = np.sum(Ldir * eigvectors[:, 0])
         A2 = np.sum(Ldir * eigvectors[:, 1])
         A3 = np.sum(Ldir * eigvectors[:, 2])
         A = np.abs(np.array([A1, A2, A3]))
-        print(A)
+        
         # Align X axis with the major axis #
         i, = np.where(A == A.max())
         xdir = eigvectors[:, i[0]]
@@ -52,10 +52,21 @@ class RotateGalaxies:
     
     
     @staticmethod
-    def rotate(property, dir1, dir2, dir3):
+    def rotate(property, dir1, dir2, dir3, glx_unit_vector):
         matrix = np.array([dir1, dir2, dir3])
-        rotmat = np.array(matrix.transpose())
-        
-        rotated_property = np.dot(property, rotmat)
+        rotation_matrix = np.array(matrix.transpose())
+
+        rotated_property = np.dot(property, rotation_matrix)
+
+        # up = [1.0, 0.0, 0.0]
+        # vec_in = np.asarray(glx_unit_vector)
+        # vec_p1 = np.cross(up, vec_in)
+        # vec_p1 = vec_p1 / np.sum(vec_p1 ** 2).sum() ** 0.5
+        # vec_p2 = np.cross(vec_in, vec_p1)
+        #
+        # matrix = np.concatenate((vec_p1, vec_p2, vec_in)).reshape((3, 3))
+        # rotmat = np.array(matrix.transpose())
+        #
+        # rotated_property = np.dot(rotmat, property.T).T
         
         return rotated_property

@@ -84,7 +84,7 @@ class BulgeDiscDecomposition:
                     start_local_time = time.time()  # Start the local time.
                     
                     disc_fractions = np.load(SavePath + 'disc_fractions' + '.npy')
-                    glx_stellar_masses = np.load(SavePath + 'glx_stellar_masses' +  '.npy')
+                    glx_stellar_masses = np.load(SavePath + 'glx_stellar_masses' + '.npy')
                     print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
                     # + ' (' + str(round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
@@ -244,12 +244,12 @@ class BulgeDiscDecomposition:
 
 
 if __name__ == '__main__':
-    tag = '010_z005p000'
-    sim = '/cosma7/data/dp004/dc-payy1/G-EAGLE/GEAGLE_06/data/'
-    outdir = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/BDD/G-EAGLE/'  # Path to save plots.
-    SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/BDD/G-EAGLE/'  # Path to save/load data.
-    # tag = '027_z000p101'
-    # sim = '/cosma5/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'
-    # outdir = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/RDSD/EAGLE/'  # Path to save plots.
-    # SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/RDSD/EAGLE/'  # Path to save/load data.
+    # tag = '010_z005p000'
+    # sim = '/cosma7/data/dp004/dc-payy1/G-EAGLE/GEAGLE_06/data/'  # Path to G-EAGLE data.
+    # outdir = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/BDD/G-EAGLE/'  # Path to save plots.
+    # SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/BDD/G-EAGLE/'  # Path to save/load data.
+    tag = '027_z000p101'
+    sim = '/cosma5/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
+    outdir = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/RDSD/EAGLE/'  # Path to save plots.
+    SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/RDSD/EAGLE/'  # Path to save/load data.
     x = BulgeDiscDecomposition(sim, tag)

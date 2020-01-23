@@ -59,7 +59,7 @@ class PositionHistogram:
                     
                     stellar_data_tmp = self.mask_galaxies(group_number, subgroup_number)  # Mask the data
                     
-                    # Save data in nampy arrays #
+                    # Save data in numpy arrays #
                     np.save(SavePath + 'group_number_' + str(group_number), group_number)
                     np.save(SavePath + 'subgroup_number_' + str(group_number), subgroup_number)
                     np.save(SavePath + 'stellar_data_tmp_' + str(group_number), stellar_data_tmp)
@@ -245,12 +245,12 @@ class PositionHistogram:
 
 
 if __name__ == '__main__':
-    tag = '010_z005p000'
-    sim = '/cosma7/data/dp004/dc-payy1/G-EAGLE/GEAGLE_06/data/'
-    outdir = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/PH/G-EAGLE/'  # Path to save plots.
-    SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/PH/G-EAGLE/'  # Path to save/load data.
-    # tag = '027_z000p101'
-    # sim = '/cosma5/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'
-    # outdir = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/PH/EAGLE/'  # Path to save plots.
-    # SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/PH/EAGLE/'  # Path to save/load data.
+    # tag = '010_z005p000'
+    # sim = '/cosma7/data/dp004/dc-payy1/G-EAGLE/GEAGLE_06/data/'  # Path to G-EAGLE data.
+    # outdir = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/PH/G-EAGLE/'  # Path to save plots.
+    # SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/PH/G-EAGLE/'  # Path to save/load data.
+    tag = '027_z000p101'
+    sim = '/cosma5/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
+    outdir = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/PH/EAGLE/'  # Path to save plots.
+    SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/PH/EAGLE/'  # Path to save/load data.
     x = PositionHistogram(sim, tag)
