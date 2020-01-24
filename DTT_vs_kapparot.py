@@ -2,6 +2,9 @@ import re
 import time
 import warnings
 import argparse
+import matplotlib
+
+matplotlib.use('Agg')
 
 import numpy as np
 import seaborn as sns
@@ -10,10 +13,11 @@ import astropy.units as u
 import matplotlib.pyplot as plt
 import eagle_IO.eagle_IO.eagle_IO as E
 
-from matplotlib import gridspec
+from astropy_healpix import HEALPix
+from morpho_kinematics import MorphoKinematics
 
 # Create a parser and add argument to read data #
-parser = argparse.ArgumentParser(description='Create 2 dimensional histograms of bulge/disc decomposition.')
+parser = argparse.ArgumentParser(description='Create D/T vs kappa_rot plot.')
 parser.add_argument('-r', action='store_true', help='Read data')
 parser.add_argument('-l', action='store_true', help='Load data')
 parser.add_argument('-rs', action='store_true', help='Read data and save to numpy arrays')
@@ -24,9 +28,9 @@ start_global_time = time.time()  # Start the global time.
 warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
 
 
-class BulgeDiscDecomposition:
+class DiscToTotalVsKappaRot:
     """
-    A class to create 2 dimensional histograms of the bulge/disc decomposition.
+    Create a disc to total ratio as a function of kappa_rot plos.
     """
     
     
@@ -39,8 +43,9 @@ class BulgeDiscDecomposition:
         
         p = 1  # Counter.
         # Initialise empty arrays to hold the data #
+        kappas = []
         disc_fractions = []
-        glx_stellar_masses = []
+        disc_fractions_IT20 = []
         
         if not args.l:
             self.Ngroups = E.read_header('SUBFIND', sim, tag, 'TotNgroups')
@@ -50,20 +55,21 @@ class BulgeDiscDecomposition:
             
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
         
-        # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all the accepted haloes
-        for group_number in range(1, 2):  # Loop over all masked haloes.
+        for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all the accepted haloes
+            # for group_number in range(1, 101):  # Loop over all masked haloes.
             for subgroup_number in range(0, 1):
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
                     
-                    stellar_data_tmp, disc_fraction = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
+                    kappa, disc_fraction, disc_fraction_IT20 = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
+                    kappas.append(kappa)
                     disc_fractions.append(disc_fraction)
-                    glx_stellar_masses.append(np.sum(stellar_data_tmp['Mass']))
+                    disc_fractions_IT20.append(disc_fraction_IT20)
                     
-                    # Save data in numpy arrays #
-                    if group_number == 4:
-                        np.save(SavePath + 'disc_fractions', disc_fractions)
-                        np.save(SavePath + 'glx_stellar_masses', glx_stellar_masses)
+                    # Save data in numpy arrays every 10 galaxies to make it faster #
+                    np.save(SavePath + 'kappas', kappas)
+                    np.save(SavePath + 'disc_fractions', disc_fractions)
+                    np.save(SavePath + 'disc_fractions_IT20', disc_fractions_IT20)
                     print('Masked and saved data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                         round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
@@ -72,9 +78,10 @@ class BulgeDiscDecomposition:
                 elif args.r:  # Read data.
                     start_local_time = time.time()  # Start the local time.
                     
-                    stellar_data_tmp, disc_fraction = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
+                    kappa, disc_fraction, disc_fraction_IT20 = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
+                    kappas.append(kappa)
                     disc_fractions.append(disc_fraction)
-                    glx_stellar_masses.append(np.sum(stellar_data_tmp['Mass']))
+                    disc_fractions_IT20.append(disc_fraction_IT20)
                     print('Masked data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                         round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
@@ -83,20 +90,21 @@ class BulgeDiscDecomposition:
                 elif args.l:  # Load data.
                     start_local_time = time.time()  # Start the local time.
                     
+                    kappas = np.load(SavePath + 'kappas' + '.npy')
                     disc_fractions = np.load(SavePath + 'disc_fractions' + '.npy')
-                    glx_stellar_masses = np.load(SavePath + 'glx_stellar_masses' + '.npy')
-                    print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
-                    # + ' (' + str(round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
+                    disc_fractions_IT20 = np.load(SavePath + 'disc_fractions_IT20' + '.npy')
+                    print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
+                        round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
         
         # Plot the data #
         start_local_time = time.time()  # Start the local time.
         
-        # self.plot(glx_stellar_masses, disc_fractions)
+        self.plot(kappas, disc_fractions, disc_fractions_IT20)
         print('Plotted data for ' + re.split('EAGLE/|/data', sim)[2] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished BulgeDiscDecomposition for ' + re.split('EAGLE/|/data', sim)[2] + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished DTTK for ' + re.split('EAGLE/|/data', sim)[2] + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
@@ -113,14 +121,14 @@ class BulgeDiscDecomposition:
         subhalo_data = {}
         file_type = 'SUBFIND'
         for attribute in ['ApertureMeasurements/Mass/030kpc', 'CentreOfPotential', 'GroupNumber', 'SubGroupNumber']:
-            subhalo_data[attribute] = E.read_array(file_type, sim, tag, '/Subhalo/' + attribute, numThreads=4)
+            subhalo_data[attribute] = E.read_array(file_type, sim, tag, '/Subhalo/' + attribute, numThreads=8)
         
         # Load particle data in h-free physical CGS units #
         stellar_data = {}
         particle_type = '4'
         file_type = 'PARTDATA'
-        for attribute in ['Coordinates', 'GroupNumber', 'Mass', 'SubGroupNumber', 'Velocity']:
-            stellar_data[attribute] = E.read_array(file_type, sim, tag, '/PartType' + particle_type + '/' + attribute, numThreads=4)
+        for attribute in ['Coordinates', 'GroupNumber', 'Mass', 'ParticleBindingEnergy', 'SubGroupNumber', 'Velocity']:
+            stellar_data[attribute] = E.read_array(file_type, sim, tag, '/PartType' + particle_type + '/' + attribute, numThreads=8)
         
         # Convert attributes to astronomical units #
         stellar_data['Mass'] *= u.g.to(u.Msun)
@@ -154,7 +162,7 @@ class BulgeDiscDecomposition:
         A method to mask galaxies.
         :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber']))
         :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
-        :return: stellar_data_tmp, disc_fraction
+        :return: stellar_data_tmp, prc_unit_vector
         """
         
         # Select the corresponding halo in order to get its centre of potential #
@@ -162,7 +170,7 @@ class BulgeDiscDecomposition:
         
         # Mask the data to select galaxies with a given GroupNumber and SubGroupNumber and particles inside a 30kpc sphere #
         mask = np.where((self.stellar_data['GroupNumber'] == group_number) & (self.stellar_data['SubGroupNumber'] == subgroup_number) & (
-            np.linalg.norm(np.subtract(self.stellar_data['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][index]), axis=1) <= 30.0))
+            np.linalg.norm(np.subtract(self.stellar_data['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][index]), axis=1) <= 30.0))  # kpc
         
         # Mask the temporary dictionary for each galaxy #
         stellar_data_tmp = {}
@@ -172,29 +180,50 @@ class BulgeDiscDecomposition:
         # Normalise the coordinates and velocities wrt the centre of potential of the subhalo #
         stellar_data_tmp['Coordinates'] = np.subtract(stellar_data_tmp['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][index])
         CoM_velocity = np.divide(np.sum(stellar_data_tmp['Mass'][:, np.newaxis] * stellar_data_tmp['Velocity'], axis=0),
-                                 np.sum(stellar_data_tmp['Mass']))  # km s-1
+                                 np.sum(stellar_data_tmp['Mass'], axis=0))  # km s-1
         stellar_data_tmp['Velocity'] = np.subtract(stellar_data_tmp['Velocity'], CoM_velocity)
         
         # Compute the angular momentum for each particle and for the galaxy and the unit vector parallel to the galactic angular momentum vector #
         prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
                                                                                   stellar_data_tmp['Velocity'])  # Msun kpc km s-1
-        
-        glx_angular_momentum = np.sum(prc_angular_momentum, axis=0)  # Msun kpc km s-1
-        glx_unit_vector = np.divide(glx_angular_momentum, np.linalg.norm(glx_angular_momentum))
         prc_unit_vector = np.divide(prc_angular_momentum, np.linalg.norm(prc_angular_momentum, axis=1)[:, np.newaxis])
         
-        # Select particles whose angular momentum projected along the rotation axis is negative and compute the disc-to-total ratio #
-        norm_projection = np.sum(np.multiply(prc_unit_vector, glx_unit_vector), axis=1)
-        index = np.where(np.arccos(norm_projection) > np.pi / 2)
-        disc_fraction = 1 - np.divide(2 * np.sum(stellar_data_tmp['Mass'][index]), np.sum(stellar_data_tmp['Mass']))
+        # Calculate kinematic diagnostics #
+        kappa, disc_fraction, orbital, vrotsig, vrots, delta, zaxis, momentum = MorphoKinematics.kinematics_diagnostics(
+            stellar_data_tmp['Coordinates'], stellar_data_tmp['Mass'], stellar_data_tmp['Velocity'], stellar_data_tmp['ParticleBindingEnergy'])
         
-        return stellar_data_tmp, disc_fraction
+        # Calculate the ra and dec of the (unit vector of) angular momentum for each particle #
+        ra = np.degrees(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]))
+        dec = np.degrees(np.arcsin(prc_unit_vector[:, 2]))
+        
+        # Create HEALPix map #
+        nside = 2 ** 5  # Define the resolution of the grid (number of divisions along the side of a base-resolution pixel).
+        hp = HEALPix(nside=nside)  # Initialise the HEALPix pixellisation class.
+        indices = hp.lonlat_to_healpix(ra * u.deg, dec * u.deg)  # Create list of HEALPix indices from particles' ra and dec.
+        density = np.bincount(indices, minlength=hp.npix)  # Count number of points in each HEALPix pixel.
+        
+        # Find location of density maximum and plot its positions and the ra and dec of the galactic angular momentum #
+        index_densest = np.argmax(density)
+        lon_densest = (hp.healpix_to_lonlat([index_densest])[0].value + np.pi) % (2 * np.pi) - np.pi
+        lat_densest = (hp.healpix_to_lonlat([index_densest])[1].value + np.pi / 2) % (2 * np.pi) - np.pi / 2
+        
+        # Calculate disc mass fraction as the mass within 30 degrees from the densest pixel #
+        angular_theta_from_densest = np.arccos(
+            np.sin(lat_densest) * np.sin(np.arcsin(prc_unit_vector[:, 2])) + np.cos(lat_densest) * np.cos(np.arcsin(prc_unit_vector[:, 2])) * np.cos(
+                lon_densest - np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0])))  # In radians.
+        index = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))
+        disc_fraction_IT20 = np.divide(np.sum(stellar_data_tmp['Mass'][index]), np.sum(stellar_data_tmp['Mass']))
+        
+        return kappa, disc_fraction, disc_fraction_IT20
     
     
     @staticmethod
-    def plot(glx_stellar_masses, disc_fractions):
+    def plot(kappas, disc_fractions, disc_fractions_IT20):
         """
-        A method to plot a hexbin histogram.
+        A method to plot a HEALPix histogram.
+        :param kappas: from mask_galaxies
+        :param disc_fractions: from mask_galaxies
+        :param disc_fractions_IT20: from mask_galaxies
         :return: None
         """
         
@@ -203,41 +232,31 @@ class BulgeDiscDecomposition:
         sns.set_style('ticks')
         sns.set_context('notebook', font_scale=1.6)
         
-        # Generate the figures #
+        # Generate the figure #
         plt.close()
-        figure = plt.figure(0, figsize=(10, 10))
+        figure = plt.figure(0, figsize=(20, 22.5))
         
-        gs = gridspec.GridSpec(1, 2, width_ratios=(30, 1))
-        ax = plt.subplot(gs[:, :1])
-        axcbar = plt.subplot(gs[:, 1])
+        plt.grid(True)
+        plt.xlim(0, 1)
+        plt.ylim(0, 1)
+        plt.ylabel('$D/T_{30\degree}$')
+        plt.xlabel('$\kappa_{rot}$')
         
-        # plt.xlim(-15, 15)
-        ax.set_ylim(-1.2, 1.2)
-        ax.set_ylabel(r'$\mathrm{D/T}$')
-        ax.set_xlabel(r'$\mathrm{M_{\bigstar} / M_{\odot}}$')
-        ax.tick_params(direction='in', which='both', top='on', right='on')
-        
-        # Generate the XY projection #
-        hexbin = ax.scatter(glx_stellar_masses, disc_fractions)  # , xscale='log', cmap='bone', gridsize=50, edgecolor='none', mincnt=1)
-        
-        # Generate the color bar #
-        # cbar = plt.colorbar(hexbin, cax=axcbar)
-        # cbar.set_label('$\mathrm{Particles\; per\; hexbin}$')
+        plt.scatter(disc_fractions_IT20, kappas)
+        plt.scatter(disc_fractions, kappas)
         
         # Save the plot #
-        plt.title('z ~ ' + re.split('_z0|p000', tag)[1])
-        plt.savefig(outdir + 'BDD' + '-' + date + '.png', bbox_inches='tight')
-        
+        plt.savefig(outdir + 'DTTK' + '-' + date + '.png', bbox_inches='tight')
         return None
 
 
 if __name__ == '__main__':
     # tag = '010_z005p000'
     # sim = '/cosma7/data/dp004/dc-payy1/G-EAGLE/GEAGLE_06/data/'  # Path to G-EAGLE data.
-    # outdir = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/BDD/G-EAGLE/'  # Path to save plots.
-    # SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/BDD/G-EAGLE/'  # Path to save/load data.
+    # outdir = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/DTTK/G-EAGLE/'  # Path to save plots.
+    # SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/DTTK/G-EAGLE/'  # Path to save/load data.
     tag = '027_z000p101'
     sim = '/cosma5/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
-    outdir = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/RDSD/EAGLE/'  # Path to save plots.
-    SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/RDSD/EAGLE/'  # Path to save/load data.
-    x = BulgeDiscDecomposition(sim, tag)
+    outdir = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/DTTK/EAGLE/'  # Path to save plots.
+    SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/DTTK/EAGLE/'  # Path to save/load data.
+    x = DiscToTotalVsKappaRot(sim, tag)

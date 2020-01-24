@@ -19,7 +19,7 @@ from rotate_galaxies import RotateGalaxies
 from morpho_kinematics import MorphoKinematics
 
 # Create a parser and add argument to read data #
-parser = argparse.ArgumentParser(description='Create ra and dec.')
+parser = argparse.ArgumentParser(description='Create ra and dec plot.')
 parser.add_argument('-r', action='store_true', help='Read data')
 parser.add_argument('-l', action='store_true', help='Load data')
 parser.add_argument('-rs', action='store_true', help='Read data and save to numpy arrays')
@@ -214,7 +214,7 @@ class RADecSurfaceDensity:
         
         # Generate the figure #
         plt.close()
-        figure = plt.figure(0, figsize=(20, 22.5))
+        plt.figure(0, figsize=(20, 22.5))
         
         gs = gridspec.GridSpec(3, 2)
         axupperleft = plt.subplot(gs[0, 0], projection='mollweide')
@@ -224,13 +224,18 @@ class RADecSurfaceDensity:
         axlowerleft = plt.subplot(gs[2, 0])
         axlowerright = plt.subplot(gs[2, 1])
         
-        axlowerright.grid(True)
-        axmiddleleft.grid(True)
-        axmiddleright.grid(True)
-        axlowerleft.grid(True)
+        for a in [axmiddleleft, axmiddleright, axlowerleft, axlowerright]:
+            a.grid(True)
         axupperright.grid(False)
+        
+        for a in [axmiddleleft, axmiddleright]:
+            a.set_xlim(-10, 190)
+            a.set_xticks(np.arange(0, 181, 20))
+        
         axupperleft.set_xlabel('RA ($\degree$)')
         axupperleft.set_ylabel('Dec ($\degree$)')
+        axupperright.set_xlabel('x [kpc]')
+        axupperright.set_ylabel('y [kpc]')
         axmiddleleft.set_ylabel('Particles per grid cell')
         axmiddleleft.set_xlabel('Angular distance from X ($\degree$)')
         axmiddleright.set_ylabel('Particles per grid cell')
@@ -240,24 +245,23 @@ class RADecSurfaceDensity:
         axlowerright.set_xlabel('$\mathrm{\epsilon}$')
         axlowerright.set_ylabel('$\mathrm{f(\epsilon)}$')
         
-        axmiddleright.set_xlim(-10, 190)
-        axmiddleleft.set_xlim(-10, 190)
+        axupperright.set_xlim(-20, 20)
+        axupperright.set_ylim(-20, 20)
         axlowerleft.set_ylim(-0.2, 1.2)
         axlowerleft.set_xlim(0.0, 10.0)
         
-        y_tick_labels = np.array(['', '-60', '', '-30', '', '0', '', '30', '', 60])
-        x_tick_labels = np.array(['', '-120', '', '-60', '', '0', '', '60', '', 120])
-        axupperleft.set_xticklabels(x_tick_labels)
-        axupperleft.set_yticklabels(y_tick_labels)
-        
-        axupperleft.annotate(r'0', xy=(0, 0), xycoords='data', size=18)  # Position of 0 degrees.
-        axupperleft.annotate(r'60', xy=(np.pi / 3, 0), xycoords='data', size=18)  # Position of 60 degrees.
-        axupperleft.annotate(r'-60', xy=(-np.pi / 3, 0), xycoords='data', size=18)  # Position of -60 degrees.
-        axupperleft.annotate(r'120', xy=(2 * np.pi / 3, 0), xycoords='data', size=18)  # Position of 120 degrees.
-        axupperleft.annotate(r'-120', xy=(-2 * np.pi / 3, 0), xycoords='data', size=18)  # Position of -120 degrees.
-        
-        axmiddleleft.set_xticks(np.arange(0, 181, 20))
-        axmiddleright.set_xticks(np.arange(0, 181, 20))
+        # Set manually the values of the ra axis #
+        axupperleft.annotate(r'0', xy=(0 - np.pi / 40, - np.pi / 65), xycoords='data', size=18)
+        axupperleft.annotate(r'30', xy=(np.pi / 6 - np.pi / 25, - np.pi / 65), xycoords='data', size=18)
+        axupperleft.annotate(r'-30', xy=(-np.pi / 6 - np.pi / 15, - np.pi / 65), xycoords='data', size=18)
+        axupperleft.annotate(r'60', xy=(np.pi / 3 - np.pi / 25, - np.pi / 65), xycoords='data', size=18)
+        axupperleft.annotate(r'-60', xy=(-np.pi / 3 - np.pi / 15, - np.pi / 65), xycoords='data', size=18)
+        axupperleft.annotate(r'90', xy=(np.pi / 2 - np.pi / 25, - np.pi / 65), xycoords='data', size=18)
+        axupperleft.annotate(r'-90', xy=(-np.pi / 2 - np.pi / 15, -np.pi / 65), xycoords='data', size=18)
+        axupperleft.annotate(r'120', xy=(2 * np.pi / 3 - np.pi / 15, -np.pi / 65), xycoords='data', size=18)
+        axupperleft.annotate(r'-120', xy=(-2 * np.pi / 3 - np.pi / 10, -np.pi / 65), xycoords='data', size=18)
+        axupperleft.annotate(r'150', xy=(2.5 * np.pi / 3 - np.pi / 15, -np.pi / 65), xycoords='data', size=18)
+        axupperleft.annotate(r'-150', xy=(-2.5 * np.pi / 3 - np.pi / 10, -np.pi / 65), xycoords='data', size=18)
         
         # Rotate galaxies #
         # xdir, ydir, zdir = RotateGalaxies.get_principal_axis(stellar_data_tmp['Coordinates'], stellar_data_tmp['Mass'], glx_unit_vector)
@@ -285,7 +289,7 @@ class RADecSurfaceDensity:
         lon_densest = (hp.healpix_to_lonlat([index_densest])[0].value + np.pi) % (2 * np.pi) - np.pi
         lat_densest = (hp.healpix_to_lonlat([index_densest])[1].value + np.pi / 2) % (2 * np.pi) - np.pi / 2
         axupperleft.annotate(r'Density maximum', xy=(lon_densest, lat_densest), xycoords='data', xytext=(0.78, 1.00), textcoords='axes fraction',
-                             arrowprops=dict(arrowstyle="-", color='black', connectionstyle="arc3,rad=0"))  # Position of the denset pixel.
+                             arrowprops=dict(arrowstyle="-", color='black', connectionstyle="arc3,rad=0"))  # Position of the densest pixel.
         axupperleft.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black', marker='X',
                             zorder=5)  # Position of the galactic angular momentum.
         
@@ -319,10 +323,14 @@ class RADecSurfaceDensity:
         disc_fraction_IT20 = np.divide(np.sum(stellar_data_tmp['Mass'][index]), np.sum(stellar_data_tmp['Mass']))
         
         # Plot the 2D surface density projection and the contours #
-        count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][:, 1], stellar_data_tmp['Coordinates'][:, 2], bins=30,
-                                               range=[[-15, 15], [-15, 15]])
-        axupperright.imshow(np.ma.log10(count).T, extent=[-15, 15, -15, 15], origin='lower', cmap='bone', interpolation='bicubic')
-        # axupperright.contour(np.ma.log10(count).T, colors="k", extent=[-15, 15, -15, 15], levels=np.arange(0, 5 + 0.5, 0.25))
+        count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][:, 0], stellar_data_tmp['Coordinates'][:, 1], bins=30,
+                                               range=[[-20, 20], [-20, 20]])
+        # axupperright.imshow(np.ma.log10(count).T, extent=[-20, 20, -20, 20], origin='lower', cmap='nipy_spectral_r', interpolation='bicubic',
+        #                     aspect='auto')
+        axupperright.scatter(stellar_data_tmp['Coordinates'][index, 0], stellar_data_tmp['Coordinates'][index, 1], s=3, c='blue')
+        index = np.where(angular_theta_from_densest > np.divide(np.pi, 6.0))
+        axupperright.scatter(stellar_data_tmp['Coordinates'][index, 0], stellar_data_tmp['Coordinates'][index, 1], s=3, c='red')
+        axupperright.contour(np.ma.log10(count).T, colors="k", extent=[-20, 20, -20, 20], levels=np.arange(0, 5 + 0.5, 0.25))
         
         # Calculate and plot the angular distance between the densest and all the other grid cells - all methods are identical #
         # 1) Spherical law of cosines https://en.wikipedia.org/wiki/Spherical_law_of_cosines
@@ -356,7 +364,7 @@ class RADecSurfaceDensity:
         # # angular_theta_from_densest = 2 * np.arcsin(c / 2)
         
         axmiddleright.scatter(angular_theta_from_densest[density_map.nonzero()] * np.divide(180.0, np.pi), density_map[density_map.nonzero()],
-                             c='black', s=10)  # In degrees.
+                              c='black', s=10)  # In degrees.
         axmiddleright.axvline(x=30, c='blue', lw=3, linestyle='dashed', label='D/T= %.3f ' % disc_fraction_IT20)  # Vertical line at 30 degrees.
         axmiddleright.axvspan(0, 30, facecolor='0.2', alpha=0.5)  # Draw a vertical span.
         axmiddleright.legend(loc='upper center', fontsize=16, frameon=False, numpoints=1)
