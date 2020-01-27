@@ -55,8 +55,8 @@ class DiscToTotalVsKappaRot:
             
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
         
-        # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all the accepted haloes
-        for group_number in range(1, 3):  # Loop over all masked haloes.
+        for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all the accepted haloes
+        # for group_number in range(1, 149):  # Loop over all masked haloes.
             for subgroup_number in range(0, 1):
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
@@ -71,7 +71,6 @@ class DiscToTotalVsKappaRot:
                         round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
                     p += 1
-                    print("O")
                 elif args.r:  # Read data.
                     start_local_time = time.time()  # Start the local time.
                     
@@ -82,25 +81,26 @@ class DiscToTotalVsKappaRot:
                     print('Masked data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                         round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
-                    p += 1  # Increace the count by one.
+                    p += 1  # Increase the count by one.
                 
                 if args.l or args.rs:  # Load data.
-                    print("E")
                     start_local_time = time.time()  # Start the local time.
     
                     kappa = np.load(SavePath + 'kappa_' + str(group_number) + '.npy')
                     disc_fraction = np.load(SavePath + 'disc_fraction_' + str(group_number) + '.npy')
                     disc_fraction_IT20 = np.load(SavePath + 'disc_fraction_IT20_' + str(group_number) + '.npy')
-                    kappas.append(kappa)
-                    disc_fractions.append(disc_fraction)
-                    disc_fractions_IT20.append(disc_fraction_IT20)
+                    kappas.append(kappa.item())
+                    disc_fractions.append(disc_fraction.item())
+                    disc_fractions_IT20.append(disc_fraction_IT20.item())
                     print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
                     # + ' (' + str(round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
         
         # Plot the data #
         start_local_time = time.time()  # Start the local time.
-        
+        print(kappas)
+        print(disc_fractions_IT20)
+        print(np.shape(kappas))
         self.plot(kappas, disc_fractions, disc_fractions_IT20)
         print('Plotted data for ' + re.split('EAGLE/|/data', sim)[2] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
@@ -249,47 +249,47 @@ class DiscToTotalVsKappaRot:
         y_hist.xaxis.set_ticks_position("top")
         y_hist.yaxis.set_ticks_position("right")
         
-        # Calculate median and 1-sigma #
-        nbin = int((max(kappas) - min(kappas)) / 0.02)
-        x_value = np.empty(nbin)
-        median = np.empty(nbin)
-        slow = np.empty(nbin)
-        shigh = np.empty(nbin)
-        x_low = min(kappas)
-        for i in range(nbin):
-            index = np.where((kappas >= x_low) & (kappas < x_low + 0.02))[0]
-            x_value[i] = np.mean(np.absolute(kappas)[index])
-            if len(index) > 0:
-                median[i] = np.nanmedian(disc_fractions_IT20[index])
-                slow[i] = np.nanpercentile(disc_fractions_IT20[index], 15.87)
-                shigh[i] = np.nanpercentile(disc_fractions_IT20[index], 84.13)
-            x_low += 0.02
-        
-        # Plot median and 1-sigma lines #
-        median_IT20, = main_plot.plot(x_value, median, color='black', zorder=5)
-        main_plot.fill_between(x_value, shigh, slow, color='black', alpha='0.5', zorder=5)
-        fill_IT20, = plt.fill(np.NaN, np.NaN, color='black', alpha=0.5, zorder=5)
-        
-        # Calculate median and 1-sigma #
-        nbin = int((max(kappas) - min(kappas)) / 0.02)
-        x_value = np.empty(nbin)
-        median = np.empty(nbin)
-        slow = np.empty(nbin)
-        shigh = np.empty(nbin)
-        x_low = min(kappas)
-        for i in range(nbin):
-            index = np.where((kappas >= x_low) & (kappas < x_low + 0.02))[0]
-            x_value[i] = np.mean(np.absolute(kappas)[index])
-            if len(index) > 0:
-                median[i] = np.nanmedian(disc_fractions[index])
-                slow[i] = np.nanpercentile(disc_fractions[index], 15.87)
-                shigh[i] = np.nanpercentile(disc_fractions[index], 84.13)
-            x_low += 0.02
-        
-        # Plot median and 1-sigma lines #
-        median, = main_plot.plot(x_value, median, color='blue', zorder=5)
-        main_plot.fill_between(x_value, shigh, slow, color='blue', alpha='0.5', zorder=5)
-        fill, = plt.fill(np.NaN, np.NaN, color='black', alpha=0.5, zorder=5)
+        # # Calculate median and 1-sigma #
+        # nbin = int((max(kappas) - min(kappas)) / 0.02)
+        # x_value = np.empty(nbin)
+        # median = np.empty(nbin)
+        # slow = np.empty(nbin)
+        # shigh = np.empty(nbin)
+        # x_low = min(kappas)
+        # for i in range(nbin):
+        #     index = np.where((kappas >= x_low) & (kappas < x_low + 0.02))[0]
+        #     x_value[i] = np.mean(np.absolute(kappas)[index])
+        #     if len(index) > 0:
+        #         median[i] = np.nanmedian(disc_fractions_IT20[index])
+        #         slow[i] = np.nanpercentile(disc_fractions_IT20[index], 15.87)
+        #         shigh[i] = np.nanpercentile(disc_fractions_IT20[index], 84.13)
+        #     x_low += 0.02
+        #
+        # # Plot median and 1-sigma lines #
+        # median_IT20, = main_plot.plot(x_value, median, color='black', zorder=5)
+        # main_plot.fill_between(x_value, shigh, slow, color='black', alpha='0.5', zorder=5)
+        # fill_IT20, = plt.fill(np.NaN, np.NaN, color='black', alpha=0.5, zorder=5)
+        #
+        # # Calculate median and 1-sigma #
+        # nbin = int((max(kappas) - min(kappas)) / 0.02)
+        # x_value = np.empty(nbin)
+        # median = np.empty(nbin)
+        # slow = np.empty(nbin)
+        # shigh = np.empty(nbin)
+        # x_low = min(kappas)
+        # for i in range(nbin):
+        #     index = np.where((kappas >= x_low) & (kappas < x_low + 0.02))[0]
+        #     x_value[i] = np.mean(np.absolute(kappas)[index])
+        #     if len(index) > 0:
+        #         median[i] = np.nanmedian(disc_fractions[index])
+        #         slow[i] = np.nanpercentile(disc_fractions[index], 15.87)
+        #         shigh[i] = np.nanpercentile(disc_fractions[index], 84.13)
+        #     x_low += 0.02
+        #
+        # # Plot median and 1-sigma lines #
+        # median, = main_plot.plot(x_value, median, color='blue', zorder=5)
+        # main_plot.fill_between(x_value, shigh, slow, color='blue', alpha='0.5', zorder=5)
+        # fill, = plt.fill(np.NaN, np.NaN, color='black', alpha=0.5, zorder=5)
         
         main_plot.scatter(kappas, disc_fractions_IT20, s=1, label='$D/T_{30\degree}$', color='black')
         main_plot.scatter(kappas, disc_fractions, s=1, label=r'$D/T_{\vec{J}_{b} = 0}$', color='brown')
