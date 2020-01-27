@@ -58,7 +58,7 @@ class RADecSurfaceDensity:
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
         
         # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all masked haloes.
-        for group_number in range(8, 9):  # Loop over all masked haloes.
+        for group_number in range(3, 4):  # Loop over all masked haloes.
             for subgroup_number in range(0, 1):
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
@@ -113,7 +113,7 @@ class RADecSurfaceDensity:
     @staticmethod
     def read_galaxies(sim, tag):
         """
-         A static method to extract particle and subhalo attributes.
+         A method to extract particle and subhalo attributes.
         :param sim: simulation directory
         :param tag: redshift folder
         :return: stellar_data, subhalo_data
@@ -323,16 +323,15 @@ class RADecSurfaceDensity:
         disc_fraction_IT20 = np.divide(np.sum(stellar_data_tmp['Mass'][index]), np.sum(stellar_data_tmp['Mass']))
         
         # Plot the 2D surface density projection and the contours #
-        count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][:, 0], stellar_data_tmp['Coordinates'][:, 1], bins=30,
-                                               range=[[-20, 20], [-20, 20]])
-        # axupperright.imshow(np.ma.log10(count).T, extent=[-20, 20, -20, 20], origin='lower', cmap='nipy_spectral_r', interpolation='bicubic',
-        #                     aspect='auto')
-        axupperright.scatter(stellar_data_tmp['Coordinates'][index, 0], stellar_data_tmp['Coordinates'][index, 1], s=3, c='blue')
-        index = np.where(angular_theta_from_densest > np.divide(np.pi, 6.0))
-        axupperright.scatter(stellar_data_tmp['Coordinates'][index, 0], stellar_data_tmp['Coordinates'][index, 1], s=3, c='red')
-        axupperright.contour(np.ma.log10(count).T, colors="k", extent=[-20, 20, -20, 20], levels=np.arange(0, 5 + 0.5, 0.25))
+        count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][:, 0], stellar_data_tmp['Coordinates'][:, 1], bins=100,
+                                               range=[[-30, 30], [-30, 30]])
+        axupperright.imshow(count, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', interpolation='bicubic', aspect='auto')
+        # axupperright.scatter(stellar_data_tmp['Coordinates'][index, 0], stellar_data_tmp['Coordinates'][index, 1], s=3, c='blue')
+        # index = np.where(angular_theta_from_densest > np.divide(np.pi, 6.0))
+        # axupperright.scatter(stellar_data_tmp['Coordinates'][index, 0], stellar_data_tmp['Coordinates'][index, 1], s=3, c='red')
+        # axupperright.contour(count, colors="k", extent=[-20, 20, -20, 20], levels=np.arange(0, 5 + 0.5, 0.25))
         
-        # Calculate and plot the angular distance between the densest and all the other grid cells - all methods are identical #
+        # Calculate and plot the angular distance between the densest and all the other grid cells #
         # 1) Spherical law of cosines https://en.wikipedia.org/wiki/Spherical_law_of_cosines
         angular_theta_from_densest = np.arccos(
             np.sin(lat_densest) * np.sin(np.radians(dec_grid.value)) + np.cos(lat_densest) * np.cos(np.radians(dec_grid.value)) * np.cos(
@@ -434,12 +433,8 @@ class RADecSurfaceDensity:
 
 
 if __name__ == '__main__':
-    # tag = '010_z005p000'
-    # sim = '/cosma7/data/dp004/dc-payy1/G-EAGLE/GEAGLE_06/data/'  # Path to G-EAGLE data.
-    # outdir = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/RDSD/G-EAGLE/'  # Path to save plots.
-    # SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/RDSD/G-EAGLE/'  # Path to save/load data.
     tag = '027_z000p101'
     sim = '/cosma5/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
-    outdir = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/RDSD/EAGLE/'  # Path to save plots.
-    SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/RDSD/EAGLE/'  # Path to save/load data.
+    outdir = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/RDSD/'  # Path to save plots.
+    SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/RDSD/'  # Path to save/load data.
     x = RADecSurfaceDensity(sim, tag)

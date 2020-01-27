@@ -29,7 +29,7 @@ warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # I
 
 class PositionHistogram:
     """
-    A class to create 2 dimensional histograms of the position of stellar particles.
+    A class to create mass-weighted 2D histograms of the position of stellar particles.
     """
     
     
@@ -52,7 +52,7 @@ class PositionHistogram:
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
         
         # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all masked haloes.
-        for group_number in range(1, 51):  # Loop over all masked haloes.
+        for group_number in range(1, 101):  # Loop over all masked haloes.
             for subgroup_number in range(0, 1):
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
@@ -103,7 +103,7 @@ class PositionHistogram:
     @staticmethod
     def read_galaxies(sim, tag):
         """
-         A static method to extract particle and subhalo attribute.
+         A method to extract particles's and subhalo's attribute.
         :param sim: simulation directory
         :param tag: redshift folder
         :return: stellar_data, subhalo_data
@@ -119,7 +119,7 @@ class PositionHistogram:
         stellar_data = {}
         particle_type = '4'
         file_type = 'PARTDATA'
-        for attribute in ['Coordinates', 'GroupNumber', 'SubGroupNumber']:
+        for attribute in ['Coordinates', 'GroupNumber', 'Mass', 'SubGroupNumber']:
             stellar_data[attribute] = E.read_array(file_type, sim, tag, '/PartType' + particle_type + '/' + attribute, numThreads=8)
         
         # Convert to astronomical units #
@@ -190,7 +190,7 @@ class PositionHistogram:
         
         # Generate the figures #
         plt.close()
-        figure = plt.figure(0, figsize=(20, 7.5))
+        plt.figure(0, figsize=(20, 7.5))
         
         gs = gridspec.GridSpec(2, 3, height_ratios=(0.03, 1))
         gs.update(hspace=0.4, wspace=0.3)
@@ -201,56 +201,56 @@ class PositionHistogram:
         axcbar2 = plt.subplot(gs[0, 1])
         axcbar3 = plt.subplot(gs[0, 2])
         
-        # Generate the XY projection #
-        # axleft.set_xlim(-10, 10)
-        # axleft.set_ylim(-10, 10)
-        axleft.set_xlabel(r'$\mathrm{x/kpc}$')
+        for a in [axleft, axmid, axright]:
+            a.set_xlim(-20, 20)
+            a.set_ylim(-20, 20)
+            a.set_facecolor('k')
+            a.tick_params(direction='out', which='both', top='on', right='on')
+        
+        for a in [axleft, axmid]:
+            a.set_xlabel(r'$\mathrm{x/kpc}$')
+        
+        for a in [axmid, axright]:
+            a.set_ylabel(r'$\mathrm{z/kpc}$')
+        
         axleft.set_ylabel(r'$\mathrm{y/kpc}$')
-        axleft.tick_params(direction='in', which='both', top='on', right='on')
-        axleft.set_facecolor('k')
-        plleft = axleft.hexbin(list(zip(*stellar_data_tmp['Coordinates']))[0], list(zip(*stellar_data_tmp['Coordinates']))[1], bins='log',
-                               cmap='bone', gridsize=300, edgecolor='none')
-        
-        # Generate the XZ projection #
-        # axmid.set_xlim(-10, 10)
-        # axmid.set_ylim(-10, 10)
-        axmid.set_xlabel(r'$\mathrm{x/kpc}$')
-        axmid.set_ylabel(r'$\mathrm{z/kpc}$')
-        axmid.set_facecolor('k')
-        plmid = axmid.hexbin(list(zip(*stellar_data_tmp['Coordinates']))[0], list(zip(*stellar_data_tmp['Coordinates']))[2], bins='log', cmap='bone',
-                             gridsize=300, edgecolor='none')
-        
-        # Generate the ZY projection #
-        # axright.set_xlim(-10, 10)
-        # axright.set_ylim(-10, 10)
         axright.set_xlabel(r'$\mathrm{y/kpc}$')
-        axright.set_ylabel(r'$\mathrm{z/kpc}$')
-        axright.set_facecolor('k')
-        plright = axright.hexbin(list(zip(*stellar_data_tmp['Coordinates']))[1], list(zip(*stellar_data_tmp['Coordinates']))[2], bins='log',
-                                 cmap='bone', gridsize=300, edgecolor='none')
+        
+        # Generate the XY projection #
+        count, xedges, yedges = np.histogram2d(list(zip(*stellar_data_tmp['Coordinates']))[0], list(zip(*stellar_data_tmp['Coordinates']))[1],
+                                               weights=stellar_data_tmp['Mass'], bins=100, range=[[-20, 20], [-20, 20]])
+        plleft = axleft.imshow(count, extent=[-20, 20, -20, 20], origin='lower', cmap='nipy_spectral_r', interpolation='bicubic', aspect='auto')
         
         # Generate the color bar #
         cbar1 = plt.colorbar(plleft, cax=axcbar1, orientation='horizontal')
-        cbar1.set_label('$\mathrm{Particles\; per\; hexbin}$')
+        cbar1.set_label('$\Sigma_\mathrm{stars}\,\mathrm{[M_\odot\,kpc^{-2}]}$')
+        
+        # Generate the XZ projection #
+        count, xedges, yedges = np.histogram2d(list(zip(*stellar_data_tmp['Coordinates']))[0], list(zip(*stellar_data_tmp['Coordinates']))[2],
+                                               weights=stellar_data_tmp['Mass'], bins=100, range=[[-20, 20], [-20, 20]])
+        plmid = axmid.imshow(count, extent=[-20, 20, -20, 20], origin='lower', cmap='nipy_spectral_r', interpolation='bicubic', aspect='auto')
+        # Generate the color bar #
         cbar2 = plt.colorbar(plmid, cax=axcbar2, orientation='horizontal')
-        cbar2.set_label('$\mathrm{Particles\; per\; hexbin}$')
+        cbar2.set_label('$\Sigma_\mathrm{stars}\,\mathrm{[M_\odot\,kpc^{-2}]}$')
+        
+        # Generate the ZY projection #
+        count, xedges, yedges = np.histogram2d(list(zip(*stellar_data_tmp['Coordinates']))[1], list(zip(*stellar_data_tmp['Coordinates']))[2],
+                                               weights=stellar_data_tmp['Mass'], bins=100, range=[[-20, 20], [-20, 20]])
+        plright = axright.imshow(count, extent=[-20, 20, -20, 20], origin='lower', cmap='nipy_spectral_r', interpolation='bicubic', aspect='auto')
+        
+        # Generate the color bar #
         cbar3 = plt.colorbar(plright, cax=axcbar3, orientation='horizontal')
-        cbar3.set_label('$\mathrm{Particles\; per\; hexbin}$')
+        cbar3.set_label('$\Sigma_\mathrm{stars}\,\mathrm{[M_\odot\,kpc^{-2}]}$')
         
         # Save the plot #
-        plt.title('z ~ ' + re.split('_z0|p000', tag)[1])
         plt.savefig(outdir + str(group_number) + str(subgroup_number) + '-' + 'PH' + '-' + date + '.png', bbox_inches='tight')
         
         return None
 
 
 if __name__ == '__main__':
-    # tag = '010_z005p000'
-    # sim = '/cosma7/data/dp004/dc-payy1/G-EAGLE/GEAGLE_06/data/'  # Path to G-EAGLE data.
-    # outdir = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/PH/G-EAGLE/'  # Path to save plots.
-    # SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/PH/G-EAGLE/'  # Path to save/load data.
     tag = '027_z000p101'
     sim = '/cosma5/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
-    outdir = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/PH/EAGLE/'  # Path to save plots.
-    SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/PH/EAGLE/'  # Path to save/load data.
+    outdir = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/PH/'  # Path to save plots.
+    SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/PH/'  # Path to save/load data.
     x = PositionHistogram(sim, tag)

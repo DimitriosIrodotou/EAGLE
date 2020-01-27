@@ -44,6 +44,7 @@ class DiscToTotalVsKappaRot:
         p = 1  # Counter.
         # Initialise empty arrays to hold the data #
         kappas = []
+        glx_masses = []
         disc_fractions = []
         disc_fractions_IT20 = []
         
@@ -56,26 +57,26 @@ class DiscToTotalVsKappaRot:
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
         
         # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all the accepted haloes
-        for group_number in range(1, 3):  # Loop over all masked haloes.
+        for group_number in range(1, 149):  # Loop over all masked haloes.
             for subgroup_number in range(0, 1):
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
                     
-                    kappa, disc_fraction, disc_fraction_IT20 = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
+                    kappa, disc_fraction, disc_fraction_IT20, glx_masses = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
                     
                     # Save data in numpy arrays every 10 galaxies to make it faster #
-                    np.save(SavePath + 'kappa_' + str(group_number), kappa)
-                    np.save(SavePath + 'disc_fraction_' + str(group_number), disc_fraction)
-                    np.save(SavePath + 'disc_fraction_IT20_' + str(group_number), disc_fraction_IT20)
+                    np.save(SavePath + 'kappas_' + str(group_number), kappas)
+                    np.save(SavePath + 'disc_fractions_' + str(group_number), disc_fractions)
+                    np.save(SavePath + 'disc_fractions_IT20_' + str(group_number), disc_fractions_IT20)
                     print('Masked and saved data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                         round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
                     p += 1
-                    print("O")
+                
                 elif args.r:  # Read data.
                     start_local_time = time.time()  # Start the local time.
                     
-                    kappa, disc_fraction, disc_fraction_IT20 = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
+                    kappa, disc_fraction, disc_fraction_IT20, glx_masses = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
                     kappas.append(kappa)
                     disc_fractions.append(disc_fraction)
                     disc_fractions_IT20.append(disc_fraction_IT20)
@@ -84,20 +85,19 @@ class DiscToTotalVsKappaRot:
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
                     p += 1  # Increace the count by one.
                 
-                if args.l or args.rs:  # Load data.
-                    print("E")
+                elif args.l:  # Load data.
                     start_local_time = time.time()  # Start the local time.
-    
-                    kappa = np.load(SavePath + 'kappa_' + str(group_number) + '.npy')
-                    disc_fraction = np.load(SavePath + 'disc_fraction_' + str(group_number) + '.npy')
-                    disc_fraction_IT20 = np.load(SavePath + 'disc_fraction_IT20_' + str(group_number) + '.npy')
-                    kappas.append(kappa)
-                    disc_fractions.append(disc_fraction)
-                    disc_fractions_IT20.append(disc_fraction_IT20)
+                    
+                    kappas = np.load(SavePath + 'kappas_' + str(group_number) + '.npy')
+                    disc_fractions = np.load(SavePath + 'disc_fractions_' + str(group_number) + '.npy')
+                    disc_fractions_IT20 = np.load(SavePath + 'disc_fractions_IT20_' + str(group_number) + '.npy')
                     print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
                     # + ' (' + str(round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
-        
+
+        if not args.r:
+            kappas
+            
         # Plot the data #
         start_local_time = time.time()  # Start the local time.
         
@@ -213,13 +213,14 @@ class DiscToTotalVsKappaRot:
             np.sin(lat_densest) * np.sin(np.arcsin(prc_unit_vector[:, 2])) + np.cos(lat_densest) * np.cos(np.arcsin(prc_unit_vector[:, 2])) * np.cos(
                 lon_densest - np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0])))  # In radians.
         index = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))
-        disc_fraction_IT20 = np.divide(np.sum(stellar_data_tmp['Mass'][index]), np.sum(stellar_data_tmp['Mass']))
+        glx_mass = np.sum(stellar_data_tmp['Mass'])
+        disc_fraction_IT20 = np.divide(np.sum(glx_mass[index]), glx_mass)
         
-        return kappa, disc_fraction, disc_fraction_IT20
+        return kappa, disc_fraction, disc_fraction_IT20, glx_mass
     
     
     @staticmethod
-    def plot(kappas, disc_fractions, disc_fractions_IT20):
+    def plot(kappas, disc_fractions, disc_fractions_IT20, glx_mass):
         """
         A method to plot a HEALPix histogram.
         :param kappas: from mask_galaxies
@@ -291,8 +292,9 @@ class DiscToTotalVsKappaRot:
         main_plot.fill_between(x_value, shigh, slow, color='blue', alpha='0.5', zorder=5)
         fill, = plt.fill(np.NaN, np.NaN, color='black', alpha=0.5, zorder=5)
         
-        main_plot.scatter(kappas, disc_fractions_IT20, s=1, label='$D/T_{30\degree}$', color='black')
-        main_plot.scatter(kappas, disc_fractions, s=1, label=r'$D/T_{\vec{J}_{b} = 0}$', color='brown')
+        main_plot.scatter(glx_mass, disc_fractions_IT20, s=1, label='$D/T_{30\degree}$', color='black')
+        main_plot.scatter(glx_mass, disc_fractions, s=1, label=r'$D/T_{\vec{J}_{b} = 0}$', color='brown')
+        main_plot.scatter(glx_mass, kappas, s=1, label=r'$D/T_{\vec{J}_{b} = 0}$', color='brown')
         main_plot.legend(loc='upper left', frameon=False, markerscale=5)
         # main_plot.legend([median_IT20, fill_IT20, median, fill],
         #                  [r'$\mathrm{This\; work: Median}$', r'$\mathrm{This\; work: 16^{th}-84^{th}\,\%ile}$'], frameon=False, loc=2)
