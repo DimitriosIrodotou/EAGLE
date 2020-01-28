@@ -19,8 +19,8 @@ module purge
 module load utils
 module load intel_comp/2018
 module load intel_mpi/2018
-module load fftw/2.1.5
-module load hdf5/1.8.20
+module load fftw/3.3.7
+module load hdf5/1.10.3
 module load gsl/2.4
 module load hwloc/1.11.11
 
@@ -34,5 +34,4 @@ source activate my_python
 
 cd /cosma7/data/dp004/dc-irod1/EAGLE/python/ || exit
 
-#python RA_Dec_surface_density.py -l
-python position_3D.py -l
+python DTT_vs_kapparot.py -rs

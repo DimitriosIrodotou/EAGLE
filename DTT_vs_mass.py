@@ -29,9 +29,9 @@ start_global_time = time.time()  # Start the global time.
 warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
 
 
-class DiscToTotalVsKappaRot:
+class DiscToTotalVsMass:
     """
-    Create a disc to total ratio as a function of kappa_rot plot.
+    Create a disc to total ratio as a function of stellar mass.
     """
     
     
@@ -45,6 +45,7 @@ class DiscToTotalVsKappaRot:
         p = 1  # Counter.
         # Initialise empty arrays to hold the data #
         kappas = []
+        glx_masses = []
         disc_fractions = []
         disc_fractions_IT20 = []
         
@@ -59,67 +60,73 @@ class DiscToTotalVsKappaRot:
             # names = glob.glob(SavePath + 'kappa_*' + '.npy')
             # names = [re.split('_|.npy', name)[1] for name in names]
             # if not glob.glob(SavePath + 'kappas.npy'):
-            for group_number in np.sort(list(set(self.subhalo_data_tmp['GroupNumber']))):  # Loop over all the accepted haloes
-                # for group_number in names:  # Loop over all masked haloes.
-                for subgroup_number in range(0, 1):
-                    if args.rs:  # Read and save data.
-                        start_local_time = time.time()  # Start the local time.
-                        
-                        kappa, disc_fraction, disc_fraction_IT20 = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
-                        
-                        # Save data in numpy arrays every 10 galaxies to make it faster #
-                        np.save(SavePath + 'kappas/' + 'kappa_' + str(group_number), kappa)
-                        np.save(SavePath + 'disc_feactions/' + 'disc_fraction_' + str(group_number), disc_fraction)
-                        np.save(SavePath + 'disc_fractions_IT20/' + 'disc_fraction_IT20_' + str(group_number), disc_fraction_IT20)
-                        print('Masked and saved data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
-                            round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
-                        print('–––––––––––––––––––––––––––––––––––––––––––––')
-                        p += 1
-                    elif args.r:  # Read data.
-                        start_local_time = time.time()  # Start the local time.
-                        
-                        kappa, disc_fraction, disc_fraction_IT20 = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
-                        kappas.append(kappa)
-                        disc_fractions.append(disc_fraction)
-                        disc_fractions_IT20.append(disc_fraction_IT20)
-                        print('Masked data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
-                            round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
-                        print('–––––––––––––––––––––––––––––––––––––––––––––')
-                        p += 1  # Increase the count by one.
+            # for group_number in np.sort(list(set(self.subhalo_data_tmp['GroupNumber']))):  # Loop over all the accepted haloes
+        for group_number in range(1, 100):  # Loop over all masked haloes.
+            for subgroup_number in range(0, 1):
+                if args.rs:  # Read and save data.
+                    start_local_time = time.time()  # Start the local time.
                     
-                    if args.l or args.rs:  # Load data.
-                        start_local_time = time.time()  # Start the local time.
-                        kappa = np.load(SavePath + 'kappas/' + 'kappa_' + str(group_number) + '.npy')
-                        disc_fraction = np.load(SavePath + 'disc_fractions/' + 'disc_fraction_' + str(group_number) + '.npy')
-                        disc_fraction_IT20 = np.load(SavePath + 'disc_fractions_IT20/' + 'disc_fraction_IT20_' + str(group_number) + '.npy')
-                        kappas.append(kappa)
-                        disc_fractions.append(disc_fraction)
-                        disc_fractions_IT20.append(disc_fraction_IT20)
-                        print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
-                        # + ' (' + str(round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
-                        print('–––––––––––––––––––––––––––––––––––––––––––––')
+                    kappa, disc_fraction, disc_fraction_IT20, glx_mass = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
+                    
+                    # Save data in numpy arrays every 10 galaxies to make it faster #
+                    np.save(SavePath + 'kappa_' + str(group_number), kappa)
+                    np.save(SavePath + 'glx_mass_' + str(group_number), glx_mass)
+                    np.save(SavePath + 'disc_fraction_' + str(group_number), disc_fraction)
+                    np.save(SavePath + 'disc_fraction_IT20_' + str(group_number), disc_fraction_IT20)
+                    print('Masked and saved data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
+                        round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
+                    print('–––––––––––––––––––––––––––––––––––––––––––––')
+                    p += 1
+                elif args.r:  # Read data.
+                    start_local_time = time.time()  # Start the local time.
+                    
+                    kappa, disc_fraction, disc_fraction_IT20, glx_mass = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
+                    kappas.append(kappa)
+                    glx_masses.append(glx_mass)
+                    disc_fractions.append(disc_fraction)
+                    disc_fractions_IT20.append(disc_fraction_IT20)
+                    print('Masked data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
+                        round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
+                    print('–––––––––––––––––––––––––––––––––––––––––––––')
+                    p += 1  # Increase the count by one.
+                
+                if args.l or args.rs:  # Load data.
+                    start_local_time = time.time()  # Start the local time.
+                    kappa = np.load(SavePath + 'kappa_' + str(group_number) + '.npy')
+                    disc_fraction = np.load(SavePath + 'disc_fraction_' + str(group_number) + '.npy')
+                    disc_fraction_IT20 = np.load(SavePath + 'disc_fraction_IT20_' + str(group_number) + '.npy')
+                    glx_mass = np.load(SavePath + 'glx_mass_' + str(group_number) + '.npy')
+                    kappas.append(kappa.item())
+                    glx_masses.append(glx_mass.item())
+                    disc_fractions.append(disc_fraction.item())
+                    disc_fractions_IT20.append(disc_fraction_IT20.item())
+                    print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
+                    # + ' (' + str(round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
+                    print('–––––––––––––––––––––––––––––––––––––––––––––')
             
             if args.l or args.rs:  # Load data.
-                np.save(SavePath + 'kappas/' + 'kappas', kappas)
-                np.save(SavePath + 'disc_fractions/' + 'disc_fractions', disc_fractions)
-                np.save(SavePath + 'disc_fractions_IT20/' + 'disc_fractions_IT20', disc_fractions_IT20)
-        else:
-            start_local_time = time.time()  # Start the local time.
-            
-            kappas = np.load(SavePath + 'kappas/' + 'kappas.npy')
-            disc_fractions = np.load(SavePath + 'disc_fractions/' + 'disc_fractions.npy')
-            disc_fractions_IT20 = np.load(SavePath + 'disc_fractions_IT20/' + 'disc_fractions_IT20.npy')
-            print('Loaded data for ' + re.split('EAGLE/|/data', sim)[0] + ' in %.4s s' % (time.time() - start_global_time))
-            print('–––––––––––––––––––––––––––––––––––––––––')
+                np.save(SavePath + 'kappas', kappas)
+                np.save(SavePath + 'glx_masses', glx_masses)
+                np.save(SavePath + 'disc_fractions', disc_fractions)
+                np.save(SavePath + 'disc_fractions_IT20', disc_fractions_IT20)
+        # else:
+        #     start_local_time = time.time()  # Start the local time.
+        #
+        #     kappas = np.load(SavePath + 'kappas.npy')
+        #     glx_masses = np.load(SavePath + 'glx_masses.npy')
+        #     disc_fractions = np.load(SavePath + 'disc_fractions.npy')
+        #     disc_fractions_IT20 = np.load(SavePath + 'disc_fractions_IT20.npy')
+        #     print('Loaded data for ' + re.split('EAGLE/|/data', sim)[0] + ' in %.4s s' % (time.time() - start_global_time))
+        #     print('–––––––––––––––––––––––––––––––––––––––––')
         
         # Plot the data #
         start_local_time = time.time()  # Start the local time.
         
-        self.plot(kappas, disc_fractions, disc_fractions_IT20)
+        self.plot(kappas, disc_fractions, disc_fractions_IT20, glx_masses)
         print('Plotted data for ' + re.split('EAGLE/|/data', sim)[2] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished DTTK for ' + re.split('EAGLE/|/data', sim)[2] + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished DTTM for ' + re.split('EAGLE/|/data', sim)[2] + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
@@ -223,17 +230,18 @@ class DiscToTotalVsKappaRot:
         lat_densest = (hp.healpix_to_lonlat([index_densest])[1].value + np.pi / 2) % (2 * np.pi) - np.pi / 2
         
         # Calculate disc mass fraction as the mass within 30 degrees from the densest pixel #
+        glx_mass = np.sum(stellar_data_tmp['Mass'])
         angular_theta_from_densest = np.arccos(
             np.sin(lat_densest) * np.sin(np.arcsin(prc_unit_vector[:, 2])) + np.cos(lat_densest) * np.cos(np.arcsin(prc_unit_vector[:, 2])) * np.cos(
                 lon_densest - np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0])))  # In radians.
         index = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))
         disc_fraction_IT20 = np.divide(np.sum(stellar_data_tmp['Mass'][index]), np.sum(stellar_data_tmp['Mass']))
         
-        return kappa, disc_fraction, disc_fraction_IT20
+        return kappa, disc_fraction, disc_fraction_IT20, glx_mass
     
     
     @staticmethod
-    def plot(kappas, disc_fractions, disc_fractions_IT20):
+    def plot(kappas, disc_fractions, disc_fractions_IT20, glx_masses):
         """
         A method to plot a HEALPix histogram.
         :param kappas: from mask_galaxies
@@ -241,7 +249,7 @@ class DiscToTotalVsKappaRot:
         :param disc_fractions_IT20: from mask_galaxies
         :return: None
         """
-        
+        print(len(kappas))
         # Set the style of the plots #
         sns.set()
         sns.set_style('ticks')
@@ -250,78 +258,82 @@ class DiscToTotalVsKappaRot:
         # Generate initial figure #
         plt.close()
         figure = plt.figure(figsize=(10, 7.5))
-        grid = plt.GridSpec(1, 2, width_ratios=(1, 0.25), wspace=0.0)
-        main_plot = figure.add_subplot(grid[0, 0])
-        y_hist = figure.add_subplot(grid[0, 1])
-        for a in [main_plot, y_hist]:
-            a.grid(True)
-            a.set_ylabel('D/T')
-            a.set_ylim(-0.2, 1)
-        
-        main_plot.set_xlim(0, 1)
-        main_plot.set_xlabel('$\kappa_{rot}$')
-        y_hist.xaxis.set_ticks_position("top")
-        y_hist.yaxis.set_ticks_position("right")
-        
+        # grid = plt.GridSpec(1, 2, width_ratios=(1, 0.25), wspace=0.0)
+        # main_plot = figure.add_subplot(grid[0, 0])
+        # y_hist = figure.add_subplot(grid[0, 1])
+        # for a in [main_plot, y_hist]:
+        plt.grid(True)
+        # plt.ylabel('D/T')
+        plt.xlabel(r'$M_{\star}$')
+        plt.xscale('log')
+        plt.ylim(-0.2, 1)
+        plt.xlim(3e10, 1e12)
+        #
+        # main_plot.set_xlim(0, 1)
+        # main_plot.set_xlabel('$\kappa_{rot}$')
+        # y_hist.xaxis.set_ticks_position("top")
+        # y_hist.yaxis.set_ticks_position("right")
+        #
         # Calculate median and 1-sigma #
-        nbin = int((max(kappas) - min(kappas)) / 0.02)
-        x_value = np.empty(nbin)
-        median = np.empty(nbin)
-        slow = np.empty(nbin)
-        shigh = np.empty(nbin)
-        x_low = min(kappas)
-        for i in range(nbin):
-            index = np.where((kappas >= x_low) & (kappas < x_low + 0.02))[0]
-            x_value[i] = np.mean(np.absolute(kappas)[index])
-            if len(index) > 0:
-                median[i] = np.nanmedian(disc_fractions_IT20[index])
-                slow[i] = np.nanpercentile(disc_fractions_IT20[index], 15.87)
-                shigh[i] = np.nanpercentile(disc_fractions_IT20[index], 84.13)
-            x_low += 0.02
-        
+        # nbin = int((max(kappas) - min(kappas)) / 0.02)
+        # x_value = np.empty(nbin)
+        # median = np.empty(nbin)
+        # slow = np.empty(nbin)
+        # shigh = np.empty(nbin)
+        # x_low = min(kappas)
+        # for i in range(nbin):
+        #     index = np.where((kappas >= x_low) & (kappas < x_low + 0.02))[0]
+        #     x_value[i] = np.mean(np.absolute(kappas)[index])
+        #     if len(index) > 0:
+        #         median[i] = np.nanmedian(disc_fractions_IT20[index])
+        #         slow[i] = np.nanpercentile(disc_fractions_IT20[index], 15.87)
+        #         shigh[i] = np.nanpercentile(disc_fractions_IT20[index], 84.13)
+        #     x_low += 0.02
+        #
         # Plot median and 1-sigma lines #
-        median_IT20, = main_plot.plot(x_value, median, color='black', zorder=5)
-        main_plot.fill_between(x_value, shigh, slow, color='black', alpha='0.5', zorder=5)
-        fill_IT20, = plt.fill(np.NaN, np.NaN, color='black', alpha=0.5, zorder=5)
-        
+        # median_IT20, = main_plot.plot(x_value, median, color='black', zorder=5)
+        # main_plot.fill_between(x_value, shigh, slow, color='black', alpha='0.5', zorder=5)
+        # fill_IT20, = plt.fill(np.NaN, np.NaN, color='black', alpha=0.5, zorder=5)
+        #
         # Calculate median and 1-sigma #
-        nbin = int((max(kappas) - min(kappas)) / 0.02)
-        x_value = np.empty(nbin)
-        median = np.empty(nbin)
-        slow = np.empty(nbin)
-        shigh = np.empty(nbin)
-        x_low = min(kappas)
-        for i in range(nbin):
-            index = np.where((kappas >= x_low) & (kappas < x_low + 0.02))[0]
-            x_value[i] = np.mean(np.absolute(kappas)[index])
-            if len(index) > 0:
-                median[i] = np.nanmedian(disc_fractions[index])
-                slow[i] = np.nanpercentile(disc_fractions[index], 15.87)
-                shigh[i] = np.nanpercentile(disc_fractions[index], 84.13)
-            x_low += 0.02
-        
+        # nbin = int((max(kappas) - min(kappas)) / 0.02)
+        # x_value = np.empty(nbin)
+        # median = np.empty(nbin)
+        # slow = np.empty(nbin)
+        # shigh = np.empty(nbin)
+        # x_low = min(kappas)
+        # for i in range(nbin):
+        #     index = np.where((kappas >= x_low) & (kappas < x_low + 0.02))[0]
+        #     x_value[i] = np.mean(np.absolute(kappas)[index])
+        #     if len(index) > 0:
+        #         median[i] = np.nanmedian(disc_fractions[index])
+        #         slow[i] = np.nanpercentile(disc_fractions[index], 15.87)
+        #         shigh[i] = np.nanpercentile(disc_fractions[index], 84.13)
+        #     x_low += 0.02
+        #
         # Plot median and 1-sigma lines #
-        median, = main_plot.plot(x_value, median, color='blue', zorder=5)
-        main_plot.fill_between(x_value, shigh, slow, color='blue', alpha='0.5', zorder=5)
-        fill, = plt.fill(np.NaN, np.NaN, color='black', alpha=0.5, zorder=5)
+        # median, = main_plot.plot(x_value, median, color='blue', zorder=5)
+        # main_plot.fill_between(x_value, shigh, slow, color='blue', alpha='0.5', zorder=5)
+        # fill, = plt.fill(np.NaN, np.NaN, color='black', alpha=0.5, zorder=5)
         
-        main_plot.scatter(kappas, disc_fractions_IT20, s=1, label='$D/T_{30\degree}$', color='black')
-        main_plot.scatter(kappas, disc_fractions, s=1, label=r'$D/T_{\vec{J}_{b} = 0}$', color='brown')
-        main_plot.legend(loc='upper left', frameon=False, markerscale=5)
+        plt.scatter(glx_masses, disc_fractions_IT20, label='$D/T_{30\degree}$')
+        plt.scatter(glx_masses, disc_fractions, label=r'$D/T_{\vec{J}_{b} = 0}$')
+        plt.scatter(glx_masses, kappas, label=r'$\kappa_{rot}$')
+        plt.legend(loc='upper left', frameon=False, markerscale=1)
         # main_plot.legend([median_IT20, fill_IT20, median, fill],
         #                  [r'$\mathrm{This\; work: Median}$', r'$\mathrm{This\; work: 16^{th}-84^{th}\,\%ile}$'], frameon=False, loc=2)
         
-        y_hist.hist(disc_fractions_IT20, bins=np.linspace(-1, 1, 50), histtype='step', orientation='horizontal', color='black')
-        y_hist.hist(disc_fractions, bins=np.linspace(-1, 1, 50), histtype='step', orientation='horizontal', color='brown')
+        # y_hist.hist(disc_fractions_IT20, bins=np.linspace(-1, 1, 50), histtype='step', orientation='horizontal', color='black')
+        # y_hist.hist(disc_fractions, bins=np.linspace(-1, 1, 50), histtype='step', orientation='horizontal', color='brown')
         
         # Save the plot #
-        plt.savefig(outdir + 'DTTK' + '-' + date + '.png', bbox_inches='tight')
+        plt.savefig(outdir + 'DTTM' + '-' + date + '.png', bbox_inches='tight')
         return None
 
 
 if __name__ == '__main__':
     tag = '027_z000p101'
     sim = '/cosma5/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
-    outdir = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/DTTK/'  # Path to save plots.
-    SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/'  # Path to save/load data.
-    x = DiscToTotalVsKappaRot(sim, tag)
+    outdir = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/DTTM/'  # Path to save plots.
+    SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/DTTM/'  # Path to save/load data.
+    x = DiscToTotalVsMass(sim, tag)

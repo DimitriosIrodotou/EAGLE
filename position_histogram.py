@@ -44,14 +44,13 @@ class PositionHistogram:
         stellar_data_tmp = {}  # Initialise a dictionary to store the data.
         
         if not args.l:
-            self.Ngroups = E.read_header('SUBFIND', sim, tag, 'TotNgroups')
             self.stellar_data, self.subhalo_data = self.read_galaxies(sim, tag)
             print('Read data for ' + re.split('EAGLE/|/data', sim)[2] + ' in %.4s s' % (time.time() - start_global_time))
             print('–––––––––––––––––––––––––––––––––––––––––')
             
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
         
-        # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all masked haloes.
+        # for group_number in np.sort(list(set(self.subhalo_data_tmp['GroupNumber']))):  # Loop over all masked haloes.
         for group_number in range(1, 101):  # Loop over all masked haloes.
             for subgroup_number in range(0, 1):
                 if args.rs:  # Read and save data.
