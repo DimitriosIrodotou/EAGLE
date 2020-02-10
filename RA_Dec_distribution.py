@@ -15,7 +15,7 @@ import eagle_IO.eagle_IO.eagle_IO as E
 
 from matplotlib import gridspec
 from astropy_healpix import HEALPix
-from rotate_galaxies import RotateGalaxies
+from rotate_galaxies import RotateCoordinates
 from morpho_kinematics import MorphoKinematics
 
 # Create a parser and add argument to read data #
@@ -167,7 +167,7 @@ class RADecSurfaceDensity:
 
 if __name__ == '__main__':
     tag = '027_z000p101'
-    sim = '/cosma5/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
+    sim = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
     outdir = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/RDD/'  # Path to save plots.
     SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/RDSD/'  # Path to save/load data.
     x = RADecSurfaceDensity(sim, tag)

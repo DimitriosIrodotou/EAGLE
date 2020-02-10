@@ -333,7 +333,7 @@ class DiscToTotalVsMass:
 
 if __name__ == '__main__':
     tag = '027_z000p101'
-    sim = '/cosma5/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
+    sim = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
     outdir = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/DTTM/'  # Path to save plots.
     SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/DTTM/'  # Path to save/load data.
     x = DiscToTotalVsMass(sim, tag)

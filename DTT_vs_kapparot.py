@@ -109,7 +109,7 @@ class DiscToTotalVsKappaRot:
             kappas = np.load(SavePath + 'kappas/' + 'kappas.npy')
             disc_fractions = np.load(SavePath + 'disc_fractions/' + 'disc_fractions.npy')
             disc_fractions_IT20 = np.load(SavePath + 'disc_fractions_IT20/' + 'disc_fractions_IT20.npy')
-            print('Loaded data for ' + re.split('EAGLE/|/data', sim)[0] + ' in %.4s s' % (time.time() - start_global_time))
+            print('Loaded data for ' + re.split('EAGLE/|/data', sim)[0] + ' in %.4s s' % (time.time() - start_local_time))
             print('–––––––––––––––––––––––––––––––––––––––––')
         
         # Plot the data #
@@ -119,7 +119,7 @@ class DiscToTotalVsKappaRot:
         print('Plotted data for ' + re.split('EAGLE/|/data', sim)[2] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished DTTK for ' + re.split('EAGLE/|/data', sim)[2] + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished DiscToTotalVsKappaRot for ' + re.split('EAGLE/|/data', sim)[2] + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
@@ -321,7 +321,7 @@ class DiscToTotalVsKappaRot:
 
 if __name__ == '__main__':
     tag = '027_z000p101'
-    sim = '/cosma5/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
+    sim = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
     outdir = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/DTTK/'  # Path to save plots.
     SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/'  # Path to save/load data.
     x = DiscToTotalVsKappaRot(sim, tag)

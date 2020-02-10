@@ -15,7 +15,7 @@ import eagle_IO.eagle_IO.eagle_IO as E
 
 from matplotlib import gridspec
 from astropy_healpix import HEALPix
-from rotate_galaxies import RotateGalaxies
+from rotate_galaxies import RotateCoordinates
 from morpho_kinematics import MorphoKinematics
 
 # Create a parser and add argument to read data #
@@ -262,20 +262,11 @@ class RADecSurfaceDensity:
         axupperleft.annotate(r'150', xy=(2.5 * np.pi / 3 - np.pi / 15, -np.pi / 65), xycoords='data', size=18)
         axupperleft.annotate(r'-150', xy=(-2.5 * np.pi / 3 - np.pi / 10, -np.pi / 65), xycoords='data', size=18)
         
-        # Rotate galaxies #
-        # xdir, ydir, zdir = RotateGalaxies.get_principal_axis(stellar_data_tmp['Coordinates'], stellar_data_tmp['Mass'], glx_unit_vector)
-        # stellar_data_tmp['Coordinates'] = RotateGalaxies.rotate(stellar_data_tmp['Coordinates'], xdir, ydir, zdir, glx_unit_vector)
-        # stellar_data_tmp['Velocity'] = RotateGalaxies.rotate(stellar_data_tmp['Velocity'], xdir, ydir, zdir, glx_unit_vector)
-        #
-        # prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
-        #                                                                           stellar_data_tmp['Velocity'])  # Msun kpc km s-1
-        # glx_angular_momentum = np.sum(prc_angular_momentum, axis=0)  # Msun kpc km s-1
-        # glx_unit_vector = np.divide(glx_angular_momentum, np.linalg.norm(glx_angular_momentum))
-        # prc_unit_vector = np.divide(prc_angular_momentum, np.linalg.norm(prc_angular_momentum, axis=1)[:, np.newaxis])
-        
         # Calculate the ra and dec of the (unit vector of) angular momentum for each particle #
         ra = np.degrees(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]))
         dec = np.degrees(np.arcsin(prc_unit_vector[:, 2]))
+        
+
         
         # Create HEALPix map #
         nside = 2 ** 5  # Define the resolution of the grid (number of divisions along the side of a base-resolution pixel).
@@ -291,6 +282,9 @@ class RADecSurfaceDensity:
                              arrowprops=dict(arrowstyle="-", color='black', connectionstyle="arc3,rad=0"))  # Position of the densest pixel.
         axupperleft.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black', marker='X',
                             zorder=5)  # Position of the galactic angular momentum.
+        
+        # glx_ra, glx_dec = RotateCoordinates.rotate(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), glx_unit_vector)
+        # axupperleft.scatter(glx_ra, glx_dec, s=300, color='black', marker='X', zorder=5)  # Position of the galactic angular momentum.
         
         # Sample a 360x180 grid in ra/dec #
         ra = np.linspace(-180.0, 180.0, num=360) * u.deg
@@ -433,7 +427,7 @@ class RADecSurfaceDensity:
 
 if __name__ == '__main__':
     tag = '027_z000p101'
-    sim = '/cosma5/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
+    sim = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
     outdir = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/RDSD/'  # Path to save plots.
     SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/RDSD/'  # Path to save/load data.
     x = RADecSurfaceDensity(sim, tag)
