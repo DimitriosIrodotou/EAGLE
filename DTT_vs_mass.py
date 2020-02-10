@@ -56,11 +56,9 @@ class DiscToTotalVsMass:
             
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
             
-            # Check if the data already exists, if not then read and save it #
-            # names = glob.glob(SavePath + 'kappa_*' + '.npy')
-            # names = [re.split('_|.npy', name)[1] for name in names]
-            # if not glob.glob(SavePath + 'kappas.npy'):
-            # for group_number in np.sort(list(set(self.subhalo_data_tmp['GroupNumber']))):  # Loop over all the accepted haloes
+            # Check if the data already exists, if not then read and save it #  # names = glob.glob(SavePath + 'kappa_*' + '.npy')  # names = [
+            # re.split('_|.npy', name)[1] for name in names]  # if not glob.glob(SavePath + 'kappas.npy'):  # for group_number in np.sort(list(set(
+            # self.subhalo_data_tmp['GroupNumber']))):  # Loop over all the accepted haloes
         for group_number in range(1, 100):  # Loop over all masked haloes.
             for subgroup_number in range(0, 1):
                 if args.rs:  # Read and save data.
@@ -211,8 +209,8 @@ class DiscToTotalVsMass:
         prc_unit_vector = np.divide(prc_angular_momentum, np.linalg.norm(prc_angular_momentum, axis=1)[:, np.newaxis])
         
         # Calculate kinematic diagnostics #
-        kappa, disc_fraction, orbital, vrotsig, vrots, delta, zaxis, momentum = MorphoKinematics.kinematics_diagnostics(
-            stellar_data_tmp['Coordinates'], stellar_data_tmp['Mass'], stellar_data_tmp['Velocity'], stellar_data_tmp['ParticleBindingEnergy'])
+        kappa, disc_fraction, orbital, vrotsig, vrots, zaxis, momentum = MorphoKinematics.kinematics_diagnostics(stellar_data_tmp['Coordinates'],
+            stellar_data_tmp['Mass'], stellar_data_tmp['Velocity'], stellar_data_tmp['ParticleBindingEnergy'])
         
         # Calculate the ra and dec of the (unit vector of) angular momentum for each particle #
         ra = np.degrees(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]))

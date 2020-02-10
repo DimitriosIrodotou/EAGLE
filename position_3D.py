@@ -222,11 +222,11 @@ class Position3D:
             Create the 3D scatter of the positions of the particles.
             :return: figure
             """
-            kappa, discfrac, orbi, vrotsig, vrots, delta, zaxis, Momentum = MorphoKinematics.kinematics_diagnostics(stellar_data_tmp['Coordinates'],
-                                                                                                                    stellar_data_tmp['Mass'],
-                                                                                                                    stellar_data_tmp['Velocity'],
-                                                                                                                    stellar_data_tmp[
-                                                                                                                        'ParticleBindingEnergy'])
+            kappa, discfrac, orbi, vrotsig, vrots, zaxis, Momentum = MorphoKinematics.kinematics_diagnostics(stellar_data_tmp['Coordinates'],
+                                                                                                             stellar_data_tmp['Mass'],
+                                                                                                             stellar_data_tmp['Velocity'],
+                                                                                                             stellar_data_tmp[
+                                                                                                                 'ParticleBindingEnergy'])
             color = []
             for i in range(len(stellar_data_tmp['Mass'])):
                 if vrots[i] < 0.0:

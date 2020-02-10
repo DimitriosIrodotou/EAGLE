@@ -5,7 +5,7 @@
 
 # Give the job a name
 #SBATCH --job-name=Python_DI
-#SBATCH -t 0-01:00
+#SBATCH -t 0-72:00
 
 # Folders to save the log files
 #SBATCH -o out/slurm.%N.%j.out

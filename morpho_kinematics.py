@@ -77,11 +77,11 @@ class MorphoKinematics:
         Vrot = np.abs(MorphoKinematics.cumsummedian(vrots, weights=prc_properties[:, 3]))
         SigmaXY = np.sqrt(np.average(np.sum(prc_properties[:, [3]] * np.vstack([vrads, vrots]).T ** 2, axis=0) / glx_mass))  #
         SigmaO = np.sqrt(SigmaXY ** 2 - .5 * Vrot ** 2)
-        SigmaZ = np.sqrt(np.average(vheis ** 2, weights=prc_properties[:, 3]))
+        # SigmaZ = np.sqrt(np.average(vheis ** 2, weights=prc_properties[:, 3]))
         vrotsig = Vrot / SigmaO
-        delta = 1 - (SigmaZ / SigmaO) ** 2
+        # delta = 1 - (SigmaZ / SigmaO) ** 2
         
-        return kappa, discfrac, orbital, vrotsig, vrots, delta, zaxis, glx_angular_momentum_magnitude
+        return kappa, discfrac, orbital, vrotsig, vrots, zaxis, glx_angular_momentum_magnitude
     
     
     @staticmethod

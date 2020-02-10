@@ -57,7 +57,7 @@ class RADecSurfaceDensity:
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
         
         # for group_number in np.sort(list(set(self.subhalo_data_tmp['GroupNumber']))):  # Loop over all masked haloes.
-        for group_number in range(3, 4):  # Loop over all masked haloes.
+        for group_number in range(22, 24):  # Loop over all masked haloes.
             for subgroup_number in range(0, 1):
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
@@ -262,11 +262,12 @@ class RADecSurfaceDensity:
         axupperleft.annotate(r'150', xy=(2.5 * np.pi / 3 - np.pi / 15, -np.pi / 65), xycoords='data', size=18)
         axupperleft.annotate(r'-150', xy=(-2.5 * np.pi / 3 - np.pi / 10, -np.pi / 65), xycoords='data', size=18)
         
+        # Rotate
+        prc_unit_vector, glx_unit_vector = RotateCoordinates.rotate(prc_unit_vector, glx_unit_vector)
+        
         # Calculate the ra and dec of the (unit vector of) angular momentum for each particle #
         ra = np.degrees(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]))
         dec = np.degrees(np.arcsin(prc_unit_vector[:, 2]))
-        
-
         
         # Create HEALPix map #
         nside = 2 ** 5  # Define the resolution of the grid (number of divisions along the side of a base-resolution pixel).
@@ -282,9 +283,6 @@ class RADecSurfaceDensity:
                              arrowprops=dict(arrowstyle="-", color='black', connectionstyle="arc3,rad=0"))  # Position of the densest pixel.
         axupperleft.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black', marker='X',
                             zorder=5)  # Position of the galactic angular momentum.
-        
-        # glx_ra, glx_dec = RotateCoordinates.rotate(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), glx_unit_vector)
-        # axupperleft.scatter(glx_ra, glx_dec, s=300, color='black', marker='X', zorder=5)  # Position of the galactic angular momentum.
         
         # Sample a 360x180 grid in ra/dec #
         ra = np.linspace(-180.0, 180.0, num=360) * u.deg
@@ -372,11 +370,10 @@ class RADecSurfaceDensity:
         axmiddleleft.axvspan(90, 180, facecolor='0.2', alpha=0.5)  # Draw a vertical span.
         
         # Calculate kinematic diagnostics #
-        kappa, discfrac, orbital, vrotsig, vrots, delta, zaxis, momentum = MorphoKinematics.kinematics_diagnostics(stellar_data_tmp['Coordinates'],
-                                                                                                                   stellar_data_tmp['Mass'],
-                                                                                                                   stellar_data_tmp['Velocity'],
-                                                                                                                   stellar_data_tmp[
-                                                                                                                       'ParticleBindingEnergy'])
+        kappa, discfrac, orbital, vrotsig, vrots, zaxis, momentum = MorphoKinematics.kinematics_diagnostics(stellar_data_tmp['Coordinates'],
+                                                                                                            stellar_data_tmp['Mass'],
+                                                                                                            stellar_data_tmp['Velocity'],
+                                                                                                            stellar_data_tmp['ParticleBindingEnergy'])
         
         # Calculate the distribution of orbital circularity #
         j, = np.where((orbital < 0.0))
