@@ -45,9 +45,8 @@ class RADecSurfaceDensity:
         
         p = 1  # Counter.
         # Initialise arrays and a dictionary to store the data #
-        prc_unit_vector = []
-        glx_unit_vector = []
         stellar_data_tmp = {}
+        prc_unit_vector, glx_unit_vector = [], []
         
         if not args.l:
             self.stellar_data, self.subhalo_data = self.read_galaxies(sim, tag)
@@ -56,8 +55,7 @@ class RADecSurfaceDensity:
             
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
         
-        # for group_number in np.sort(list(set(self.subhalo_data_tmp['GroupNumber']))):  # Loop over all masked haloes.
-        for group_number in range(22, 24):  # Loop over all masked haloes.
+        for group_number in np.sort(list(set(self.subhalo_data_tmp['GroupNumber']))):  # Loop over all masked haloes.
             for subgroup_number in range(0, 1):
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
@@ -65,11 +63,11 @@ class RADecSurfaceDensity:
                     stellar_data_tmp, glx_unit_vector, prc_unit_vector = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
                     
                     # Save data in numpy arrays #
-                    np.save(SavePath + 'unit_vector_' + str(group_number), prc_unit_vector)
-                    np.save(SavePath + 'group_number_' + str(group_number), group_number)
-                    np.save(SavePath + 'subgroup_number_' + str(group_number), subgroup_number)
-                    np.save(SavePath + 'stellar_data_tmp_' + str(group_number), stellar_data_tmp)
-                    np.save(SavePath + 'glx_unit_vector_' + str(group_number), glx_unit_vector)
+                    np.save(SavePath + 'group_numbers/' + 'group_number_' + str(group_number), group_number)
+                    np.save(SavePath + 'unit_vectors/' + 'unit_vector_' + str(group_number), prc_unit_vector)
+                    np.save(SavePath + 'subgroup_numbers/' + 'subgroup_number_' + str(group_number), subgroup_number)
+                    np.save(SavePath + 'glx_unit_vectors/' + 'glx_unit_vector_' + str(group_number), glx_unit_vector)
+                    np.save(SavePath + 'stellar_data_tmps/' + 'stellar_data_tmp_' + str(group_number), stellar_data_tmp)
                     print('Masked and saved data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                         round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
@@ -87,22 +85,21 @@ class RADecSurfaceDensity:
                 elif args.l:  # Load data.
                     start_local_time = time.time()  # Start the local time.
                     
-                    group_number = np.load(SavePath + 'group_number_' + str(group_number) + '.npy')
-                    subgroup_number = np.load(SavePath + 'subgroup_number_' + str(group_number) + '.npy')
-                    prc_unit_vector = np.load(SavePath + 'unit_vector_' + str(group_number) + '.npy')
-                    glx_unit_vector = np.load(SavePath + 'glx_unit_vector_' + str(group_number) + '.npy')
-                    stellar_data_tmp = np.load(SavePath + 'stellar_data_tmp_' + str(group_number) + '.npy', allow_pickle=True)
+                    group_number = np.load(SavePath + 'group_numbers/' + 'group_number_' + str(group_number) + '.npy')
+                    prc_unit_vector = np.load(SavePath + 'unit_vectors/' + 'unit_vector_' + str(group_number) + '.npy')
+                    subgroup_number = np.load(SavePath + 'subgroup_numbers/' + 'subgroup_number_' + str(group_number) + '.npy')
+                    glx_unit_vector = np.load(SavePath + 'glx_unit_vectors/' + 'glx_unit_vector_' + str(group_number) + '.npy')
+                    stellar_data_tmp = np.load(SavePath + 'stellar_data_tmps/' + 'stellar_data_tmp_' + str(group_number) + '.npy', allow_pickle=True)
                     stellar_data_tmp = stellar_data_tmp.item()
-                    print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
-                    # + ' (' + str(round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
+                    print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
+                        round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
                 
                 # Plot the data #
                 start_local_time = time.time()  # Start the local time.
                 
-                self.plot(stellar_data_tmp, glx_unit_vector, prc_unit_vector, group_number, subgroup_number)
-                print('Plotted data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
-                print('–––––––––––––––––––––––––––––––––––––––––')
+                # self.plot(stellar_data_tmp, glx_unit_vector, prc_unit_vector, group_number, subgroup_number)  # print('Plotted data for halo ' +
+                # str(group_number) + ' in %.4s s' % (time.time() - start_local_time))  # print('–––––––––––––––––––––––––––––––––––––––––')
         
         print('Finished RADecSurfaceDensity for ' + re.split('EAGLE/|/data', sim)[2] + ' in %.4s s' % (
             time.time() - start_global_time))  # Print total time.
@@ -184,7 +181,7 @@ class RADecSurfaceDensity:
                                  np.sum(stellar_data_tmp['Mass'], axis=0))  # km s-1
         stellar_data_tmp['Velocity'] = np.subtract(stellar_data_tmp['Velocity'], CoM_velocity)
         
-        # Compute the angular momentum for each particle and for the galaxy and the unit vector parallel to the galactic angular momentum vector #
+        # Calculate the angular momentum for each particle and for the galaxy and the unit vector parallel to the galactic angular momentum vector #
         prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
                                                                                   stellar_data_tmp['Velocity'])  # Msun kpc km s-1
         glx_angular_momentum = np.sum(prc_angular_momentum, axis=0)  # Msun kpc km s-1
@@ -233,7 +230,7 @@ class RADecSurfaceDensity:
         
         axupperleft.set_xlabel('RA ($\degree$)')
         axupperleft.set_ylabel('Dec ($\degree$)')
-        axupperright.set_xlabel('x [kpc]')
+        axupperright.set_xlabel('z [kpc]')
         axupperright.set_ylabel('y [kpc]')
         axmiddleleft.set_ylabel('Particles per grid cell')
         axmiddleleft.set_xlabel('Angular distance from X ($\degree$)')
@@ -262,8 +259,9 @@ class RADecSurfaceDensity:
         axupperleft.annotate(r'150', xy=(2.5 * np.pi / 3 - np.pi / 15, -np.pi / 65), xycoords='data', size=18)
         axupperleft.annotate(r'-150', xy=(-2.5 * np.pi / 3 - np.pi / 10, -np.pi / 65), xycoords='data', size=18)
         
-        # Rotate
-        prc_unit_vector, glx_unit_vector = RotateCoordinates.rotate(prc_unit_vector, glx_unit_vector)
+        # Rotate coordinates and velocities of stellar particles wrt galactic angular momentum #
+        stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_unit_vector, glx_unit_vector = RotateCoordinates.rotate_x(stellar_data_tmp,
+                                                                                                                                     glx_unit_vector)
         
         # Calculate the ra and dec of the (unit vector of) angular momentum for each particle #
         ra = np.degrees(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]))
@@ -314,7 +312,7 @@ class RADecSurfaceDensity:
         disc_fraction_IT20 = np.divide(np.sum(stellar_data_tmp['Mass'][index]), np.sum(stellar_data_tmp['Mass']))
         
         # Plot the 2D surface density projection and the contours #
-        count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][:, 0], stellar_data_tmp['Coordinates'][:, 1], bins=100,
+        count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][:, 2], stellar_data_tmp['Coordinates'][:, 1], bins=100,
                                                range=[[-30, 30], [-30, 30]])
         axupperright.imshow(count, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', interpolation='bicubic', aspect='auto')
         # axupperright.scatter(stellar_data_tmp['Coordinates'][index, 0], stellar_data_tmp['Coordinates'][index, 1], s=3, c='blue')
@@ -389,7 +387,7 @@ class RADecSurfaceDensity:
         
         # Calculate bar strength from Fourier modes of surface density as a function of radius plot #
         nbins = 40  # Number of radial bins.
-        r = np.sqrt(stellar_data_tmp['Coordinates'][:, 0] ** 2 + stellar_data_tmp['Coordinates'][:, 1] ** 2)  # Radius of each particle.
+        r = np.sqrt(stellar_data_tmp['Coordinates'][:, 2] ** 2 + stellar_data_tmp['Coordinates'][:, 1] ** 2)  # Radius of each particle.
         
         # Initialise Fourier components #
         r_m = np.zeros(nbins)
@@ -402,7 +400,7 @@ class RADecSurfaceDensity:
             r_s = float(i) * 0.25
             r_b = float(i) * 0.25 + 0.25
             r_m[i] = float(i) * 0.25 + 0.125
-            xfit = stellar_data_tmp['Coordinates'][:, 0][(r < r_b) & (r > r_s)]
+            xfit = stellar_data_tmp['Coordinates'][:, 2][(r < r_b) & (r > r_s)]
             yfit = stellar_data_tmp['Coordinates'][:, 1][(r < r_b) & (r > r_s)]
             for k in range(0, len(xfit)):
                 th_i = np.arctan2(yfit[k], xfit[k])
@@ -426,5 +424,5 @@ if __name__ == '__main__':
     tag = '027_z000p101'
     sim = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
     outdir = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/RDSD/'  # Path to save plots.
-    SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/RDSD/'  # Path to save/load data.
+    SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/'  # Path to save/load data.
     x = RADecSurfaceDensity(sim, tag)

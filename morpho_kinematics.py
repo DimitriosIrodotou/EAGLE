@@ -7,7 +7,7 @@ class MorphoKinematics:
     @staticmethod
     def cumsummedian(a, weights=None):
         """
-        Compute the weighted median.
+        Calculate the weighted median.
         :param a: Input array.
         :param weights: Weights.
         :return: P (median)
@@ -30,7 +30,7 @@ class MorphoKinematics:
     @staticmethod
     def kinematics_diagnostics(coordinates, masses, velocities, particlebindingenergy):
         """
-        Compute various kinematics parameters
+        Calculate various kinematics parameters
         :param coordinates: Coordinates of particles.
         :param masses: Masses of particles
         :param velocities: Velocities of particles
@@ -48,7 +48,7 @@ class MorphoKinematics:
         glx_angular_momentum = np.sum(prc_properties[:, 3][:, np.newaxis] * prc_s_angular_momentum, axis=0)
         glx_angular_momentum_magnitude = np.linalg.norm(glx_angular_momentum)
         
-        # Compute cylindrical quantities #
+        # Calculate cylindrical quantities #
         zaxis = (glx_angular_momentum / glx_angular_momentum_magnitude)  # Unit vector pointing along the glx_angular_momentum direction.
         zheight = np.sum(zaxis * prc_properties[:, :3], axis=1)  # Projection of the coordinate vectors on the unit vector.
         cylposition = prc_properties[:, :3] - zheight[:, np.newaxis] * [zaxis]
@@ -62,7 +62,7 @@ class MorphoKinematics:
         Mvrot2 = np.sum((prc_properties[:, 3] * vrots ** 2)[vrots > 0])
         kappa = Mvrot2 / np.sum(prc_properties[:, 3] * (np.linalg.norm(prc_properties[:, 4:7], axis=1)) ** 2)
         
-        # Compute disc-to-total masses fraction estimated from the counter-rotating bulge #
+        # Calculate disc-to-total masses fraction estimated from the counter-rotating bulge #
         discfrac = 1 - 2 * np.sum(prc_properties[vrots <= 0, 3]) / glx_mass
         
         # Calculate the mean orbital circularity #
@@ -73,7 +73,7 @@ class MorphoKinematics:
         orbital = (jzE[:, 1] / np.maximum.accumulate(np.abs(jzE[:, 1])))[unsortE]
         orbi = np.median(orbital)
         
-        # Compute rotation-to-dispersion and dispersion anisotropy
+        # Calculate rotation-to-dispersion and dispersion anisotropy
         Vrot = np.abs(MorphoKinematics.cumsummedian(vrots, weights=prc_properties[:, 3]))
         SigmaXY = np.sqrt(np.average(np.sum(prc_properties[:, [3]] * np.vstack([vrads, vrots]).T ** 2, axis=0) / glx_mass))  #
         SigmaO = np.sqrt(SigmaXY ** 2 - .5 * Vrot ** 2)
@@ -87,7 +87,7 @@ class MorphoKinematics:
     @staticmethod
     def morphological_diagnostics(coordinates, masses, velocities, aperture=0.03, CoMvelocity=True, reduced_structure=True):
         """
-                Compute the morphological diagnostics through the (reduced or not) inertia tensor.
+                Calculate the morphological diagnostics through the (reduced or not) inertia tensor.
 
         Returns the morphological diagnostics for the input particles.
 
@@ -128,23 +128,23 @@ class MorphoKinematics:
         :return:
         """
         particlesall = np.vstack([coordinates.T, masses, velocities.T]).T
-        # Compute prc_distances
+        # Calculate prc_distances
         distancesall = np.linalg.norm(particlesall[:, :3], axis=1)
         # Restrict particles
         extract = (distancesall < aperture)
         particles = particlesall[extract].copy()
         prc_distances = distancesall[extract].copy()
         glx_mass = np.sum(particles[:, 3])
-        # Compute kinematic diagnostics
+        # Calculate kinematic diagnostics
         if CoMvelocity:
-            # Compute CoM velocty, correct
+            # Calculate CoM velocty, correct
             dvVmass = np.nan_to_num(np.sum(particles[:, 3][:, np.newaxis] * particles[:, 4:7], axis=0) / glx_mass)
             particlesall[:, 4:7] -= dvVmass
             particles[:, 4:7] -= dvVmass
-        # Compute glx_angular_momentum
+        # Calculate glx_angular_momentum
         prc_s_angular_momentum = np.cross(particlesall[:, :3], particlesall[:, 4:7])
         glx_angular_momentum = np.sum(particles[:, 3][:, np.newaxis] * prc_s_angular_momentum[extract], axis=0)
-        # Compute morphological diagnostics
+        # Calculate morphological diagnostics
         s = 1
         q = 1
         Rsphall = 1 + reduced_structure * (distancesall - 1)
@@ -153,7 +153,7 @@ class MorphoKinematics:
             particles = particlesall[extract].copy()
             Rsph = Rsphall[extract]
             Rsph /= np.median(Rsph)
-            # Compute structure tensor
+            # Calculate structure tensor
             structure = np.sum(
                 (particles[:, 3] / Rsph ** 2)[:, np.newaxis, np.newaxis] * (np.matmul(particles[:, :3, np.newaxis], particles[:, np.newaxis, :3])),
                 axis=0) / np.sum(particles[:, 3] / Rsph ** 2)
@@ -172,7 +172,7 @@ class MorphoKinematics:
             foo = (np.argmax(eigval) / 2) * 2
             temp = np.array([(-1) ** (1 + foo / 2), 1, 1]) * (temp[:, [2 - foo, 1, foo]])
             eigval = eigval[[2 - foo, 1, foo]]
-            # Compute change of basis matrix
+            # Calculate change of basis matrix
             transform = linalg.inv(temp)
             stop = (np.max((1 - np.sqrt(eigval[:2] / eigval[2]) / np.array([q, s])) ** 2) < 1e-4)
             if (reduced_structure and not (stop)):

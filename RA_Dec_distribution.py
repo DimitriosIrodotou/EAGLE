@@ -30,7 +30,7 @@ start_global_time = time.time()  # Start the global time.
 warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
 
 
-class RADecSurfaceDensity:
+class RADecDistribution:
     """
     Create a ra and dec plot with the angular momentum of particles for each galaxy.
     """
@@ -64,7 +64,7 @@ class RADecSurfaceDensity:
         print('Plotted data for halo ' + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished RADecSurfaceDensity for ' + re.split('EAGLE/|/data', sim)[2] + ' in %.4s s' % (
+        print('Finished RADecDistribution for ' + re.split('EAGLE/|/data', sim)[2] + ' in %.4s s' % (
             time.time() - start_global_time))  # Print total time.
         print('–––––––––––––––––––––––––––––––––––––––––')
     
@@ -170,4 +170,4 @@ if __name__ == '__main__':
     sim = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
     outdir = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/RDD/'  # Path to save plots.
     SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/RDSD/'  # Path to save/load data.
-    x = RADecSurfaceDensity(sim, tag)
+    x = RADecDistribution(sim, tag)

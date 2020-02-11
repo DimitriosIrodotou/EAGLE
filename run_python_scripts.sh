@@ -34,4 +34,4 @@ source activate my_python
 
 cd /cosma7/data/dp004/dc-irod1/EAGLE/python/ || exit
 
-python DTT_vs_kapparot.py -rs
+python RA_Dec_surface_density.py -rs

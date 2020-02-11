@@ -43,9 +43,8 @@ class RADec:
         
         p = 1  # Counter.
         # Initialise arrays and a dictionary to store the data #
-        prc_unit_vector = []
         stellar_data_tmp = {}
-        glx_unit_vector = []
+        prc_unit_vector, glx_unit_vector = [], []
         
         if not args.l:
             self.stellar_data, self.subhalo_data = self.read_galaxies(sim, tag)
@@ -183,7 +182,7 @@ class RADec:
                                  np.sum(stellar_data_tmp['Mass']))  # km s-1
         stellar_data_tmp['Velocity'] = np.subtract(stellar_data_tmp['Velocity'], CoM_velocity)
         
-        # Compute the angular momentum for each particle and for the galaxy and the unit vector parallel to the galactic angular momentum vector #
+        # Calculate the angular momentum for each particle and for the galaxy and the unit vector parallel to the galactic angular momentum vector #
         prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
                                                                                   stellar_data_tmp['Velocity'])  # Msun kpc km s-1
         glx_angular_momentum = np.sum(prc_angular_momentum, axis=0)  # Msun kpc km s-1

@@ -44,10 +44,7 @@ class DiscToTotalVsMass:
         
         p = 1  # Counter.
         # Initialise empty arrays to hold the data #
-        kappas = []
-        glx_masses = []
-        disc_fractions = []
-        disc_fractions_IT20 = []
+        kappas, glx_masses, disc_fractions, disc_fractions_IT20 = [], [], [], []
         
         if not args.l:
             self.stellar_data, self.subhalo_data = self.read_galaxies(sim, tag)
@@ -59,54 +56,55 @@ class DiscToTotalVsMass:
             # Check if the data already exists, if not then read and save it #  # names = glob.glob(SavePath + 'kappa_*' + '.npy')  # names = [
             # re.split('_|.npy', name)[1] for name in names]  # if not glob.glob(SavePath + 'kappas.npy'):  # for group_number in np.sort(list(set(
             # self.subhalo_data_tmp['GroupNumber']))):  # Loop over all the accepted haloes
-        for group_number in range(1, 100):  # Loop over all masked haloes.
-            for subgroup_number in range(0, 1):
-                if args.rs:  # Read and save data.
-                    start_local_time = time.time()  # Start the local time.
+            for group_number in np.sort(list(set(self.subhalo_data_tmp['GroupNumber']))):  # Loop over all the accepted haloes
+                for subgroup_number in range(0, 1):
+                    if args.rs:  # Read and save data.
+                        start_local_time = time.time()  # Start the local time.
+                        
+                        kappa, disc_fraction, disc_fraction_IT20, glx_mass = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
+                        
+                        # Save data in numpy arrays every 10 galaxies to make it faster #
+                        # np.save(SavePath + 'kappa_' + str(group_number), kappa)
+                        np.save(SavePath + 'glx_masses/' + 'glx_mass_' + str(group_number), glx_mass)
+                        # np.save(SavePath + 'disc_fraction_' + str(group_number), disc_fraction)
+                        # np.save(SavePath + 'disc_fraction_IT20_' + str(group_number), disc_fraction_IT20)
+                        print('Masked and saved data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
+                            round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
+                        print('–––––––––––––––––––––––––––––––––––––––––––––')
+                        p += 1
+                    elif args.r:  # Read data.
+                        start_local_time = time.time()  # Start the local time.
+                        
+                        kappa, disc_fraction, disc_fraction_IT20, glx_mass = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
+                        # kappas.append(kappa)
+                        glx_masses.append(glx_mass)
+                        # disc_fractions.append(disc_fraction)
+                        # disc_fractions_IT20.append(disc_fraction_IT20)
+                        print('Masked data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
+                            round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
+                        print('–––––––––––––––––––––––––––––––––––––––––––––')
+                        p += 1  # Increase the count by one.
                     
-                    kappa, disc_fraction, disc_fraction_IT20, glx_mass = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
-                    
-                    # Save data in numpy arrays every 10 galaxies to make it faster #
-                    np.save(SavePath + 'kappa_' + str(group_number), kappa)
-                    np.save(SavePath + 'glx_mass_' + str(group_number), glx_mass)
-                    np.save(SavePath + 'disc_fraction_' + str(group_number), disc_fraction)
-                    np.save(SavePath + 'disc_fraction_IT20_' + str(group_number), disc_fraction_IT20)
-                    print('Masked and saved data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
-                        round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
-                    print('–––––––––––––––––––––––––––––––––––––––––––––')
-                    p += 1
-                elif args.r:  # Read data.
-                    start_local_time = time.time()  # Start the local time.
-                    
-                    kappa, disc_fraction, disc_fraction_IT20, glx_mass = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
-                    kappas.append(kappa)
-                    glx_masses.append(glx_mass)
-                    disc_fractions.append(disc_fraction)
-                    disc_fractions_IT20.append(disc_fraction_IT20)
-                    print('Masked data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
-                        round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
-                    print('–––––––––––––––––––––––––––––––––––––––––––––')
-                    p += 1  # Increase the count by one.
-                
-                if args.l or args.rs:  # Load data.
-                    start_local_time = time.time()  # Start the local time.
-                    kappa = np.load(SavePath + 'kappa_' + str(group_number) + '.npy')
-                    disc_fraction = np.load(SavePath + 'disc_fraction_' + str(group_number) + '.npy')
-                    disc_fraction_IT20 = np.load(SavePath + 'disc_fraction_IT20_' + str(group_number) + '.npy')
-                    glx_mass = np.load(SavePath + 'glx_mass_' + str(group_number) + '.npy')
-                    kappas.append(kappa.item())
-                    glx_masses.append(glx_mass.item())
-                    disc_fractions.append(disc_fraction.item())
-                    disc_fractions_IT20.append(disc_fraction_IT20.item())
-                    print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
-                    # + ' (' + str(round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
-                    print('–––––––––––––––––––––––––––––––––––––––––––––')
+                    if args.l or args.rs:  # Load data.
+                        start_local_time = time.time()  # Start the local time.
+                        
+                        # kappa = np.load(SavePath + 'kappa_' + str(group_number) + '.npy')
+                        glx_mass = np.load(SavePath + 'glx_masses/' + 'glx_mass_' + str(group_number) + '.npy')
+                        # disc_fraction = np.load(SavePath + 'disc_fraction_' + str(group_number) + '.npy')
+                        # disc_fraction_IT20 = np.load(SavePath + 'disc_fraction_IT20_' + str(group_number) + '.npy')
+                        # kappas.append(kappa.item())
+                        glx_masses.append(glx_mass.item())
+                        # disc_fractions.append(disc_fraction.item())
+                        # disc_fractions_IT20.append(disc_fraction_IT20.item())
+                        print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
+                        # + ' (' + str(round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
+                        print('–––––––––––––––––––––––––––––––––––––––––––––')
             
             if args.l or args.rs:  # Load data.
-                np.save(SavePath + 'kappas', kappas)
-                np.save(SavePath + 'glx_masses', glx_masses)
-                np.save(SavePath + 'disc_fractions', disc_fractions)
-                np.save(SavePath + 'disc_fractions_IT20', disc_fractions_IT20)
+                # np.save(SavePath + 'kappas', kappas)
+                np.save(SavePath + 'glx_masses/' + 'glx_masses',
+                        glx_masses)  # np.save(SavePath + 'disc_fractions', disc_fractions)  # np.save(SavePath + 'disc_fractions_IT20',
+                # disc_fractions_IT20)
         # else:
         #     start_local_time = time.time()  # Start the local time.
         #
@@ -203,14 +201,17 @@ class DiscToTotalVsMass:
                                  np.sum(stellar_data_tmp['Mass'], axis=0))  # km s-1
         stellar_data_tmp['Velocity'] = np.subtract(stellar_data_tmp['Velocity'], CoM_velocity)
         
-        # Compute the angular momentum for each particle and for the galaxy and the unit vector parallel to the galactic angular momentum vector #
+        # Calculate the angular momentum for each particle and for the galaxy and the unit vector parallel to the galactic angular momentum vector #
         prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
                                                                                   stellar_data_tmp['Velocity'])  # Msun kpc km s-1
         prc_unit_vector = np.divide(prc_angular_momentum, np.linalg.norm(prc_angular_momentum, axis=1)[:, np.newaxis])
         
         # Calculate kinematic diagnostics #
         kappa, disc_fraction, orbital, vrotsig, vrots, zaxis, momentum = MorphoKinematics.kinematics_diagnostics(stellar_data_tmp['Coordinates'],
-            stellar_data_tmp['Mass'], stellar_data_tmp['Velocity'], stellar_data_tmp['ParticleBindingEnergy'])
+                                                                                                                 stellar_data_tmp['Mass'],
+                                                                                                                 stellar_data_tmp['Velocity'],
+                                                                                                                 stellar_data_tmp[
+                                                                                                                     'ParticleBindingEnergy'])
         
         # Calculate the ra and dec of the (unit vector of) angular momentum for each particle #
         ra = np.degrees(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]))
@@ -333,5 +334,5 @@ if __name__ == '__main__':
     tag = '027_z000p101'
     sim = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
     outdir = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/DTTM/'  # Path to save plots.
-    SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/DTTM/'  # Path to save/load data.
+    SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/'  # Path to save/load data.
     x = DiscToTotalVsMass(sim, tag)
