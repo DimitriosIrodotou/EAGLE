@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import eagle_IO.eagle_IO.eagle_IO as E
 
 from matplotlib import gridspec
+from rotate_galaxies import RotateCoordinates
 
 # Create a parser and add argument to read data #
 parser = argparse.ArgumentParser(description='Create 2 dimensional histograms of the position of stellar particles.')
@@ -51,7 +52,7 @@ class PositionHistogram:
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
         
         # for group_number in np.sort(list(set(self.subhalo_data_tmp['GroupNumber']))):  # Loop over all masked haloes.
-        for group_number in range(1, 101):  # Loop over all masked haloes.
+        for group_number in range(1, 50):  # Loop over all masked haloes.
             for subgroup_number in range(0, 1):
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
@@ -79,9 +80,10 @@ class PositionHistogram:
                 elif args.l:  # Load data.
                     start_local_time = time.time()  # Start the local time.
                     
-                    group_number = np.load(SavePath + 'group_number_' + str(group_number) + '.npy')
                     subgroup_number = np.load(SavePath + 'subgroup_number_' + str(group_number) + '.npy')
-                    stellar_data_tmp = np.load(SavePath + 'stellar_data_tmp_' + str(group_number) + '.npy', allow_pickle=True)
+                    group_number = np.load(SavePath + 'group_numbers/' + 'group_number_' + str(group_number) + '.npy')
+                    glx_unit_vector = np.load(SavePath + 'glx_unit_vectors/' + 'glx_unit_vector_' + str(group_number) + '.npy')
+                    stellar_data_tmp = np.load(SavePath + 'stellar_data_tmps/' + 'stellar_data_tmp_' + str(group_number) + '.npy', allow_pickle=True)
                     stellar_data_tmp = stellar_data_tmp.item()
                     print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
                     # + ' (' + str(round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
@@ -90,7 +92,7 @@ class PositionHistogram:
                 # Plot the data #
                 start_local_time = time.time()  # Start the local time.
                 
-                self.plot(stellar_data_tmp, group_number, subgroup_number)
+                self.plot(stellar_data_tmp, glx_unit_vector, group_number, subgroup_number)
                 print('Plotted data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
                 print('–––––––––––––––––––––––––––––––––––––––––')
         
@@ -173,7 +175,7 @@ class PositionHistogram:
     
     
     @staticmethod
-    def plot(stellar_data_tmp, group_number, subgroup_number):
+    def plot(stellar_data_tmp, glx_unit_vector, group_number, subgroup_number):
         """
         A method to plot a hexbin histogram.
         :param stellar_data_tmp: temporary data
@@ -215,6 +217,9 @@ class PositionHistogram:
         axleft.set_ylabel(r'$\mathrm{y/kpc}$')
         axright.set_xlabel(r'$\mathrm{y/kpc}$')
         
+        # Rotate coordinates and velocities of stellar particles wrt galactic angular momentum #
+        stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_unit_vector, glx_unit_vector = RotateCoordinates.rotate_x(stellar_data_tmp,
+                                                                                                                                     glx_unit_vector)
         # Generate the XY projection #
         count, xedges, yedges = np.histogram2d(list(zip(*stellar_data_tmp['Coordinates']))[0], list(zip(*stellar_data_tmp['Coordinates']))[1],
                                                weights=stellar_data_tmp['Mass'], bins=100, range=[[-20, 20], [-20, 20]])
@@ -251,5 +256,5 @@ if __name__ == '__main__':
     tag = '027_z000p101'
     sim = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
     outdir = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/PH/'  # Path to save plots.
-    SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/PH/'  # Path to save/load data.
+    SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/'  # Path to save/load data.
     x = PositionHistogram(sim, tag)
