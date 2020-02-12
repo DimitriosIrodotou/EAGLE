@@ -15,6 +15,7 @@ from astropy_healpix import HEALPix
 import eagle_IO.eagle_IO.eagle_IO as E
 
 from matplotlib import gridspec
+from rotate_galaxies import RotateCoordinates
 
 # Create a parser and add argument to read data #
 parser = argparse.ArgumentParser(description='Create RA and Dec.')
@@ -54,7 +55,7 @@ class RADec:
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
         
         # for group_number in np.sort(list(set(self.subhalo_data_tmp['GroupNumber']))):  # Loop over all masked haloes.
-        for group_number in range(8, 9):  # Loop over all masked haloes.
+        for group_number in range(25, 26):  # Loop over all masked haloes.
             for subgroup_number in range(0, 1):
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
@@ -85,7 +86,7 @@ class RADec:
                     start_local_time = time.time()  # Start the local time.
                     
                     group_number = np.load(SavePath + 'group_number_' + str(group_number) + '.npy')
-                    prc_unit_vector = np.load(SavePath + 'unit_vector_' + str(group_number) + '.npy')
+                    prc_unit_vector = np.load(SavePath + 'prc_unit_vector_' + str(group_number) + '.npy')
                     subgroup_number = np.load(SavePath + 'subgroup_number_' + str(group_number) + '.npy')
                     glx_unit_vector = np.load(SavePath + 'glx_unit_vector_' + str(group_number) + '.npy')
                     stellar_data_tmp = np.load(SavePath + 'stellar_data_tmp_' + str(group_number) + '.npy', allow_pickle=True)
@@ -219,29 +220,27 @@ class RADec:
         axupperright = plt.subplot(gs[0, 1], projection="mollweide")
         axlowerright = plt.subplot(gs[1, 1], projection="mollweide")
         
-        axupperleft.grid(True)
-        axlowerleft.grid(True)
-        axupperright.grid(True)
-        axlowerright.grid(True)
-        axupperleft.set_xlabel('RA ($\degree$)')
-        axlowerleft.set_xlabel('RA ($\degree$)')
-        axupperright.set_xlabel('RA ($\degree$)')
-        axlowerright.set_xlabel('RA ($\degree$)')
-        axupperleft.set_ylabel('Dec ($\degree$)')
-        axlowerleft.set_ylabel('Dec ($\degree$)')
-        axupperright.set_ylabel('Dec ($\degree$)')
-        axlowerright.set_ylabel('Dec ($\degree$)')
+        for a in [axupperleft, axlowerleft, axupperright, axlowerright]:
+            a.set_xlabel('RA ($\degree$)')
+            a.set_ylabel('Dec ($\degree$)')
+            a.set_xticklabels([])
         
-        y_tick_labels = np.array(['', '-60', '', '-30', '', 0, '', '30', '', 60])
-        x_tick_labels = np.array(['', '-120', '', '-60', '', 0, '', '60', '', 120])
-        axupperleft.set_xticklabels(x_tick_labels)
-        axupperleft.set_yticklabels(y_tick_labels)
-        axlowerleft.set_xticklabels(x_tick_labels)
-        axlowerleft.set_yticklabels(y_tick_labels)
-        axlowerright.set_xticklabels(x_tick_labels)
-        axlowerright.set_yticklabels(y_tick_labels)
-        axupperright.set_xticklabels(x_tick_labels)
-        axupperright.set_yticklabels(y_tick_labels)
+            # Set manually the values of the ra axis #
+            a.annotate(r'0', xy=(0 - np.pi / 40, - np.pi / 65), xycoords='data', size=18)
+            a.annotate(r'30', xy=(np.pi / 6 - np.pi / 25, - np.pi / 65), xycoords='data', size=18)
+            a.annotate(r'-30', xy=(-np.pi / 6 - np.pi / 15, - np.pi / 65), xycoords='data', size=18)
+            a.annotate(r'60', xy=(np.pi / 3 - np.pi / 25, - np.pi / 65), xycoords='data', size=18)
+            a.annotate(r'-60', xy=(-np.pi / 3 - np.pi / 15, - np.pi / 65), xycoords='data', size=18)
+            a.annotate(r'90', xy=(np.pi / 2 - np.pi / 25, - np.pi / 65), xycoords='data', size=18)
+            a.annotate(r'-90', xy=(-np.pi / 2 - np.pi / 15, -np.pi / 65), xycoords='data', size=18)
+            a.annotate(r'120', xy=(2 * np.pi / 3 - np.pi / 15, -np.pi / 65), xycoords='data', size=18)
+            a.annotate(r'-120', xy=(-2 * np.pi / 3 - np.pi / 10, -np.pi / 65), xycoords='data', size=18)
+            a.annotate(r'150', xy=(2.5 * np.pi / 3 - np.pi / 15, -np.pi / 65), xycoords='data', size=18)
+            a.annotate(r'-150', xy=(-2.5 * np.pi / 3 - np.pi / 10, -np.pi / 65), xycoords='data', size=18)
+        
+        # Rotate coordinates and velocities of stellar particles wrt galactic angular momentum #
+        stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_unit_vector, glx_unit_vector = RotateCoordinates.rotate_x(stellar_data_tmp,
+                                                                                                                                     glx_unit_vector)
         
         # Calculate the ra and dec of the (unit vector of) angular momentum for each particle #
         ra = np.degrees(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]))
@@ -281,9 +280,6 @@ class RADec:
         scatter = axupperright.scatter(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]), np.arcsin(prc_unit_vector[:, 2]),
                                        c=stellar_data_tmp['StellarFormationTime'], cmap='jet_r', s=1, zorder=-1)
         
-        axupperright.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black', marker='X',
-                             zorder=-1)
-        
         # Generate the color bar #
         cbar = plt.colorbar(scatter, ax=axupperright, orientation='horizontal')
         cbar.set_label('$\mathrm{StellarFormationTime}$')
@@ -296,20 +292,15 @@ class RADec:
             2 * velocity_r_sqred))
         
         scatter = axlowerleft.scatter(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]), np.arcsin(prc_unit_vector[:, 2]), c=np.exp(beta - 1),
-                                      cmap='tab20', s=1, zorder=-1)
-        
-        axlowerleft.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black', marker='X',
-                            zorder=-1)
+                                      cmap='magma', s=1, zorder=-1)
         
         # Generate the color bar #
         cbar = plt.colorbar(scatter, ax=axlowerleft, orientation='horizontal')
-        cbar.set_label(r'$\mathrm{log_{10}({\beta/\bar{\beta}})}$')
+        cbar.set_label(r'$\mathrm{exp(\beta - 1)}$')
         
         # Generate the RA and Dec projection colour-coded by BirthDensity #
         scatter = axlowerright.scatter(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]), np.arcsin(prc_unit_vector[:, 2]),
-                                       c=stellar_data_tmp['BirthDensity'], cmap='jet', s=1, zorder=-1)
-        axlowerright.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black', marker='X',
-                             zorder=-1)
+                                       c=np.log10(stellar_data_tmp['BirthDensity']), cmap='jet', s=1, zorder=-1)
         
         # Generate the color bar #
         cbar = plt.colorbar(scatter, ax=axlowerright, orientation='horizontal')
@@ -330,5 +321,5 @@ if __name__ == '__main__':
     tag = '027_z000p101'
     sim = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
     outdir = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/RD/'  # Path to save plots.
-    SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/RD/EAGLE/'  # Path to save/load data.
+    SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/RD/'  # Path to save/load data.
     x = RADec(sim, tag)
