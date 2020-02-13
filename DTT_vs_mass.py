@@ -53,9 +53,6 @@ class DiscToTotalVsMass:
             
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
             
-            # Check if the data already exists, if not then read and save it #  # names = glob.glob(SavePath + 'kappa_*' + '.npy')  # names = [
-            # re.split('_|.npy', name)[1] for name in names]  # if not glob.glob(SavePath + 'kappas.npy'):  # for group_number in np.sort(list(set(
-            # self.subhalo_data_tmp['GroupNumber']))):  # Loop over all the accepted haloes
             for group_number in np.sort(list(set(self.subhalo_data_tmp['GroupNumber']))):  # Loop over all the accepted haloes
                 for subgroup_number in range(0, 1):
                     if args.rs:  # Read and save data.
@@ -63,11 +60,11 @@ class DiscToTotalVsMass:
                         
                         kappa, disc_fraction, disc_fraction_IT20, glx_mass = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
                         
-                        # Save data in numpy arrays every 10 galaxies to make it faster #
-                        # np.save(SavePath + 'kappa_' + str(group_number), kappa)
+                        # Save data in numpy arrays #
+                        np.save(SavePath + 'kappa_' + str(group_number), kappa)
+                        np.save(SavePath + 'disc_fraction_' + str(group_number), disc_fraction)
                         np.save(SavePath + 'glx_masses/' + 'glx_mass_' + str(group_number), glx_mass)
-                        # np.save(SavePath + 'disc_fraction_' + str(group_number), disc_fraction)
-                        # np.save(SavePath + 'disc_fraction_IT20_' + str(group_number), disc_fraction_IT20)
+                        np.save(SavePath + 'disc_fraction_IT20_' + str(group_number), disc_fraction_IT20)
                         print('Masked and saved data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                             round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                         print('–––––––––––––––––––––––––––––––––––––––––––––')
@@ -76,10 +73,10 @@ class DiscToTotalVsMass:
                         start_local_time = time.time()  # Start the local time.
                         
                         kappa, disc_fraction, disc_fraction_IT20, glx_mass = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
-                        # kappas.append(kappa)
+                        kappas.append(kappa)
                         glx_masses.append(glx_mass)
-                        # disc_fractions.append(disc_fraction)
-                        # disc_fractions_IT20.append(disc_fraction_IT20)
+                        disc_fractions.append(disc_fraction)
+                        disc_fractions_IT20.append(disc_fraction_IT20)
                         print('Masked data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                             round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                         print('–––––––––––––––––––––––––––––––––––––––––––––')

@@ -45,21 +45,28 @@ class RADecDistribution:
         
         # Initialise arrays and a dictionary to store the data #
         glx_unit_vectors = []
-        
-        for group_number in range(1, 149):  # Loop over all masked haloes.
-            for subgroup_number in range(0, 1):
-                start_local_time = time.time()  # Start the local time.
-                
-                glx_unit_vector = np.load(SavePath + 'glx_unit_vector_' + str(group_number) + '.npy')
-                glx_unit_vectors.append(glx_unit_vector)
-                np.save(SavePath + 'glx_unit_vectors', glx_unit_vectors)
-                
-                print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
-                print('–––––––––––––––––––––––––––––––––––––––––––––')
+        if not args.l:
+            self.stellar_data, self.subhalo_data = self.read_galaxies(sim, tag)
+            print('Read data for ' + re.split('EAGLE/|/data', sim)[2] + ' in %.4s s' % (time.time() - start_global_time))
+            print('–––––––––––––––––––––––––––––––––––––––––')
+            
+            self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
+            
+            for group_number in np.sort(list(set(self.subhalo_data_tmp['GroupNumber']))):  # Loop over all masked haloes.
+                for subgroup_number in range(0, 1):
+                    start_local_time = time.time()  # Start the local time.
+                    
+                    glx_unit_vector = np.load(SavePath + 'glx_unit_vectors/' + 'glx_unit_vector_' + str(group_number) + '.npy')
+                    glx_unit_vectors.append(glx_unit_vector)
+                    
+                    print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
+                    print('–––––––––––––––––––––––––––––––––––––––––––––')
+            
+            np.save(SavePath + 'glx_unit_vectors/' + 'glx_unit_vectors', glx_unit_vectors)
         
         # Plot the data #
         start_local_time = time.time()  # Start the local time.
-        glx_unit_vectors = np.load(SavePath + 'glx_unit_vectors.npy')
+        glx_unit_vectors = np.load(SavePath + 'glx_unit_vectors/' + 'glx_unit_vectors.npy')
         self.plot(glx_unit_vectors)
         print('Plotted data for halo ' + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––')
@@ -88,7 +95,7 @@ class RADecDistribution:
         stellar_data = {}
         particle_type = '4'
         file_type = 'PARTDATA'
-        for attribute in ['Coordinates', 'GroupNumber', 'Mass', 'SubGroupNumber', 'Velocity']:
+        for attribute in ['Coordinates', 'GroupNumber', 'Mass', 'ParticleBindingEnergy', 'SubGroupNumber', 'Velocity']:
             stellar_data[attribute] = E.read_array(file_type, sim, tag, '/PartType' + particle_type + '/' + attribute, numThreads=8)
         
         # Convert attributes to astronomical units #
@@ -99,6 +106,23 @@ class RADecDistribution:
         subhalo_data['ApertureMeasurements/Mass/030kpc'] *= u.g.to(u.Msun)
         
         return stellar_data, subhalo_data
+    
+    
+    def mask_haloes(self):
+        """
+        A method to mask haloes.
+        :return: subhalo_data_tmp
+        """
+        
+        # Mask the data to select haloes more #
+        mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 2.5e8)
+        
+        # Mask the temporary dictionary for each galaxy #
+        subhalo_data_tmp = {}
+        for attribute in self.subhalo_data.keys():
+            subhalo_data_tmp[attribute] = np.copy(self.subhalo_data[attribute])[mask]
+        
+        return subhalo_data_tmp
     
     
     @staticmethod
@@ -136,11 +160,12 @@ class RADecDistribution:
         plt.annotate(r'-150', xy=(-2.5 * np.pi / 3 - np.pi / 10, -np.pi / 65), xycoords='data', size=18)
         
         # Calculate the ra and dec of the (unit vector of) angular momentum for each particle #
+        glx_unit_vectors = glx_unit_vectors[~np.isnan(glx_unit_vectors).any(axis=1)]
         ra = np.degrees(np.arctan2(glx_unit_vectors[:, 1], glx_unit_vectors[:, 0]))
         dec = np.degrees(np.arcsin(glx_unit_vectors[:, 2]))
         
         # Create HEALPix map #
-        nside = 2 ** 3  # Define the resolution of the grid (number of divisions along the side of a base-resolution pixel).
+        nside = 2 ** 5  # Define the resolution of the grid (number of divisions along the side of a base-resolution pixel).
         hp = HEALPix(nside=nside)  # Initialise the HEALPix pixellisation class.
         indices = hp.lonlat_to_healpix(ra * u.deg, dec * u.deg)  # Create list of HEALPix indices from particles' ra and dec.
         density = np.bincount(indices, minlength=hp.npix)  # Count number of points in each HEALPix pixel.
@@ -155,10 +180,10 @@ class RADecDistribution:
         density_map = density[coordinate_index]
         
         # Display data on a 2D regular raster and create a pseudo-color plot #
-        im = plt.imshow(density_map, cmap='nipy_spectral_r', aspect='auto', norm=matplotlib.colors.LogNorm(vmin=1))
+        im = plt.imshow(density_map, cmap='magma_r', aspect='auto',vmin=1)
         cbar = plt.colorbar(im, ax=ax, orientation='horizontal')
-        # cbar.set_label('$\mathrm{Particles\; per\; grid\; cell}$')
-        plt.pcolormesh(np.radians(ra), np.radians(dec), density_map, cmap='nipy_spectral_r')
+        cbar.set_label('$\mathrm{Number\; of\; galaxies\; per\; grid\; cell}$')
+        plt.pcolormesh(np.radians(ra), np.radians(dec), density_map, cmap='magma_r')
         
         # Save the plot #
         plt.savefig(outdir + 'RDD' + '-' + date + '.png', bbox_inches='tight')

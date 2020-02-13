@@ -91,15 +91,16 @@ class RADecSurfaceDensity:
                     glx_unit_vector = np.load(SavePath + 'glx_unit_vectors/' + 'glx_unit_vector_' + str(group_number) + '.npy')
                     stellar_data_tmp = np.load(SavePath + 'stellar_data_tmps/' + 'stellar_data_tmp_' + str(group_number) + '.npy', allow_pickle=True)
                     stellar_data_tmp = stellar_data_tmp.item()
-                    print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
-                        round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
+                    print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
+                    # + ' (' + str(round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
                 
                 # Plot the data #
                 start_local_time = time.time()  # Start the local time.
                 
-                # self.plot(stellar_data_tmp, glx_unit_vector, prc_unit_vector, group_number, subgroup_number)  # print('Plotted data for halo ' +
-                # str(group_number) + ' in %.4s s' % (time.time() - start_local_time))  # print('–––––––––––––––––––––––––––––––––––––––––')
+                self.plot(stellar_data_tmp, glx_unit_vector, prc_unit_vector, group_number, subgroup_number)
+                print('Plotted data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
+                print('–––––––––––––––––––––––––––––––––––––––––')
         
         print('Finished RADecSurfaceDensity for ' + re.split('EAGLE/|/data', sim)[2] + ' in %.4s s' % (
             time.time() - start_global_time))  # Print total time.

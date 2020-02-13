@@ -59,14 +59,18 @@ class DiscToTotalVsKappaRot:
                         
                         kappa, disc_fraction, disc_fraction_IT20 = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
                         
-                        # Save data in numpy arrays every 10 galaxies to make it faster #
+                        # Save data in numpy arrays #
                         np.save(SavePath + 'kappas/' + 'kappa_' + str(group_number), kappa)
                         np.save(SavePath + 'disc_fractions/' + 'disc_fraction_' + str(group_number), disc_fraction)
                         np.save(SavePath + 'disc_fractions_IT20/' + 'disc_fraction_IT20_' + str(group_number), disc_fraction_IT20)
+                        kappas.append(kappa)
+                        disc_fractions.append(disc_fraction)
+                        disc_fractions_IT20.append(disc_fraction_IT20)
                         print('Masked and saved data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                             round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                         print('–––––––––––––––––––––––––––––––––––––––––––––')
                         p += 1
+                    
                     elif args.r:  # Read data.
                         start_local_time = time.time()  # Start the local time.
                         
@@ -78,24 +82,12 @@ class DiscToTotalVsKappaRot:
                             round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                         print('–––––––––––––––––––––––––––––––––––––––––––––')
                         p += 1  # Increase the count by one.
-                    
-                    if args.l or args.rs:  # Load data.
-                        start_local_time = time.time()  # Start the local time.
-                        kappa = np.load(SavePath + 'kappas/' + 'kappa_' + str(group_number) + '.npy')
-                        disc_fraction = np.load(SavePath + 'disc_fractions/' + 'disc_fraction_' + str(group_number) + '.npy')
-                        disc_fraction_IT20 = np.load(SavePath + 'disc_fractions_IT20/' + 'disc_fraction_IT20_' + str(group_number) + '.npy')
-                        kappas.append(kappa)
-                        disc_fractions.append(disc_fraction)
-                        disc_fractions_IT20.append(disc_fraction_IT20)
-                        print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
-                            round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
-                        print('–––––––––––––––––––––––––––––––––––––––––––––')
             
-            if args.l or args.rs:  # Load data.
+            if args.rs:
                 np.save(SavePath + 'kappas/' + 'kappas', kappas)
                 np.save(SavePath + 'disc_fractions/' + 'disc_fractions', disc_fractions)
                 np.save(SavePath + 'disc_fractions_IT20/' + 'disc_fractions_IT20', disc_fractions_IT20)
-        else:
+        else:  # Load data.
             start_local_time = time.time()  # Start the local time.
             
             kappas = np.load(SavePath + 'kappas/' + 'kappas.npy')
