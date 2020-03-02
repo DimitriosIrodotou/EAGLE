@@ -79,7 +79,7 @@ class RADecDistribution:
     @staticmethod
     def read_galaxies(sim, tag):
         """
-         A method to extract particle and subhalo attributes.
+        Extract particle and subhalo attributes.
         :param sim: simulation directory
         :param tag: redshift folder
         :return: stellar_data, subhalo_data

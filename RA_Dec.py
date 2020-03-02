@@ -109,7 +109,7 @@ class RADec:
     @staticmethod
     def read_galaxies(sim, tag):
         """
-         A method to extract particle and subhalo attributes.
+        Extract particle and subhalo attributes.
         :param sim: simulation directory
         :param tag: redshift folder
         :return: stellar_data, subhalo_data
@@ -224,7 +224,7 @@ class RADec:
             a.set_xlabel('RA ($\degree$)')
             a.set_ylabel('Dec ($\degree$)')
             a.set_xticklabels([])
-        
+            
             # Set manually the values of the ra axis #
             a.annotate(r'0', xy=(0 - np.pi / 40, - np.pi / 65), xycoords='data', size=18)
             a.annotate(r'30', xy=(np.pi / 6 - np.pi / 25, - np.pi / 65), xycoords='data', size=18)
@@ -239,7 +239,7 @@ class RADec:
             a.annotate(r'-150', xy=(-2.5 * np.pi / 3 - np.pi / 10, -np.pi / 65), xycoords='data', size=18)
         
         # Rotate coordinates and velocities of stellar particles wrt galactic angular momentum #
-        stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_unit_vector, glx_unit_vector = RotateCoordinates.rotate_x(stellar_data_tmp,
+        stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_unit_vector, glx_unit_vector = RotateCoordinates.rotate_X(stellar_data_tmp,
                                                                                                                                      glx_unit_vector)
         
         # Calculate the ra and dec of the (unit vector of) angular momentum for each particle #

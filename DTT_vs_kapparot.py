@@ -13,6 +13,7 @@ import astropy.units as u
 import matplotlib.pyplot as plt
 import eagle_IO.eagle_IO.eagle_IO as E
 
+from matplotlib import gridspec
 from astropy_healpix import HEALPix
 from morpho_kinematics import MorphoKinematics
 
@@ -110,7 +111,7 @@ class DiscToTotalVsKappaRot:
     @staticmethod
     def read_galaxies(sim, tag):
         """
-         A method to extract particle and subhalo attributes.
+        Extract particle and subhalo attributes.
         :param sim: simulation directory
         :param tag: redshift folder
         :return: stellar_data, subhalo_data
@@ -237,9 +238,9 @@ class DiscToTotalVsKappaRot:
         # Generate initial figure #
         plt.close()
         figure = plt.figure(figsize=(10, 7.5))
-        grid = plt.GridSpec(1, 2, width_ratios=(1, 0.25), wspace=0.0)
-        main_plot = figure.add_subplot(grid[0, 0])
-        y_hist = figure.add_subplot(grid[0, 1])
+        gs = gridspec.GridSpec(1, 2, width_ratios=(1, 0.25), wspace=0.0)
+        main_plot = figure.add_subplot(gs[0, 0])
+        y_hist = figure.add_subplot(gs[0, 1])
         for a in [main_plot, y_hist]:
             a.grid(True)
             a.set_ylim(-0.4, 1)

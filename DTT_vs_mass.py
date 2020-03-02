@@ -14,6 +14,7 @@ import astropy.units as u
 import matplotlib.pyplot as plt
 import eagle_IO.eagle_IO.eagle_IO as E
 
+from matplotlib import gridspec
 from astropy_healpix import HEALPix
 from morpho_kinematics import MorphoKinematics
 
@@ -102,15 +103,15 @@ class DiscToTotalVsMass:
                 np.save(SavePath + 'glx_masses/' + 'glx_masses',
                         glx_masses)  # np.save(SavePath + 'disc_fractions', disc_fractions)  # np.save(SavePath + 'disc_fractions_IT20',
                 # disc_fractions_IT20)
-        # else:
-        #     start_local_time = time.time()  # Start the local time.
-        #
-        #     kappas = np.load(SavePath + 'kappas.npy')
-        #     glx_masses = np.load(SavePath + 'glx_masses.npy')
-        #     disc_fractions = np.load(SavePath + 'disc_fractions.npy')
-        #     disc_fractions_IT20 = np.load(SavePath + 'disc_fractions_IT20.npy')
-        #     print('Loaded data for ' + re.split('EAGLE/|/data', sim)[0] + ' in %.4s s' % (time.time() - start_global_time))
-        #     print('–––––––––––––––––––––––––––––––––––––––––')
+        else:
+            start_local_time = time.time()  # Start the local time.
+            
+            kappas = np.load(SavePath + 'kappas/' + 'kappas.npy')
+            glx_masses = np.load(SavePath + 'glx_masses/' + 'glx_masses.npy')
+            disc_fractions = np.load(SavePath + 'disc_fractions/' + 'disc_fractions.npy')
+            disc_fractions_IT20 = np.load(SavePath + 'disc_fractions_IT20/' + 'disc_fractions_IT20.npy')
+            print('Loaded data for ' + re.split('EAGLE/|/data', sim)[0] + ' in %.4s s' % (time.time() - start_local_time))
+            print('–––––––––––––––––––––––––––––––––––––––––')
         
         # Plot the data #
         start_local_time = time.time()  # Start the local time.
@@ -126,7 +127,7 @@ class DiscToTotalVsMass:
     @staticmethod
     def read_galaxies(sim, tag):
         """
-         A method to extract particle and subhalo attributes.
+        Extract particle and subhalo attributes.
         :param sim: simulation directory
         :param tag: redshift folder
         :return: stellar_data, subhalo_data
@@ -245,7 +246,7 @@ class DiscToTotalVsMass:
         :param disc_fractions_IT20: from mask_galaxies
         :return: None
         """
-        print(len(kappas))
+        
         # Set the style of the plots #
         sns.set()
         sns.set_style('ticks')
@@ -253,44 +254,42 @@ class DiscToTotalVsMass:
         
         # Generate initial figure #
         plt.close()
-        figure = plt.figure(figsize=(10, 7.5))
-        # grid = plt.GridSpec(1, 2, width_ratios=(1, 0.25), wspace=0.0)
-        # main_plot = figure.add_subplot(grid[0, 0])
-        # y_hist = figure.add_subplot(grid[0, 1])
-        # for a in [main_plot, y_hist]:
-        plt.grid(True)
-        # plt.ylabel('D/T')
-        plt.xlabel(r'$M_{\star}$')
-        plt.xscale('log')
-        plt.ylim(-0.2, 1)
-        plt.xlim(3e10, 1e12)
-        #
-        # main_plot.set_xlim(0, 1)
-        # main_plot.set_xlabel('$\kappa_{rot}$')
-        # y_hist.xaxis.set_ticks_position("top")
-        # y_hist.yaxis.set_ticks_position("right")
-        #
+        figure = plt.figure(figsize=(10, 22.5))
+        gs = gridspec.GridSpec(3, 1, wspace=0.0)
+        upper = figure.add_subplot(gs[0, 0])
+        middle = figure.add_subplot(gs[1, 0])
+        bottom = figure.add_subplot(gs[2, 0])
+        method = ['$D/T_{30\degree}$', r'$D/T_{\vec{J}_{b} = 0}$', r'$\kappa_{rot}$']
+        for i, a in enumerate([upper, middle, bottom]):
+            a.grid(True)
+            a.set_ylabel(str(method[i]))
+            a.set_xlabel(r'$M_{\star}$')
+            a.set_xscale('log')
+            a.set_ylim(-0.4, 1)
+            a.set_xlim(1e8, 1e12)
+        
         # Calculate median and 1-sigma #
-        # nbin = int((max(kappas) - min(kappas)) / 0.02)
-        # x_value = np.empty(nbin)
-        # median = np.empty(nbin)
-        # slow = np.empty(nbin)
-        # shigh = np.empty(nbin)
-        # x_low = min(kappas)
-        # for i in range(nbin):
-        #     index = np.where((kappas >= x_low) & (kappas < x_low + 0.02))[0]
-        #     x_value[i] = np.mean(np.absolute(kappas)[index])
-        #     if len(index) > 0:
-        #         median[i] = np.nanmedian(disc_fractions_IT20[index])
-        #         slow[i] = np.nanpercentile(disc_fractions_IT20[index], 15.87)
-        #         shigh[i] = np.nanpercentile(disc_fractions_IT20[index], 84.13)
-        #     x_low += 0.02
-        #
+        nbin = int((max(np.log10(glx_masses)) - min(np.log10(glx_masses))) / 0.02)
+        print(nbin)
+        x_value = np.empty(nbin)
+        median = np.empty(nbin)
+        slow = np.empty(nbin)
+        shigh = np.empty(nbin)
+        x_low = min(glx_masses)
+        for i in range(nbin):
+            index = np.where((glx_masses >= x_low) & (glx_masses < x_low + 0.02))[0]
+            x_value[i] = np.mean(np.absolute(glx_masses)[index])
+            if len(index) > 0:
+                median[i] = np.nanmedian(disc_fractions_IT20[index])
+                slow[i] = np.nanpercentile(disc_fractions_IT20[index], 15.87)
+                shigh[i] = np.nanpercentile(disc_fractions_IT20[index], 84.13)
+            x_low += 0.02
+        
         # Plot median and 1-sigma lines #
-        # median_IT20, = main_plot.plot(x_value, median, color='black', zorder=5)
-        # main_plot.fill_between(x_value, shigh, slow, color='black', alpha='0.5', zorder=5)
-        # fill_IT20, = plt.fill(np.NaN, np.NaN, color='black', alpha=0.5, zorder=5)
-        #
+        median_IT20, = upper.plot(x_value, median, color='black', zorder=5)
+        upper.fill_between(x_value, shigh, slow, color='black', alpha='0.5', zorder=5)
+        fill_IT20, = plt.fill(np.NaN, np.NaN, color='black', alpha=0.5, zorder=5)
+
         # Calculate median and 1-sigma #
         # nbin = int((max(kappas) - min(kappas)) / 0.02)
         # x_value = np.empty(nbin)
@@ -308,15 +307,14 @@ class DiscToTotalVsMass:
         #     x_low += 0.02
         #
         # Plot median and 1-sigma lines #
-        # median, = main_plot.plot(x_value, median, color='blue', zorder=5)
-        # main_plot.fill_between(x_value, shigh, slow, color='blue', alpha='0.5', zorder=5)
+        # median, = upper.plot(x_value, median, color='blue', zorder=5)
+        # upper.fill_between(x_value, shigh, slow, color='blue', alpha='0.5', zorder=5)
         # fill, = plt.fill(np.NaN, np.NaN, color='black', alpha=0.5, zorder=5)
         
-        plt.scatter(glx_masses, disc_fractions_IT20, label='$D/T_{30\degree}$')
-        plt.scatter(glx_masses, disc_fractions, label=r'$D/T_{\vec{J}_{b} = 0}$')
-        plt.scatter(glx_masses, kappas, label=r'$\kappa_{rot}$')
-        plt.legend(loc='upper left', frameon=False, markerscale=1)
-        # main_plot.legend([median_IT20, fill_IT20, median, fill],
+        upper.scatter(glx_masses, disc_fractions_IT20)
+        middle.scatter(glx_masses, disc_fractions)
+        bottom.scatter(glx_masses, kappas)
+        # upper.legend([median_IT20, fill_IT20, median, fill],
         #                  [r'$\mathrm{This\; work: Median}$', r'$\mathrm{This\; work: 16^{th}-84^{th}\,\%ile}$'], frameon=False, loc=2)
         
         # y_hist.hist(disc_fractions_IT20, bins=np.linspace(-1, 1, 50), histtype='step', orientation='horizontal', color='black')
