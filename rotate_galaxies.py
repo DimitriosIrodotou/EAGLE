@@ -9,13 +9,14 @@ class RotateCoordinates:
     Rotate coordinates and velocities wrt different quantities.
     """
     
+    
     @staticmethod
     def rotate_X(stellar_data_tmp, glx_unit_vector):
         """
         Rotate first about z-axis to set y=0 and then about the y-axis to set z=0
-        :param stellar_data_tmp:
-        :param glx_unit_vector:
-        :return:
+        :param stellar_data_tmp: from mask_galaxies
+        :param glx_unit_vector: from mask_galaxies
+        :return: stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_unit_vector, glx_unit_vector
         """
         # Calculate the rotation matrices and combine them #
         ra = np.arctan2(glx_unit_vector[1], glx_unit_vector[0])
@@ -45,7 +46,7 @@ class RotateCoordinates:
         Rotate first about z-axis to set y=0and then about the y-axis to set z=0
         :param prc_unit_vector:
         :param glx_unit_vector:
-        :return:
+        :return: prc_unit_vector, glx_unit_vector
         """
         # Calculate the ra and dec of the (unit vector of) angular momentum for each particle #
         ra = np.degrees(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]))
@@ -84,7 +85,7 @@ class RotateCoordinates:
         """
         Rotate a galaxy such that its angular momentum is along the z axis/
         :param stellar_data_tmp:
-        :return:
+        :return: stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_angular_momentum, glx_angular_momentum
         """
         
         # Calculate the angular momentum of the galaxy #
@@ -108,7 +109,7 @@ class RotateCoordinates:
         stellar_data_tmp['Velocity'] = np.array(
             [np.matmul(transform, stellar_data_tmp['Velocity'][i].T) for i in range(0, len(stellar_data_tmp['Velocity']))])[:, 0]
         
-        # Calculate the rotated angualr momentum of the galaxy #
+        # Calculate the rotated angular momentum of the galaxy #
         prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
                                                                                   stellar_data_tmp['Velocity'])  # Msun kpc km s-1
         glx_angular_momentum = np.sum(prc_angular_momentum, axis=0)  # Msun kpc km s-1

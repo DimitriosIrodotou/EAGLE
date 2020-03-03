@@ -36,10 +36,10 @@ class SurfaceDensityProfiles:
     """
     
     
-    def __init__(self, sim, tag):
+    def __init__(self, simulation_path, tag):
         """
         A constructor method for the class.
-        :param sim: simulation directory
+        :param simulation_path: simulation directory
         :param tag: redshift folder
         """
         
@@ -47,8 +47,9 @@ class SurfaceDensityProfiles:
         stellar_data_tmp = {}  # Initialise a dictionary to store the data.
         
         if not args.l:
-            self.stellar_data, self.subhalo_data = self.read_galaxies(sim, tag)  # Extract particle and subhalo attributes.
-            print('Read data for ' + re.split('EAGLE/|/data', sim)[2] + ' in %.4s s' % (time.time() - start_global_time))
+            # Extract particle and subhalo attributes and convert them to astronomical units #
+            self.stellar_data, self.subhalo_data = self.read_galaxies(simulation_path, tag)
+            print('Read data for ' + re.split('EAGLE/|/data', simulation_path)[2] + ' in %.4s s' % (time.time() - start_global_time))
             print('–––––––––––––––––––––––––––––––––––––––––––––')
             
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher that 1e8
@@ -62,9 +63,9 @@ class SurfaceDensityProfiles:
                     stellar_data_tmp = self.mask_galaxies(group_number, subgroup_number)  # Mask galaxies and normalise data.
                     
                     # Save data in numpy arrays #
-                    np.save(SavePath + 'group_numbers/' + 'group_number_' + str(group_number), group_number)
-                    np.save(SavePath + 'subgroup_numbers/' + 'subgroup_number_' + str(group_number), subgroup_number)
-                    np.save(SavePath + 'stellar_data_tmps/' + 'stellar_data_tmp_' + str(group_number), stellar_data_tmp)
+                    np.save(data_path + 'group_numbers/' + 'group_number_' + str(group_number), group_number)
+                    np.save(data_path + 'subgroup_numbers/' + 'subgroup_number_' + str(group_number), subgroup_number)
+                    np.save(data_path + 'stellar_data_tmps/' + 'stellar_data_tmp_' + str(group_number), stellar_data_tmp)
                     print('Masked and saved data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                         round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
@@ -82,9 +83,9 @@ class SurfaceDensityProfiles:
                 elif args.l:  # Load data.
                     start_local_time = time.time()  # Start the local time.
                     
-                    group_number = np.load(SavePath + 'group_numbers/' + 'group_number_' + str(group_number) + '.npy')
-                    subgroup_number = np.load(SavePath + 'subgroup_numbers/' + 'subgroup_number_' + str(group_number) + '.npy')
-                    stellar_data_tmp = np.load(SavePath + 'stellar_data_tmps/' + 'stellar_data_tmp_' + str(group_number) + '.npy', allow_pickle=True)
+                    group_number = np.load(data_path + 'group_numbers/' + 'group_number_' + str(group_number) + '.npy')
+                    subgroup_number = np.load(data_path + 'subgroup_numbers/' + 'subgroup_number_' + str(group_number) + '.npy')
+                    stellar_data_tmp = np.load(data_path + 'stellar_data_tmps/' + 'stellar_data_tmp_' + str(group_number) + '.npy', allow_pickle=True)
                     stellar_data_tmp = stellar_data_tmp.item()
                     print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
@@ -101,10 +102,10 @@ class SurfaceDensityProfiles:
     
     
     @staticmethod
-    def read_galaxies(sim, tag):
+    def read_galaxies(simulation_path, tag):
         """
-        Extract particle and subhalo attributes.
-        :param sim: simulation directory
+        Extract particle and subhalo attributes and convert them to astronomical units.
+        :param simulation_path: simulation directory
         :param tag: redshift folder
         :return: stellar_data, subhalo_data
         """
@@ -113,14 +114,14 @@ class SurfaceDensityProfiles:
         subhalo_data = {}
         file_type = 'SUBFIND'
         for attribute in ['ApertureMeasurements/Mass/030kpc', 'CentreOfPotential', 'GroupNumber', 'SubGroupNumber']:
-            subhalo_data[attribute] = E.read_array(file_type, sim, tag, '/Subhalo/' + attribute, numThreads=8)
+            subhalo_data[attribute] = E.read_array(file_type, simulation_path, tag, '/Subhalo/' + attribute, numThreads=8)
         
         # Load particle data in h-free physical CGS units #
         stellar_data = {}
         particle_type = '4'
         file_type = 'PARTDATA'
         for attribute in ['Coordinates', 'GroupNumber', 'Mass', 'SubGroupNumber', 'Velocity']:
-            stellar_data[attribute] = E.read_array(file_type, sim, tag, '/PartType' + particle_type + '/' + attribute, numThreads=8)
+            stellar_data[attribute] = E.read_array(file_type, simulation_path, tag, '/PartType' + particle_type + '/' + attribute, numThreads=8)
         
         # Convert attributes to astronomical units #
         stellar_data['Mass'] *= u.g.to(u.Msun)
@@ -134,7 +135,7 @@ class SurfaceDensityProfiles:
     
     def mask_haloes(self):
         """
-        Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e8
+        Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e8 Msun.
         :return: subhalo_data_tmp
         """
         
@@ -186,7 +187,7 @@ class SurfaceDensityProfiles:
         :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
         :return: None
         """
-
+        
         f = plt.figure(0, figsize=(10, 7.5))
         plt.ylim(1e0, 1e6)
         plt.xlim(0.0, 30.0)
@@ -200,12 +201,12 @@ class SurfaceDensityProfiles:
             stellar_data_tmp)
         stellar_data_tmp['Coordinates'] = np.fliplr(stellar_data_tmp['Coordinates'])
         stellar_data_tmp['Coordinates'] *= 1e-3
-
+        
         pos = stellar_data_tmp['Coordinates']
         zcut = 0.001  # vertical cut in Mpc
         Rcut = 0.040
         nshells = 60  # 35 up to galrad is OK
-
+        
         rd = np.linspace(0.0, Rcut, nshells)
         mnow = np.zeros(len(rd))
         sdlim = 1.
@@ -222,19 +223,19 @@ class SurfaceDensityProfiles:
         sa = np.zeros(len(edges) - 1)
         sa[:] = np.pi * (edges[1:] ** 2 - edges[:-1] ** 2)
         sden /= sa
-
+        
         x = np.zeros(len(edges) - 1)
         x[:] = 0.5 * (edges[1:] + edges[:-1])
-
+        
         sden *= 1e-6
         r = x * 1e3
         indy = self.find_nearest(sden * 1e4, [sdlim]).astype('int64')
-
+        
         rfit = x[indy] * 1e3
         sdfit = sden[:indy]
         r = r[:indy][sdfit > 0.]
         sdfit = sdfit[sdfit > 0.]
-
+        
         try:
             guess = (0.1, 2., 0.4, 0.6, 1.)
             bounds = ([0.01, 0., 0.01, 0.5, 0.25], [1., 6., 10., 2., 10.])
@@ -243,7 +244,7 @@ class SurfaceDensityProfiles:
         except:
             popt = np.zeros(5)
             print("fitting failed")
-
+        
         disk_mass = 2.0 * np.pi * popt[0] * popt[1] * popt[1]
         bulge_mass = np.pi * popt[2] * popt[3] * popt[3] * gamma(2.0 / popt[4] + 1)
         disk_to_total = disk_mass / (bulge_mass + disk_mass)
@@ -376,7 +377,7 @@ class SurfaceDensityProfiles:
         # scaleheight = popt[1] * 1e3
         
         # Save the plot #
-        plt.savefig(outdir + str(group_number) + str(subgroup_number) + '-' + 'SDP' + '-' + date + '.png', bbox_inches='tight')
+        plt.savefig(plots_path + str(group_number) + str(subgroup_number) + '-' + 'SDP' + '-' + date + '.png', bbox_inches='tight')
         return None
     
     
@@ -393,7 +394,7 @@ class SurfaceDensityProfiles:
 
 if __name__ == '__main__':
     tag = '027_z000p101'
-    sim = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
-    outdir = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/SDP/'  # Path to save plots.
-    SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/'  # Path to save/load data.
-    x = SurfaceDensityProfiles(sim, tag)
+    simulation_path = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
+    plots_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/SDP/'  # Path to save plots.
+    data_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/'  # Path to save/load data.
+    x = SurfaceDensityProfiles(simulation_path, tag)

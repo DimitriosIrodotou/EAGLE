@@ -36,19 +36,21 @@ class RADecDistribution:
     """
     
     
-    def __init__(self, sim, tag):
+    def __init__(self, simulation_path, tag):
         """
         A constructor method for the class.
-        :param sim: simulation directory
+        :param simulation_path: simulation directory
         :param tag: redshift folder
         """
         
         # Initialise arrays and a dictionary to store the data #
         glx_unit_vectors = []
+        
         if not args.l:
-            self.stellar_data, self.subhalo_data = self.read_galaxies(sim, tag)
-            print('Read data for ' + re.split('EAGLE/|/data', sim)[2] + ' in %.4s s' % (time.time() - start_global_time))
-            print('–––––––––––––––––––––––––––––––––––––––––')
+            # Extract particle and subhalo attributes and convert them to astronomical units #
+            self.stellar_data, self.subhalo_data = self.read_galaxies(simulation_path, tag)
+            print('Read data for ' + re.split('EAGLE/|/data', simulation_path)[2] + ' in %.4s s' % (time.time() - start_global_time))
+            print('–––––––––––––––––––––––––––––––––––––––––––––')
             
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
             
@@ -56,31 +58,31 @@ class RADecDistribution:
                 for subgroup_number in range(0, 1):
                     start_local_time = time.time()  # Start the local time.
                     
-                    glx_unit_vector = np.load(SavePath + 'glx_unit_vectors/' + 'glx_unit_vector_' + str(group_number) + '.npy')
+                    glx_unit_vector = np.load(data_path + 'glx_unit_vectors/' + 'glx_unit_vector_' + str(group_number) + '.npy')
                     glx_unit_vectors.append(glx_unit_vector)
                     
                     print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
             
-            np.save(SavePath + 'glx_unit_vectors/' + 'glx_unit_vectors', glx_unit_vectors)
+            np.save(data_path + 'glx_unit_vectors/' + 'glx_unit_vectors', glx_unit_vectors)
         
         # Plot the data #
         start_local_time = time.time()  # Start the local time.
-        glx_unit_vectors = np.load(SavePath + 'glx_unit_vectors/' + 'glx_unit_vectors.npy')
+        glx_unit_vectors = np.load(data_path + 'glx_unit_vectors/' + 'glx_unit_vectors.npy')
         self.plot(glx_unit_vectors)
         print('Plotted data for halo ' + ' in %.4s s' % (time.time() - start_local_time))
-        print('–––––––––––––––––––––––––––––––––––––––––')
+        print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished RADecDistribution for ' + re.split('EAGLE/|/data', sim)[2] + ' in %.4s s' % (
+        print('Finished RADecDistribution for ' + re.split('EAGLE/|/data', simulation_path)[2] + ' in %.4s s' % (
             time.time() - start_global_time))  # Print total time.
-        print('–––––––––––––––––––––––––––––––––––––––––')
+        print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
     @staticmethod
-    def read_galaxies(sim, tag):
+    def read_galaxies(simulation_path, tag):
         """
-        Extract particle and subhalo attributes.
-        :param sim: simulation directory
+        Extract particle and subhalo attributes and convert them to astronomical units.
+        :param simulation_path: simulation directory
         :param tag: redshift folder
         :return: stellar_data, subhalo_data
         """
@@ -89,14 +91,14 @@ class RADecDistribution:
         subhalo_data = {}
         file_type = 'SUBFIND'
         for attribute in ['ApertureMeasurements/Mass/030kpc', 'CentreOfPotential', 'GroupNumber', 'SubGroupNumber']:
-            subhalo_data[attribute] = E.read_array(file_type, sim, tag, '/Subhalo/' + attribute, numThreads=8)
+            subhalo_data[attribute] = E.read_array(file_type, simulation_path, tag, '/Subhalo/' + attribute, numThreads=8)
         
         # Load particle data in h-free physical CGS units #
         stellar_data = {}
         particle_type = '4'
         file_type = 'PARTDATA'
         for attribute in ['Coordinates', 'GroupNumber', 'Mass', 'ParticleBindingEnergy', 'SubGroupNumber', 'Velocity']:
-            stellar_data[attribute] = E.read_array(file_type, sim, tag, '/PartType' + particle_type + '/' + attribute, numThreads=8)
+            stellar_data[attribute] = E.read_array(file_type, simulation_path, tag, '/PartType' + particle_type + '/' + attribute, numThreads=8)
         
         # Convert attributes to astronomical units #
         stellar_data['Mass'] *= u.g.to(u.Msun)
@@ -186,13 +188,13 @@ class RADecDistribution:
         plt.pcolormesh(np.radians(ra), np.radians(dec), density_map, cmap='magma_r')
         
         # Save the plot #
-        plt.savefig(outdir + 'RDD' + '-' + date + '.png', bbox_inches='tight')
+        plt.savefig(plots_path + 'RDD' + '-' + date + '.png', bbox_inches='tight')
         return None
 
 
 if __name__ == '__main__':
     tag = '027_z000p101'
-    sim = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
-    outdir = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/RDD/'  # Path to save plots.
-    SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/'  # Path to save/load data.
-    x = RADecDistribution(sim, tag)
+    simulation_path = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
+    plots_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/RDD/'  # Path to save plots.
+    data_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/'  # Path to save/load data.
+    x = RADecDistribution(simulation_path, tag)

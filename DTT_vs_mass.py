@@ -36,10 +36,10 @@ class DiscToTotalVsMass:
     """
     
     
-    def __init__(self, sim, tag):
+    def __init__(self, simulation_path, tag):
         """
         A constructor method for the class.
-        :param sim: simulation directory
+        :param simulation_path: simulation directory
         :param tag: redshift folder
         """
         
@@ -48,8 +48,9 @@ class DiscToTotalVsMass:
         kappas, glx_masses, disc_fractions, disc_fractions_IT20 = [], [], [], []
         
         if not args.l:
-            self.stellar_data, self.subhalo_data = self.read_galaxies(sim, tag)
-            print('Read data for ' + re.split('EAGLE/|/data', sim)[2] + ' in %.4s s' % (time.time() - start_global_time))
+            # Extract particle and subhalo attributes and convert them to astronomical units #
+            self.stellar_data, self.subhalo_data = self.read_galaxies(simulation_path, tag)
+            print('Read data for ' + re.split('EAGLE/|/data', simulation_path)[2] + ' in %.4s s' % (time.time() - start_global_time))
             print('–––––––––––––––––––––––––––––––––––––––––')
             
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
@@ -62,10 +63,10 @@ class DiscToTotalVsMass:
                         kappa, disc_fraction, disc_fraction_IT20, glx_mass = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
                         
                         # Save data in numpy arrays #
-                        np.save(SavePath + 'kappa_' + str(group_number), kappa)
-                        np.save(SavePath + 'disc_fraction_' + str(group_number), disc_fraction)
-                        np.save(SavePath + 'glx_masses/' + 'glx_mass_' + str(group_number), glx_mass)
-                        np.save(SavePath + 'disc_fraction_IT20_' + str(group_number), disc_fraction_IT20)
+                        np.save(data_path + 'kappa_' + str(group_number), kappa)
+                        np.save(data_path + 'disc_fraction_' + str(group_number), disc_fraction)
+                        np.save(data_path + 'glx_masses/' + 'glx_mass_' + str(group_number), glx_mass)
+                        np.save(data_path + 'disc_fraction_IT20_' + str(group_number), disc_fraction_IT20)
                         print('Masked and saved data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                             round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                         print('–––––––––––––––––––––––––––––––––––––––––––––')
@@ -86,10 +87,10 @@ class DiscToTotalVsMass:
                     if args.l or args.rs:  # Load data.
                         start_local_time = time.time()  # Start the local time.
                         
-                        # kappa = np.load(SavePath + 'kappa_' + str(group_number) + '.npy')
-                        glx_mass = np.load(SavePath + 'glx_masses/' + 'glx_mass_' + str(group_number) + '.npy')
-                        # disc_fraction = np.load(SavePath + 'disc_fraction_' + str(group_number) + '.npy')
-                        # disc_fraction_IT20 = np.load(SavePath + 'disc_fraction_IT20_' + str(group_number) + '.npy')
+                        # kappa = np.load(data_path + 'kappa_' + str(group_number) + '.npy')
+                        glx_mass = np.load(data_path + 'glx_masses/' + 'glx_mass_' + str(group_number) + '.npy')
+                        # disc_fraction = np.load(data_path + 'disc_fraction_' + str(group_number) + '.npy')
+                        # disc_fraction_IT20 = np.load(data_path + 'disc_fraction_IT20_' + str(group_number) + '.npy')
                         # kappas.append(kappa.item())
                         glx_masses.append(glx_mass.item())
                         # disc_fractions.append(disc_fraction.item())
@@ -99,36 +100,36 @@ class DiscToTotalVsMass:
                         print('–––––––––––––––––––––––––––––––––––––––––––––')
             
             if args.l or args.rs:  # Load data.
-                # np.save(SavePath + 'kappas', kappas)
-                np.save(SavePath + 'glx_masses/' + 'glx_masses',
-                        glx_masses)  # np.save(SavePath + 'disc_fractions', disc_fractions)  # np.save(SavePath + 'disc_fractions_IT20',
+                # np.save(data_path + 'kappas', kappas)
+                np.save(data_path + 'glx_masses/' + 'glx_masses',
+                        glx_masses)  # np.save(data_path + 'disc_fractions', disc_fractions)  # np.save(data_path + 'disc_fractions_IT20',
                 # disc_fractions_IT20)
         else:
             start_local_time = time.time()  # Start the local time.
             
-            kappas = np.load(SavePath + 'kappas/' + 'kappas.npy')
-            glx_masses = np.load(SavePath + 'glx_masses/' + 'glx_masses.npy')
-            disc_fractions = np.load(SavePath + 'disc_fractions/' + 'disc_fractions.npy')
-            disc_fractions_IT20 = np.load(SavePath + 'disc_fractions_IT20/' + 'disc_fractions_IT20.npy')
-            print('Loaded data for ' + re.split('EAGLE/|/data', sim)[0] + ' in %.4s s' % (time.time() - start_local_time))
+            kappas = np.load(data_path + 'kappas/' + 'kappas.npy')
+            glx_masses = np.load(data_path + 'glx_masses/' + 'glx_masses.npy')
+            disc_fractions = np.load(data_path + 'disc_fractions/' + 'disc_fractions.npy')
+            disc_fractions_IT20 = np.load(data_path + 'disc_fractions_IT20/' + 'disc_fractions_IT20.npy')
+            print('Loaded data for ' + re.split('EAGLE/|/data', simulation_path)[0] + ' in %.4s s' % (time.time() - start_local_time))
             print('–––––––––––––––––––––––––––––––––––––––––')
         
         # Plot the data #
         start_local_time = time.time()  # Start the local time.
         
         self.plot(kappas, disc_fractions, disc_fractions_IT20, glx_masses)
-        print('Plotted data for ' + re.split('EAGLE/|/data', sim)[2] + ' in %.4s s' % (time.time() - start_local_time))
+        print('Plotted data for ' + re.split('EAGLE/|/data', simulation_path)[2] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished DTTM for ' + re.split('EAGLE/|/data', sim)[2] + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished DTTM for ' + re.split('EAGLE/|/data', simulation_path)[2] + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
     @staticmethod
-    def read_galaxies(sim, tag):
+    def read_galaxies(simulation_path, tag):
         """
-        Extract particle and subhalo attributes.
-        :param sim: simulation directory
+        Extract particle and subhalo attributes and convert them to astronomical units.
+        :param simulation_path: simulation directory
         :param tag: redshift folder
         :return: stellar_data, subhalo_data
         """
@@ -137,14 +138,14 @@ class DiscToTotalVsMass:
         subhalo_data = {}
         file_type = 'SUBFIND'
         for attribute in ['ApertureMeasurements/Mass/030kpc', 'CentreOfPotential', 'GroupNumber', 'SubGroupNumber']:
-            subhalo_data[attribute] = E.read_array(file_type, sim, tag, '/Subhalo/' + attribute, numThreads=8)
+            subhalo_data[attribute] = E.read_array(file_type, simulation_path, tag, '/Subhalo/' + attribute, numThreads=8)
         
         # Load particle data in h-free physical CGS units #
         stellar_data = {}
         particle_type = '4'
         file_type = 'PARTDATA'
         for attribute in ['Coordinates', 'GroupNumber', 'Mass', 'ParticleBindingEnergy', 'SubGroupNumber', 'Velocity']:
-            stellar_data[attribute] = E.read_array(file_type, sim, tag, '/PartType' + particle_type + '/' + attribute, numThreads=8)
+            stellar_data[attribute] = E.read_array(file_type, simulation_path, tag, '/PartType' + particle_type + '/' + attribute, numThreads=8)
         
         # Convert attributes to astronomical units #
         stellar_data['Mass'] *= u.g.to(u.Msun)
@@ -321,13 +322,13 @@ class DiscToTotalVsMass:
         # y_hist.hist(disc_fractions, bins=np.linspace(-1, 1, 50), histtype='step', orientation='horizontal', color='brown')
         
         # Save the plot #
-        plt.savefig(outdir + 'DTTM' + '-' + date + '.png', bbox_inches='tight')
+        plt.savefig(plots_path + 'DTTM' + '-' + date + '.png', bbox_inches='tight')
         return None
 
 
 if __name__ == '__main__':
     tag = '027_z000p101'
-    sim = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
-    outdir = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/DTTM/'  # Path to save plots.
-    SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/'  # Path to save/load data.
-    x = DiscToTotalVsMass(sim, tag)
+    simulation_path = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
+    plots_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/DTTM/'  # Path to save plots.
+    data_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/'  # Path to save/load data.
+    x = DiscToTotalVsMass(simulation_path, tag)
