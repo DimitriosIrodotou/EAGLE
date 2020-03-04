@@ -272,32 +272,44 @@ class SpatialDistribution:
         # Plot the 2D surface density projection and scatter for the disc and bulge #
         count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][index, 2], stellar_data_tmp['Coordinates'][index, 1], weights=weights,
                                                bins=500, range=[[-30, 30], [-30, 30]])
-        ax10.imshow(count, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', vmin=vmin,  interpolation='gaussian',
-                    aspect='auto')
+        ax10.imshow(count, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', vmin=vmin, interpolation='gaussian', aspect='auto')
         
         count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][index, 0], stellar_data_tmp['Coordinates'][index, 2], weights=weights,
                                                bins=500, range=[[-30, 30], [-30, 30]])
-        ax11.imshow(count, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', vmin=vmin, interpolation='gaussian',
-                    aspect='auto')
+        ax11.imshow(count, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', vmin=vmin, interpolation='gaussian', aspect='auto')
         
         index = np.where(angular_theta_from_densest > np.divide(np.pi, 6.0))[0]
         
         weights = stellar_data_tmp['Mass'][index]
         count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][index, 2], stellar_data_tmp['Coordinates'][index, 1], weights=weights,
                                                bins=500, range=[[-30, 30], [-30, 30]])
-        im = ax20.imshow(count, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', vmin=vmin,  interpolation='gaussian',
-                         aspect='auto')
+        im = ax20.imshow(count, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', vmin=vmin, interpolation='gaussian', aspect='auto')
         
         count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][index, 0], stellar_data_tmp['Coordinates'][index, 2], weights=weights,
                                                bins=500, range=[[-30, 30], [-30, 30]])
-        ax21.imshow(count, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', vmin=vmin,  interpolation='gaussian',
-                    aspect='auto')
+        ax21.imshow(count, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', vmin=vmin, interpolation='gaussian', aspect='auto')
         
         cbar = plt.colorbar(im, cax=axcbar, orientation='horizontal')
         cbar.set_label(r'$\Sigma_\mathrm{\bigstar}\,\mathrm{[M_\odot\,kpc^{-2}]}$')
         axcbar.xaxis.tick_top()
         axcbar.xaxis.set_label_position("top")
         axcbar.tick_params(direction='out', which='both', right='on')
+        
+        cylindrical_distance = np.sqrt(
+            stellar_data_tmp['Coordinates'][:, 2] ** 2 + stellar_data_tmp['Coordinates'][:, 1] ** 2)  # Cylindrical distance of each particle.
+        sort = np.argsort(cylindrical_distance)
+        
+        mass = np.sum(stellar_data_tmp['Mass'][sort])
+        starradius = cylindrical_distance[sort]
+        
+        j = 0
+        mm = 0.0
+        while mm < 0.5 * mass:
+            mm += stellar_data_tmp['Mass'][sort][j]
+            j += 1
+        
+        half_mass_radius = cylindrical_distance[j - 1]
+        mask, = np.where(starradius <= half_mass_radius)
         
         # Save the plot #
         plt.savefig(plots_path + str(group_number) + str(subgroup_number) + '-' + 'SP' + '-' + date + '.png', bbox_inches='tight')

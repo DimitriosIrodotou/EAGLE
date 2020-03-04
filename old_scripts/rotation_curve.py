@@ -1,10 +1,11 @@
 import astropy.units as u
 import matplotlib.pyplot as plt
 import numpy as np
-from dm_mass import read_dataset_dm_mass
-from read_header import read_header
+from astropy.constants import G
 
-from read_dataset import read_dataset
+from dm_mass import read_dataset_dm_mass
+from read import read_dataset
+from read_header import read_header
 
 
 class RotationCurve:
@@ -31,7 +32,7 @@ class RotationCurve:
 
         data = {}
 
-        # Load data, then mask to selected GroupNumber and SubGroupNumber.
+        # Load data and mask to selected GroupNumber and SubGroupNumber.
         gns = read_dataset(itype, 'GroupNumber')
         sgns = read_dataset(itype, 'SubGroupNumber')
         mask = np.logical_and(gns == gn, sgns == sgn)
@@ -46,6 +47,25 @@ class RotationCurve:
         data['coords'] = np.mod(data['coords'] - centre + 0.5 * boxsize, boxsize) + centre - 0.5 * boxsize
 
         return data
+
+
+    def compute_rotation_curve(self, arr):
+        """ Compute the rotation curve. """
+
+        # Compute distance to centre.
+        r = np.linalg.norm(arr['coords'] - self.centre, axis=1)
+        mask = np.argsort(r)
+        r = r[mask]
+
+        # Compute cumulative mass.
+        cmass = np.cumsum(arr['mass'][mask])
+
+        # Compute velocity.
+        myG = G.to(u.km ** 2 * u.Mpc * u.Msun ** -1 * u.s ** -2).value
+        v = np.sqrt((myG * cmass) / r)
+
+        # Return r in Mpc and v in km/s.
+        return r, v
 
 
     def plot(self):
@@ -64,9 +84,9 @@ class RotationCurve:
         # Save plot.
         plt.legend(loc='center right')
         plt.minorticks_on()
-        plt.ylabel('Velocity [km/s]');
+        plt.ylabel('Velocity [km/s]')
         plt.xlabel('r [kpc]')
-        plt.xlim(1, 50);
+        plt.xlim(1, 50)
         plt.tight_layout()
         plt.savefig('RotationCurve.png')
         plt.close()

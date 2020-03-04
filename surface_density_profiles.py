@@ -5,7 +5,6 @@ import argparse
 import matplotlib
 
 matplotlib.use('Agg')
-
 import numpy as np
 import seaborn as sns
 import matplotlib.cbook
@@ -14,6 +13,8 @@ import matplotlib.pyplot as plt
 import eagle_IO.eagle_IO.eagle_IO as E
 
 from matplotlib import gridspec
+from scipy.special import gamma
+from astropy_healpix import HEALPix
 from scipy.optimize import curve_fit
 from rotate_galaxies import RotateCoordinates
 from morpho_kinematics import MorphoKinematics
@@ -189,7 +190,7 @@ class SurfaceDensityProfiles:
         """
         
         f = plt.figure(0, figsize=(10, 7.5))
-        plt.ylim(1e0, 1e6)
+        plt.ylim(1e-1, 1e6)
         plt.xlim(0.0, 30.0)
         plt.grid(True)
         plt.xlabel("$\mathrm{R [kpc]}$", size=16)
@@ -199,48 +200,96 @@ class SurfaceDensityProfiles:
         # Rotate coordinates and velocities of stellar particles wrt galactic angular momentum #
         stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_angular_momentum, glx_angular_momentum = RotateCoordinates.rotate_Jz(
             stellar_data_tmp)
-        stellar_data_tmp['Coordinates'] = np.fliplr(stellar_data_tmp['Coordinates'])
-        stellar_data_tmp['Coordinates'] *= 1e-3
         
-        pos = stellar_data_tmp['Coordinates']
+        # prc_unit_vector = np.divide(prc_angular_momentum, np.linalg.norm(prc_angular_momentum, axis=1)[:, np.newaxis])
+        #
+        # # Calculate the ra and dec of the (unit vector of) angular momentum for each particle #
+        # ra = np.degrees(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]))
+        # dec = np.degrees(np.arcsin(prc_unit_vector[:, 2]))
+        #
+        # # Plot a HEALPix histogram #
+        # nside = 2 ** 5  # Define the resolution of the grid (number of divisions along the side of a base-resolution pixel).
+        # hp = HEALPix(nside=nside)  # Initialise the HEALPix pixellisation class.
+        # indices = hp.lonlat_to_healpix(ra * u.deg, dec * u.deg)  # Create list of HEALPix indices from particles' ra and dec.
+        # density = np.bincount(indices, minlength=hp.npix)  # Count number of points in each HEALPix pixel.
+        #
+        # # Find location of density maximum and plot its positions and the ra and dec of the galactic angular momentum #
+        # index_densest = np.argmax(density)
+        # lon_densest = (hp.healpix_to_lonlat([index_densest])[0].value + np.pi) % (2 * np.pi) - np.pi
+        # lat_densest = (hp.healpix_to_lonlat([index_densest])[1].value + np.pi / 2) % (2 * np.pi) - np.pi / 2
+        #
+        # # Calculate disc mass fraction as the mass within 30 degrees from the densest pixel #
+        # angular_theta_from_densest = np.arccos(
+        #     np.sin(lat_densest) * np.sin(np.arcsin(prc_unit_vector[:, 2])) + np.cos(lat_densest) * np.cos(np.arcsin(prc_unit_vector[:,
+        #     2])) * np.cos(
+        #         lon_densest - np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0])))  # In radians.
+        # index = np.where(angular_theta_from_densest > np.divide(np.pi, 6.0))[0]
+        #
+        # pos = np.fliplr(stellar_data_tmp['Coordinates'][index])
+        pos = stellar_data_tmp['Coordinates'] * 1e-3
+        
         zcut = 0.001  # vertical cut in Mpc
-        Rcut = 0.040
-        nshells = 60  # 35 up to galrad is OK
+        Rcut = 0.030
+        bins = 60
+        rad = np.sqrt((pos[:, :2] ** 2).sum(axis=1))
         
-        rd = np.linspace(0.0, Rcut, nshells)
-        mnow = np.zeros(len(rd))
-        sdlim = 1.
-        rad = np.sqrt((pos[:, 1:] ** 2).sum(axis=1))
-        z = pos[:, 0]
-        import plot_helper
-        from scipy.special import gamma
-        p = plot_helper.plot_helper()
+        ii, = np.where((abs(pos[:, 2]) < zcut))
         
-        ii, = np.where((abs(z) < zcut))
-        weights = stellar_data_tmp['Mass']
-        bins = nshells
-        sden, edges = np.histogram(rad[ii], bins=bins, range=(0., Rcut), weights=weights[ii])
+        sden, edges = np.histogram(rad[ii], bins=bins, range=(0., Rcut), weights=stellar_data_tmp['Mass'][ii])
         sa = np.zeros(len(edges) - 1)
         sa[:] = np.pi * (edges[1:] ** 2 - edges[:-1] ** 2)
         sden /= sa
         
         x = np.zeros(len(edges) - 1)
         x[:] = 0.5 * (edges[1:] + edges[:-1])
-        
         sden *= 1e-6
         r = x * 1e3
+        
+        sdlim = 1.
         indy = self.find_nearest(sden * 1e4, [sdlim]).astype('int64')
         
-        rfit = x[indy] * 1e3
         sdfit = sden[:indy]
         r = r[:indy][sdfit > 0.]
         sdfit = sdfit[sdfit > 0.]
         
+        
+        def total_profile(x, da, h, ba, b, n):
+            y = exponential_profile(x, da, h) + sersic_profile(x, ba, b, n)
+            return (y)
+        
+        
+        def sersic_profile(r, I_0, r_e, n):
+            return I_0 * np.exp(-1 * (r / r_e) ** (1 / n))
+        
+        
+        def exponential_profile(x, da, h):
+            return da * np.exp(-x / h)
+        
+        
+        allowonecompfit = True
+        flag = 0
         try:
-            guess = (0.1, 2., 0.4, 0.6, 1.)
+            guess = (0.1, 2., 0.4, 0.6, 1.)  # guess = (exp amp, Rd, sersic amp, sersic b, 1/n)
+            # guess = (1., 4., 1., 1., 1.)
+            
             bounds = ([0.01, 0., 0.01, 0.5, 0.25], [1., 6., 10., 2., 10.])
             sigma = 0.1 * sdfit
-            (popt, pcov) = curve_fit(p.total_profile, r, sdfit, guess, sigma=sigma, bounds=bounds)
+            (popt, pcov) = curve_fit(total_profile, r, sdfit, guess, sigma=sigma, bounds=bounds)
+            
+            if allowonecompfit is True:
+                perr = np.sqrt(np.diag(pcov)).mean()
+                try:
+                    bguess = guess[2:]
+                    bounds = ([0., 0., 0.5], [10., 10., 4.])
+                    (popt2, pcov2) = curve_fit(p.sersic_prof1, r, sdfit, bguess, sigma=sigma, bounds=bounds)
+                    perr2 = np.sqrt(np.diag(pcov2)).mean()
+                    if perr2 < perr:
+                        print("**sersic profile preferred")
+                        popt = popt2
+                        flag = 1
+                except:
+                    pass
+        
         except:
             popt = np.zeros(5)
             print("fitting failed")
@@ -249,132 +298,17 @@ class SurfaceDensityProfiles:
         bulge_mass = np.pi * popt[2] * popt[3] * popt[3] * gamma(2.0 / popt[4] + 1)
         disk_to_total = disk_mass / (bulge_mass + disk_mass)
         print(disk_to_total)
-        plt.semilogy(r, sdfit * 1e-6, 'o', markersize=5, color='k', linewidth=0.)
-        plt.semilogy(r, 1e10 * p.exp_prof(r, popt[0], popt[1]) * 1e-6, 'b-', label=r'$R_d = %.2f$' % (popt[1]))
-        plt.semilogy(r, 1e10 * p.sersic_prof1(r, popt[2], popt[3], popt[4]) * 1e-6, 'r--', label=r'n=%.2f' % (1. / popt[4]))
-        plt.semilogy(r, 1e10 * p.total_profile(r, popt[0], popt[1], popt[2], popt[3], popt[4]) * 1e-6, 'k-')
         
-        # radial_cut = 0.04
-        # rd = np.linspace(0.0, radial_cut, nshells)
-        #
-        # ii, = np.where((abs(stellar_data_tmp['Coordinates'][:, 0]) < 0.001))  # Vertical cut in Mpc.
-        # rad = np.sqrt((stellar_data_tmp['Coordinates'][:, 1:] ** 2).sum(axis=1))
-        #
-        # mass, edges = np.histogram(rad[ii], bins=60, range=(0., radial_cut), weights=stellar_data_tmp['Mass'][ii])
-        # surface = np.zeros(len(edges) - 1)
-        # surface[:] = np.pi * (edges[1:] ** 2 - edges[:-1] ** 2)
-        # sden = np.divide(mass, surface)
-        #
-        # import plot_helper
-        # from scipy.special import gamma
-        #
-        # x = np.zeros(len(edges) - 1)
-        # x[:] = 0.5 * (edges[1:] + edges[:-1])
-        # sden *= 1e-6
-        # r = x * 1e3
-        #
-        # sdlim = 1.0
-        # indy = self.find_nearest(sden * 1e4, [sdlim]).astype('int64')
-        # rfit = x[indy] * 1e3
-        # sdfit = sden[:indy]
-        # r = r[:indy][sdfit > 0.0]
-        # sdfit = sdfit[sdfit > 0.0]
-        # p = plot_helper.plot_helper()  # Load the helper.
-        #
-        # try:
-        #     guess = (0.1, 2., 0.4, 0.6, 1.)
-        #     bounds = ([0.01, 0., 0.01, 0.5, 0.25], [1., 6., 10., 2., 10.])
-        #     sigma = 0.1 * sdfit
-        #     (popt, pcov) = curve_fit(p.total_profile, r, sdfit, guess, sigma=sigma, bounds=bounds)
-        #
-        #     # Compute component masses from the fit #
-        #     disc_mass = 2.0 * np.pi * popt[0] * popt[1] * popt[1]
-        #     bulge_mass = np.pi * popt[2] * popt[3] * popt[3] * gamma(2.0 / popt[4] + 1)
-        #     disc_to_total = disc_mass / (bulge_mass + disc_mass)
-        #     print(disc_to_total)
-        #
-        # except:
-        #     popt = np.zeros(5)
-        #     print('Fitting failed')
-        #
-        # plt.axvline(rfit, color='gray', linestyle='--')
-        # plt.semilogy(r, sdfit * 1e-6, 'o', markersize=5, color='k', linewidth=0.0)
-        # plt.semilogy(r, 1e10 * p.exp_prof(r, popt[0], popt[1]) * 1e-6, 'b-')
-        # plt.semilogy(r, 1e10 * p.sersic_prof1(r, popt[2], popt[3], popt[4]) * 1e-6, 'r-')
-        # plt.semilogy(r, 1e10 * p.total_profile(r, popt[0], popt[1], popt[2], popt[3], popt[4]) * 1e-6, 'k-')
+        plt.semilogy(r, sdfit * 1e-6, 'o', markersize=1.5, color='k', linewidth=0.)
+        if flag == 1:
+            plt.semilogy(r, 1e10 * sersic_profile(r, popt[0], popt[1], popt[2]) * 1e-6, 'r--', label=r'n=%.2f' % (1. / popt[2]))
+        if flag == 0 or flag == 2:
+            plt.semilogy(r, 1e10 * exponential_profile(r, popt[0], popt[1]) * 1e-6, 'b-', label=r'$R_d = %.2f$' % (popt[1]))
+        if flag == 0:
+            plt.semilogy(r, 1e10 * sersic_profile(r, popt[2], popt[3], popt[4]) * 1e-6, 'r--', label=r'n=%.2f' % (1. / popt[4]))
+            plt.semilogy(r, 1e10 * total_profile(r, popt[0], popt[1], popt[2], popt[3], popt[4]) * 1e-6, 'k-')
         
-        # starjspec = np.array([np.cross(starp, starv) for starp, starv in zip(stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'])])
-        # starradii = np.linalg.norm(stellar_data_tmp['Coordinates'], axis=1)
-        #
-        # starr_xy = np.linalg.norm(np.dstack((stellar_data_tmp['Coordinates'][:, 0], stellar_data_tmp['Coordinates'][:, 1]))[0], axis=1)
-        # cum_mass = np.cumsum(stellar_data_tmp['Mass'])
-        # G = 4.302e-9  # Units?
-        # starv_c = np.sqrt((G * cum_mass) / starr_xy)
-        #
-        # starj_z = starjspec[:, 2]
-        # starj_c = starv_c * starr_xy
-        # starjz_jc = (starj_z / starj_c)
-        #
-        # kappa = np.sum(0.5 * stellar_data_tmp['Mass'] * ((starj_z / starr_xy) ** 2)) / np.sum(
-        #     0.5 * stellar_data_tmp['Mass'] * (np.linalg.norm(stellar_data_tmp['Velocity'], axis=1) ** 2))
-        #
-        # jz_jcdisky = float(len(starjz_jc[(starjz_jc > 0.7)]))
-        # lenjz_jc = float(len(starjz_jc))
-        # jz_jcdiskratio = jz_jcdisky / lenjz_jc
-        #
-        # rad_low = 0.003
-        # rad_high = 0.015
-        # rad_bins = np.linspace(rad_low, rad_high, num=15, endpoint=True)
-        # radial_mass = []
-        # bincenters = []
-        # for i in range(0, len(rad_bins) - 1):
-        #     bin_mask = [(np.abs(starr_xy) > rad_bins[i]) & (np.abs(starr_xy) < rad_bins[i + 1])]
-        #     bincenter = rad_bins[i] + ((rad_bins[i + 1] - rad_bins[i]) / 2)
-        #     mass_bin = stellar_data_tmp['Mass'][bin_mask]
-        #     bincenters.append(bincenter)
-        #     radial_mass.append(mass_bin)
-        #
-        # hist, bins = np.histogram(np.abs(stellar_data_tmp['Coordinates'][:, 0]), bins=100, range=(0, 0.06))
-        # centers = (bins[:-1] + bins[1:]) / 2
-        # hist = hist
-        #
-        #
-        # def sersic(r, I_0, r_e, n):
-        #     return I_0 * np.exp(-1 * (r / r_e) ** (1 / n))
-        #
-        #
-        # try:
-        #     popt, pcov = curve_fit(sersic, centers, hist, p0=[hist[0], 0.01, 1])
-        # except RuntimeError:
-        #     print(('WARNING: could not fit sersic profile... returning NaN'))
-        #     popt = [np.nan, np.nan, np.nan]
-        #
-        # r_e = popt[1]
-        # sersic_index = popt[2]
-        # disc_mask = (starjz_jc > 0.7) & (starjz_jc < 5) & (starradii > 0.002) & (starradii < 0.02) & (
-        #     stellar_data_tmp['Coordinates'][:, 2] < 0.05)  # Check
-        # print(r_e)
-        # print(sersic_index)
-        # print(stellar_data_tmp['Mass'][disc_mask])
-        #
-        # fit = np.polyfit(bincenters, fe_h_av, 1)
-        # z = np.poly1d(fit)
-        #
-        # def exponential(z, N_0, z_s, n):
-        #     return N_0 * np.exp(-1 * (z / z_s) ** n)
-        #
-        #
-        # disk = (starr_xy > 0.003) & (starr_xy < 0.015)
-        # z_disk = stellar_data_tmp['Coordinates'][:, 2][disk]
-        # mass_disk = stellar_data_tmp['Mass'][disk]
-        # hist, bins = np.histogram(np.abs(z_disk), bins=100, range=(0, 0.003), weights=mass_disk)
-        # centers = (bins[:-1] + bins[1:]) / 2
-        # try:
-        #     popt, pcov = curve_fit(exponential, centers, hist, p0=[hist[0], 0.002, 1])
-        # except RuntimeError:
-        #     print('WARNING: could not fit scale height for halo ... check disk alignment?')
-        #     return None
-        # scaleheight = popt[1] * 1e3
+        plt.legend(loc='center right')
         
         # Save the plot #
         plt.savefig(plots_path + str(group_number) + str(subgroup_number) + '-' + 'SDP' + '-' + date + '.png', bbox_inches='tight')

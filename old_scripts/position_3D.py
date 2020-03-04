@@ -14,7 +14,9 @@ import matplotlib.pyplot as plt
 import eagle_IO.eagle_IO.eagle_IO as E
 
 from matplotlib import gridspec
-from rotate_galaxies import RotateCoordinates
+from matplotlib import animation
+from mpl_toolkits.mplot3d import axes3d
+from morpho_kinematics import MorphoKinematics
 
 # Create a parser and add argument to read data #
 parser = argparse.ArgumentParser(description='Create 2 dimensional histograms of the position of stellar particles.')
@@ -28,16 +30,16 @@ start_global_time = time.time()  # Start the global time.
 warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
 
 
-class PositionHistogram:
+class Position3D:
     """
-    A class to create mass-weighted 2D histograms of the position of stellar particles.
+    A class to create 3 dimensional rotating plots of the position of stellar particles.
     """
     
     
-    def __init__(self, sim, tag):
+    def __init__(self, simulation_path, tag):
         """
         A constructor method for the class.
-        :param sim: simulation directory
+        :param simulation_path: simulation directory
         :param tag: redshift folder
         """
         
@@ -45,14 +47,15 @@ class PositionHistogram:
         stellar_data_tmp = {}  # Initialise a dictionary to store the data.
         
         if not args.l:
-            self.stellar_data, self.subhalo_data = self.read_galaxies(sim, tag)
-            print('Read data for ' + re.split('EAGLE/|/data', sim)[2] + ' in %.4s s' % (time.time() - start_global_time))
+            # Extract particle and subhalo attributes and convert them to astronomical units #
+            self.stellar_data, self.subhalo_data = self.read_galaxies(simulation_path, tag)
+            print('Read data for ' + re.split('EAGLE/|/data', simulation_path)[2] + ' in %.4s s' % (time.time() - start_global_time))
             print('–––––––––––––––––––––––––––––––––––––––––')
             
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
         
         # for group_number in np.sort(list(set(self.subhalo_data_tmp['GroupNumber']))):  # Loop over all masked haloes.
-        for group_number in range(1, 50):  # Loop over all masked haloes.
+        for group_number in range(1, 2):  # Loop over all masked haloes.
             for subgroup_number in range(0, 1):
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
@@ -60,9 +63,9 @@ class PositionHistogram:
                     stellar_data_tmp = self.mask_galaxies(group_number, subgroup_number)  # Mask the data
                     
                     # Save data in numpy arrays #
-                    np.save(SavePath + 'group_number_' + str(group_number), group_number)
-                    np.save(SavePath + 'subgroup_number_' + str(group_number), subgroup_number)
-                    np.save(SavePath + 'stellar_data_tmp_' + str(group_number), stellar_data_tmp)
+                    np.save(data_path + 'group_number_' + str(group_number), group_number)
+                    np.save(data_path + 'subgroup_number_' + str(group_number), subgroup_number)
+                    np.save(data_path + 'stellar_data_tmp_' + str(group_number), stellar_data_tmp)
                     print('Masked and saved data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                         round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
@@ -80,10 +83,9 @@ class PositionHistogram:
                 elif args.l:  # Load data.
                     start_local_time = time.time()  # Start the local time.
                     
-                    subgroup_number = np.load(SavePath + 'subgroup_number_' + str(group_number) + '.npy')
-                    group_number = np.load(SavePath + 'group_numbers/' + 'group_number_' + str(group_number) + '.npy')
-                    glx_unit_vector = np.load(SavePath + 'glx_unit_vectors/' + 'glx_unit_vector_' + str(group_number) + '.npy')
-                    stellar_data_tmp = np.load(SavePath + 'stellar_data_tmps/' + 'stellar_data_tmp_' + str(group_number) + '.npy', allow_pickle=True)
+                    group_number = np.load(data_path + 'group_number_' + str(group_number) + '.npy')
+                    subgroup_number = np.load(data_path + 'subgroup_number_' + str(group_number) + '.npy')
+                    stellar_data_tmp = np.load(data_path + 'stellar_data_tmp_' + str(group_number) + '.npy', allow_pickle=True)
                     stellar_data_tmp = stellar_data_tmp.item()
                     print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
                     # + ' (' + str(round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
@@ -92,20 +94,19 @@ class PositionHistogram:
                 # Plot the data #
                 start_local_time = time.time()  # Start the local time.
                 
-                self.plot(stellar_data_tmp, glx_unit_vector, group_number, subgroup_number)
+                self.plot(stellar_data_tmp, group_number, subgroup_number)
                 print('Plotted data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
                 print('–––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished PositionHistogram for ' + re.split('EAGLE/|/data', sim)[2] + ' in %.4s s' % (
-            time.time() - start_global_time))  # Print total time.
+        print('Finished Position3D for ' + re.split('EAGLE/|/data', simulation_path)[2] + ' in %.4s s' % (time.time() - start_global_time))  # Print total time.
         print('–––––––––––––––––––––––––––––––––––––––––')
     
     
     @staticmethod
-    def read_galaxies(sim, tag):
+    def read_galaxies(simulation_path, tag):
         """
-         A method to extract particles's and subhalo's attribute.
-        :param sim: simulation directory
+         Extract particle and subhalo attributes and convert them to astronomical units.
+        :param simulation_path: simulation directory
         :param tag: redshift folder
         :return: stellar_data, subhalo_data
         """
@@ -114,14 +115,14 @@ class PositionHistogram:
         subhalo_data = {}
         file_type = 'SUBFIND'
         for attribute in ['ApertureMeasurements/Mass/030kpc', 'CentreOfPotential', 'GroupNumber', 'SubGroupNumber']:
-            subhalo_data[attribute] = E.read_array(file_type, sim, tag, '/Subhalo/' + attribute, numThreads=8)
+            subhalo_data[attribute] = E.read_array(file_type, simulation_path, tag, '/Subhalo/' + attribute, numThreads=8)
         
         # Load particle data in h-free physical CGS units #
         stellar_data = {}
         particle_type = '4'
         file_type = 'PARTDATA'
-        for attribute in ['Coordinates', 'GroupNumber', 'Mass', 'SubGroupNumber']:
-            stellar_data[attribute] = E.read_array(file_type, sim, tag, '/PartType' + particle_type + '/' + attribute, numThreads=8)
+        for attribute in ['Coordinates', 'GroupNumber', 'SubGroupNumber']:
+            stellar_data[attribute] = E.read_array(file_type, simulation_path, tag, '/PartType' + particle_type + '/' + attribute, numThreads=8)
         
         # Convert to astronomical units #
         stellar_data['Coordinates'] *= u.cm.to(u.kpc)
@@ -175,9 +176,9 @@ class PositionHistogram:
     
     
     @staticmethod
-    def plot(stellar_data_tmp, glx_unit_vector, group_number, subgroup_number):
+    def plot(stellar_data_tmp, group_number, subgroup_number):
         """
-        A method to plot a hexbin histogram.
+        A method to plot a rotating 3D scatter.
         :param stellar_data_tmp: temporary data
         :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber']))
         :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
@@ -191,70 +192,85 @@ class PositionHistogram:
         
         # Generate the figures #
         plt.close()
-        plt.figure(0, figsize=(20, 7.5))
+        figure = plt.figure(0, figsize=(20, 15))
+        gs = gridspec.GridSpec(2, 1)
+        axupper = plt.subplot(gs[0, 0], projection='3d')
+        axlower = plt.subplot(gs[1, 0], projection='3d')
         
-        gs = gridspec.GridSpec(2, 3, height_ratios=(0.03, 1))
-        gs.update(hspace=0.4, wspace=0.3)
-        axleft = plt.subplot(gs[1, 0])
-        axmid = plt.subplot(gs[1, 1])
-        axright = plt.subplot(gs[1, 2])
-        axcbar1 = plt.subplot(gs[0, 0])
-        axcbar2 = plt.subplot(gs[0, 1])
-        axcbar3 = plt.subplot(gs[0, 2])
+        # Set the axes labels #
+        axupper.set_xlabel('x/kpc')
+        axlower.set_xlabel('x/kpc')
+        axupper.set_ylabel('y/kpc')
+        axlower.set_ylabel('y/kpc')
+        axupper.set_zlabel('z/kpc')
+        axlower.set_zlabel('z/kpc')
         
-        for a in [axleft, axmid, axright]:
-            a.set_xlim(-20, 20)
-            a.set_ylim(-20, 20)
-            a.set_facecolor('k')
-            a.tick_params(direction='out', which='both', top='on', right='on')
+        # Set tick properties #
+        axupper.tick_params(direction='in', which='both', top='on', right='on')
+        axlower.tick_params(direction='in', which='both', top='on', right='on')
         
-        for a in [axleft, axmid]:
-            a.set_xlabel(r'$\mathrm{x/kpc}$')
         
-        for a in [axmid, axright]:
-            a.set_ylabel(r'$\mathrm{z/kpc}$')
+        # axlower.quiver(0, 0, 0,  # <-- starting point of vector
+        #                20, 20, 20,  # <-- directions of vector
+        #                color='red', lw=3, )
+        # axupper.quiver(0, 0, 0,  # <-- starting point of vector
+        #                20, 20, 20,  # <-- directions of vector
+        #                color='red', lw=3, )
         
-        axleft.set_ylabel(r'$\mathrm{y/kpc}$')
-        axright.set_xlabel(r'$\mathrm{y/kpc}$')
+        # Generate the 3D plots #
+        def init():
+            """
+            Create the 3D scatter of the positions of the particles.
+            :return: figure
+            """
+            kappa, discfrac, orbi, vrotsig, vrots, zaxis, Momentum = MorphoKinematics.kinematics_diagnostics(stellar_data_tmp['Coordinates'],
+                                                                                                             stellar_data_tmp['Mass'],
+                                                                                                             stellar_data_tmp['Velocity'],
+                                                                                                             stellar_data_tmp[
+                                                                                                                 'ParticleBindingEnergy'])
+            color = []
+            for i in range(len(stellar_data_tmp['Mass'])):
+                if vrots[i] < 0.0:
+                    color.append('red')
+                else:
+                    color.append('blue')
+            
+            axupper.scatter(list(zip(*stellar_data_tmp['Coordinates']))[0], list(zip(*stellar_data_tmp['Coordinates']))[1],
+                            list(zip(*stellar_data_tmp['Coordinates']))[2], s=1, color=color)
+            
+            axlower.scatter(list(zip(*stellar_data_tmp['Coordinates']))[0], list(zip(*stellar_data_tmp['Coordinates']))[1],
+                            list(zip(*stellar_data_tmp['Coordinates']))[2], s=1, color=color)
+            return figure,
         
-        # Rotate coordinates and velocities of stellar particles wrt galactic angular momentum #
-        stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_unit_vector, glx_unit_vector = RotateCoordinates.rotate_X(stellar_data_tmp,
-                                                                                                                                     glx_unit_vector)
-        # Generate the XY projection #
-        count, xedges, yedges = np.histogram2d(list(zip(*stellar_data_tmp['Coordinates']))[0], list(zip(*stellar_data_tmp['Coordinates']))[1],
-                                               weights=stellar_data_tmp['Mass'], bins=100, range=[[-20, 20], [-20, 20]])
-        plleft = axleft.imshow(count, extent=[-20, 20, -20, 20], origin='lower', cmap='nipy_spectral_r', interpolation='bicubic', aspect='auto')
         
-        # Generate the color bar #
-        cbar1 = plt.colorbar(plleft, cax=axcbar1, orientation='horizontal')
-        cbar1.set_label('$\Sigma_\mathrm{stars}\,\mathrm{[M_\odot\,kpc^{-2}]}$')
+        # Create the animation #
+        def animate(i):
+            """
+            Set the elevation and azimuth of the axes.
+            :param i: angle
+            :return: figure
+            """
+            axupper.view_init(elev=10.0, azim=i)
+            axlower.view_init(elev=i, azim=0.0)
+            print('Rotated by ' + str(i) + ' degree(s)')
+            return figure,
         
-        # Generate the XZ projection #
-        count, xedges, yedges = np.histogram2d(list(zip(*stellar_data_tmp['Coordinates']))[0], list(zip(*stellar_data_tmp['Coordinates']))[2],
-                                               weights=stellar_data_tmp['Mass'], bins=100, range=[[-20, 20], [-20, 20]])
-        plmid = axmid.imshow(count, extent=[-20, 20, -20, 20], origin='lower', cmap='nipy_spectral_r', interpolation='bicubic', aspect='auto')
-        # Generate the color bar #
-        cbar2 = plt.colorbar(plmid, cax=axcbar2, orientation='horizontal')
-        cbar2.set_label('$\Sigma_\mathrm{stars}\,\mathrm{[M_\odot\,kpc^{-2}]}$')
         
-        # Generate the ZY projection #
-        count, xedges, yedges = np.histogram2d(list(zip(*stellar_data_tmp['Coordinates']))[1], list(zip(*stellar_data_tmp['Coordinates']))[2],
-                                               weights=stellar_data_tmp['Mass'], bins=100, range=[[-20, 20], [-20, 20]])
-        plright = axright.imshow(count, extent=[-20, 20, -20, 20], origin='lower', cmap='nipy_spectral_r', interpolation='bicubic', aspect='auto')
+        anim = animation.FuncAnimation(figure, animate, init_func=init, frames=360, interval=100, blit=True)
         
-        # Generate the color bar #
-        cbar3 = plt.colorbar(plright, cax=axcbar3, orientation='horizontal')
-        cbar3.set_label('$\Sigma_\mathrm{stars}\,\mathrm{[M_\odot\,kpc^{-2}]}$')
-        
-        # Save the plot #
-        plt.savefig(outdir + str(group_number) + str(subgroup_number) + '-' + 'PH' + '-' + date + '.png', bbox_inches='tight')
-        
+        # Save the animation #
+        # plt.title('z ~ ' + re.split('_z0|p000', tag)[1])
+        anim.save(plots_path + str(group_number) + str(subgroup_number) + '-' + 'P3D' + '-' + date + '.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
         return None
 
 
 if __name__ == '__main__':
+    # tag = '010_z005p000'
+    # simulation_path = '/cosma7/data/dp004/dc-payy1/G-EAGLE/GEAGLE_16/data/'  # Path to G-EAGLE data.
+    # plots_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/P3D/G-EAGLE/'  # Path to save plots.
+    # data_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/RD/G-EAGLE/'  # Path to save/load data.
     tag = '027_z000p101'
-    sim = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
-    outdir = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/PH/'  # Path to save plots.
-    SavePath = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/'  # Path to save/load data.
-    x = PositionHistogram(sim, tag)
+    simulation_path = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
+    plots_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/P3D/EAGLE/'  # Path to save plots.
+    data_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/RD/EAGLE/'  # Path to save/load data.
+    x = Position3D(simulation_path, tag)
