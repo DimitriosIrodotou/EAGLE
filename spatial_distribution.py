@@ -15,6 +15,7 @@ import eagle_IO.eagle_IO.eagle_IO as E
 
 from matplotlib import gridspec
 from astropy_healpix import HEALPix
+from decompose_bulges import DecomposeBulges
 from rotate_galaxies import RotateCoordinates
 from morpho_kinematics import MorphoKinematics
 
@@ -33,7 +34,6 @@ warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # I
 class SpatialDistribution:
     """
     For each galaxy create spatial distribution maps.
-    a circularity plot.
     """
     
     
@@ -57,7 +57,7 @@ class SpatialDistribution:
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e8 Msun.
         
         # for group_number in np.sort(list(set(self.subhalo_data_tmp['GroupNumber']))):  # Loop over all masked haloes.
-        for group_number in range(35, 36):  # Loop over all masked haloes.
+        for group_number in range(25, 26):  # Loop over all masked haloes.
             for subgroup_number in range(0, 1):  # Get centrals only.
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
@@ -146,12 +146,12 @@ class SpatialDistribution:
         """
         
         # Mask the data to select haloes more #
-        mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 1e8)
+        halo_mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 1e8)
         
         # Mask the temporary dictionary for each galaxy #
         subhalo_data_tmp = {}
         for attribute in self.subhalo_data.keys():
-            subhalo_data_tmp[attribute] = np.copy(self.subhalo_data[attribute])[mask]
+            subhalo_data_tmp[attribute] = np.copy(self.subhalo_data[attribute])[halo_mask]
         
         return subhalo_data_tmp
     
@@ -165,19 +165,20 @@ class SpatialDistribution:
         """
         
         # Select the corresponding halo in order to get its centre of potential #
-        index = np.where(self.subhalo_data_tmp['GroupNumber'] == group_number)[0][subgroup_number]
+        halo_mask = np.where(self.subhalo_data_tmp['GroupNumber'] == group_number)[0][subgroup_number]
         
         # Mask the data to select galaxies with a given GroupNumber and SubGroupNumber and particles inside a 30kpc sphere #
-        mask = np.where((self.stellar_data['GroupNumber'] == group_number) & (self.stellar_data['SubGroupNumber'] == subgroup_number) & (
-            np.linalg.norm(np.subtract(self.stellar_data['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][index]), axis=1) <= 30.0))  # kpc
+        galaxy_mask = np.where((self.stellar_data['GroupNumber'] == group_number) & (self.stellar_data['SubGroupNumber'] == subgroup_number) & (
+            np.linalg.norm(np.subtract(self.stellar_data['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][halo_mask]),
+                           axis=1) <= 30.0))  # kpc
         
         # Mask the temporary dictionary for each galaxy #
         stellar_data_tmp = {}
         for attribute in self.stellar_data.keys():
-            stellar_data_tmp[attribute] = np.copy(self.stellar_data[attribute])[mask]
+            stellar_data_tmp[attribute] = np.copy(self.stellar_data[attribute])[galaxy_mask]
         
         # Normalise the coordinates and velocities wrt the centre of potential of the subhalo #
-        stellar_data_tmp['Coordinates'] = np.subtract(stellar_data_tmp['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][index])
+        stellar_data_tmp['Coordinates'] = np.subtract(stellar_data_tmp['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][halo_mask])
         CoM_velocity = np.divide(np.sum(stellar_data_tmp['Mass'][:, np.newaxis] * stellar_data_tmp['Velocity'], axis=0),
                                  np.sum(stellar_data_tmp['Mass'], axis=0))  # km s-1
         stellar_data_tmp['Velocity'] = np.subtract(stellar_data_tmp['Velocity'], CoM_velocity)
@@ -221,7 +222,6 @@ class SpatialDistribution:
         for a in [ax11, ax21]:
             a.yaxis.tick_right()
             a.yaxis.set_label_position("right")
-            a.set_ylabel(r'$z\,\mathrm{[kpc]}$', size=16)
         
         for a in [ax10, ax20, ax11, ax21]:
             a.grid(True)
@@ -232,20 +232,21 @@ class SpatialDistribution:
         
         ax10.set_xticklabels([])
         ax11.set_xticklabels([])
-        ax10.annotate(r'Disc', xy=(-25, 25), xycoords='data', size=18)
-        ax20.annotate(r'Bulge', xy=(-25, 25), xycoords='data', size=18)
-        
+        ax10.set_ylabel(r'$y\,\mathrm{[kpc]}$', size=16)
+        ax20.set_xlabel(r'$x\,\mathrm{[kpc]}$', size=16)
+        ax20.set_ylabel(r'$z\,\mathrm{[kpc]}$', size=16)
+        ax11.set_ylabel(r'$y\,\mathrm{[kpc]}$', size=16)
         ax21.set_xlabel(r'$x\,\mathrm{[kpc]}$', size=16)
         ax21.set_ylabel(r'$z\,\mathrm{[kpc]}$', size=16)
-        ax20.set_xlabel(r'$z\,\mathrm{[kpc]}$', size=16)
-        ax20.set_ylabel(r'$y\,\mathrm{[kpc]}$', size=16)
-        ax10.set_ylabel(r'$y\,\mathrm{[kpc]}$', size=16)
+        ax10.annotate(r'Disc', xy=(-25, 25), xycoords='data', size=18)
+        ax11.annotate(r'Bulge', xy=(-25, 25), xycoords='data', size=18)
         
         # Rotate coordinates and velocities of stellar particles so the galactic angular momentum points along the x axis #
-        stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_unit_vector, glx_unit_vector = RotateCoordinates.rotate_X(stellar_data_tmp,
-                                                                                                                                     glx_unit_vector)
+        stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_angular_momentum, glx_angular_momentum = RotateCoordinates.rotate_Jz(
+            stellar_data_tmp)
         
         # Calculate the ra and dec of the (unit vector of) angular momentum for each particle #
+        prc_unit_vector = np.divide(prc_angular_momentum, np.linalg.norm(prc_angular_momentum, axis=1)[:, np.newaxis])
         ra = np.degrees(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]))
         dec = np.degrees(np.arcsin(prc_unit_vector[:, 2]))
         
@@ -264,29 +265,32 @@ class SpatialDistribution:
         angular_theta_from_densest = np.arccos(
             np.sin(lat_densest) * np.sin(np.arcsin(prc_unit_vector[:, 2])) + np.cos(lat_densest) * np.cos(np.arcsin(prc_unit_vector[:, 2])) * np.cos(
                 lon_densest - np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0])))  # In radians.
-        index = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))[0]
+        disc_mask = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))[0]
         
-        weights = stellar_data_tmp['Mass'][index]
+        weights = stellar_data_tmp['Mass'][disc_mask]
         vmin, vmax = 0, 5e7
         
-        # Plot the 2D surface density projection and scatter for the disc and bulge #
-        count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][index, 2], stellar_data_tmp['Coordinates'][index, 1], weights=weights,
-                                               bins=500, range=[[-30, 30], [-30, 30]])
+        # Plot the 2D surface density projection and scatter for the disc #
+        count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][disc_mask, 0], stellar_data_tmp['Coordinates'][disc_mask, 1],
+                                               weights=weights, bins=500, range=[[-30, 30], [-30, 30]])
         ax10.imshow(count, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', vmin=vmin, interpolation='gaussian', aspect='auto')
         
-        count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][index, 0], stellar_data_tmp['Coordinates'][index, 2], weights=weights,
-                                               bins=500, range=[[-30, 30], [-30, 30]])
-        ax11.imshow(count, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', vmin=vmin, interpolation='gaussian', aspect='auto')
+        count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][disc_mask, 2], stellar_data_tmp['Coordinates'][disc_mask, 0],
+                                               weights=weights, bins=500, range=[[-30, 30], [-30, 30]])
+        ax20.imshow(count, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', vmin=vmin, interpolation='gaussian', aspect='auto')
         
-        index = np.where(angular_theta_from_densest > np.divide(np.pi, 6.0))[0]
+        # Plot the 2D surface density projection and scatter for the bulge #
+        bulge_mask = np.where(angular_theta_from_densest > np.divide(np.pi, 6.0))[0]
         
-        weights = stellar_data_tmp['Mass'][index]
-        count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][index, 2], stellar_data_tmp['Coordinates'][index, 1], weights=weights,
-                                               bins=500, range=[[-30, 30], [-30, 30]])
-        im = ax20.imshow(count, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', vmin=vmin, interpolation='gaussian', aspect='auto')
+        energy_mask = DecomposeBulges.central_bulge(bulge_mask, stellar_data_tmp)
         
-        count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][index, 0], stellar_data_tmp['Coordinates'][index, 2], weights=weights,
-                                               bins=500, range=[[-30, 30], [-30, 30]])
+        weights = stellar_data_tmp['Mass'][bulge_mask]
+        count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][bulge_mask, 0], stellar_data_tmp['Coordinates'][bulge_mask, 1],
+                                               weights=weights, bins=500, range=[[-30, 30], [-30, 30]])
+        im = ax11.imshow(count, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', vmin=vmin, interpolation='gaussian', aspect='auto')
+        
+        count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][bulge_mask, 2], stellar_data_tmp['Coordinates'][bulge_mask, 0],
+                                               weights=weights, bins=500, range=[[-30, 30], [-30, 30]])
         ax21.imshow(count, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', vmin=vmin, interpolation='gaussian', aspect='auto')
         
         cbar = plt.colorbar(im, cax=axcbar, orientation='horizontal')
@@ -294,22 +298,6 @@ class SpatialDistribution:
         axcbar.xaxis.tick_top()
         axcbar.xaxis.set_label_position("top")
         axcbar.tick_params(direction='out', which='both', right='on')
-        
-        cylindrical_distance = np.sqrt(
-            stellar_data_tmp['Coordinates'][:, 2] ** 2 + stellar_data_tmp['Coordinates'][:, 1] ** 2)  # Cylindrical distance of each particle.
-        sort = np.argsort(cylindrical_distance)
-        
-        mass = np.sum(stellar_data_tmp['Mass'][sort])
-        starradius = cylindrical_distance[sort]
-        
-        j = 0
-        mm = 0.0
-        while mm < 0.5 * mass:
-            mm += stellar_data_tmp['Mass'][sort][j]
-            j += 1
-        
-        half_mass_radius = cylindrical_distance[j - 1]
-        mask, = np.where(starradius <= half_mass_radius)
         
         # Save the plot #
         plt.savefig(plots_path + str(group_number) + str(subgroup_number) + '-' + 'SP' + '-' + date + '.png', bbox_inches='tight')

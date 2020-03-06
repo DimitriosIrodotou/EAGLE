@@ -164,12 +164,12 @@ class DiscToTotalVsMass:
         """
         
         # Mask the data to select haloes more #
-        mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 2.5e8)
+        halo_mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 2.5e8)
         
         # Mask the temporary dictionary for each galaxy #
         subhalo_data_tmp = {}
         for attribute in self.subhalo_data.keys():
-            subhalo_data_tmp[attribute] = np.copy(self.subhalo_data[attribute])[mask]
+            subhalo_data_tmp[attribute] = np.copy(self.subhalo_data[attribute])[halo_mask]
         
         return subhalo_data_tmp
     
@@ -183,19 +183,20 @@ class DiscToTotalVsMass:
         """
         
         # Select the corresponding halo in order to get its centre of potential #
-        index = np.where(self.subhalo_data_tmp['GroupNumber'] == group_number)[0][subgroup_number]
+        halo_mask = np.where(self.subhalo_data_tmp['GroupNumber'] == group_number)[0][subgroup_number]
         
         # Mask the data to select galaxies with a given GroupNumber and SubGroupNumber and particles inside a 30kpc sphere #
-        mask = np.where((self.stellar_data['GroupNumber'] == group_number) & (self.stellar_data['SubGroupNumber'] == subgroup_number) & (
-            np.linalg.norm(np.subtract(self.stellar_data['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][index]), axis=1) <= 30.0))  # kpc
+        galaxy_mask = np.where((self.stellar_data['GroupNumber'] == group_number) & (self.stellar_data['SubGroupNumber'] == subgroup_number) & (
+            np.linalg.norm(np.subtract(self.stellar_data['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][halo_mask]),
+                           axis=1) <= 30.0))  # kpc
         
         # Mask the temporary dictionary for each galaxy #
         stellar_data_tmp = {}
         for attribute in self.stellar_data.keys():
-            stellar_data_tmp[attribute] = np.copy(self.stellar_data[attribute])[mask]
+            stellar_data_tmp[attribute] = np.copy(self.stellar_data[attribute])[galaxy_mask]
         
         # Normalise the coordinates and velocities wrt the centre of potential of the subhalo #
-        stellar_data_tmp['Coordinates'] = np.subtract(stellar_data_tmp['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][index])
+        stellar_data_tmp['Coordinates'] = np.subtract(stellar_data_tmp['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][halo_mask])
         CoM_velocity = np.divide(np.sum(stellar_data_tmp['Mass'][:, np.newaxis] * stellar_data_tmp['Velocity'], axis=0),
                                  np.sum(stellar_data_tmp['Mass'], axis=0))  # km s-1
         stellar_data_tmp['Velocity'] = np.subtract(stellar_data_tmp['Velocity'], CoM_velocity)
@@ -232,8 +233,8 @@ class DiscToTotalVsMass:
         angular_theta_from_densest = np.arccos(
             np.sin(lat_densest) * np.sin(np.arcsin(prc_unit_vector[:, 2])) + np.cos(lat_densest) * np.cos(np.arcsin(prc_unit_vector[:, 2])) * np.cos(
                 lon_densest - np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0])))  # In radians.
-        index = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))
-        disc_fraction_IT20 = np.divide(np.sum(stellar_data_tmp['Mass'][index]), np.sum(stellar_data_tmp['Mass']))
+        disc_mask = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))
+        disc_fraction_IT20 = np.divide(np.sum(stellar_data_tmp['Mass'][disc_mask]), np.sum(stellar_data_tmp['Mass']))
         
         return kappa, disc_fraction, disc_fraction_IT20, glx_mass
     
@@ -290,7 +291,7 @@ class DiscToTotalVsMass:
         median_IT20, = upper.plot(x_value, median, color='black', zorder=5)
         upper.fill_between(x_value, shigh, slow, color='black', alpha='0.5', zorder=5)
         fill_IT20, = plt.fill(np.NaN, np.NaN, color='black', alpha=0.5, zorder=5)
-
+        
         # Calculate median and 1-sigma #
         # nbin = int((max(kappas) - min(kappas)) / 0.02)
         # x_value = np.empty(nbin)
