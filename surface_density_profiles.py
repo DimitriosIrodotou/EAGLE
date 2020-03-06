@@ -56,7 +56,7 @@ class SurfaceDensityProfiles:
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher that 1e8
         
         # for group_number in np.sort(list(set(self.subhalo_data_tmp['GroupNumber']))):  # Loop over all masked haloes.
-        for group_number in range(25, 26):
+        for group_number in range(5, 6):
             for subgroup_number in range(0, 1):
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
@@ -199,8 +199,8 @@ class SurfaceDensityProfiles:
             return Id_0 * np.exp(-r / Rd)
         
         
-        def total_profile(r, da, h, Ib_0, b, n):
-            y = exponential_profile(r, da, h) + sersic_profile(r, Ib_0, b, n)
+        def total_profile(r, Id_0, Rd, Ib_0, b, n):
+            y = exponential_profile(r, Id_0, Rd) + sersic_profile(r, Ib_0, b, n)
             return (y)
         
         
@@ -258,8 +258,9 @@ class SurfaceDensityProfiles:
                 if mask is disc_mask:
                     popt, pcov = curve_fit(profile, centers, sden, p0=[sden[0], 2])  # p0 = [Id_0, Rd]
                     plt.semilogy(centers, profile(centers, popt[0], popt[1]), c=color, linestyle='dashed')
+                    sden_tmp = sden
                 elif mask is bulge_mask:
-                    popt, pcov = curve_fit(profile, centers, sden, sigma=0.1 * sden, p0=[sden[0], 2, 4])  # p0 = [Ib_0, Reff, n]
+                    popt, pcov = curve_fit(profile, centers, sden, p0=[sden[0], 2, 4])  # p0 = [Ib_0, Reff, n]
                     plt.semilogy(centers, profile(centers, popt[0], popt[1], popt[2]), c=color, linestyle='dashed')
             
             except RuntimeError:
@@ -274,6 +275,13 @@ class SurfaceDensityProfiles:
         sden = np.divide(mass, surface)
         
         plt.semilogy(centers, sden, 'o', markersize=3, color='k', linewidth=0)
+        
+        try:
+            popt, pcov = curve_fit(total_profile, centers, sden, p0=[sden_tmp[0], 2, sden[0], 2, 4])  # p0 = [Id_0, Rd]
+            plt.semilogy(centers, total_profile(centers, popt[0], popt[1], popt[2], popt[3], popt[4]), c='k')
+        
+        except RuntimeError:
+            print('WARNING: Could not fit a profile')
         
         plt.legend(loc='center right')
         
