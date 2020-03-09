@@ -1,3 +1,4 @@
+import os
 import re
 import time
 import warnings
@@ -254,12 +255,12 @@ class SpatialDistribution:
         angular_theta_from_densest = np.arccos(
             np.sin(lat_densest) * np.sin(np.arcsin(prc_unit_vector[:, 2])) + np.cos(lat_densest) * np.cos(np.arcsin(prc_unit_vector[:, 2])) * np.cos(
                 lon_densest - np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0])))  # In radians.
-        disc_mask = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))[0]
         
+        # Plot the 2D surface density projection and scatter for the disc #
+        disc_mask = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))[0]
         weights = stellar_data_tmp['Mass'][disc_mask]
         vmin, vmax = 0, 5e7
         
-        # Plot the 2D surface density projection and scatter for the disc #
         count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][disc_mask, 0], stellar_data_tmp['Coordinates'][disc_mask, 1],
                                                weights=weights, bins=500, range=[[-30, 30], [-30, 30]])
         ax10.imshow(count, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', vmin=vmin, interpolation='gaussian', aspect='auto')
@@ -296,4 +297,6 @@ if __name__ == '__main__':
     simulation_path = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
     plots_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/SP/'  # Path to save plots.
     data_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/'  # Path to save/load data.
+    if not os.path.exists(plots_path):
+        os.makedirs(plots_path)
     x = SpatialDistribution(simulation_path, tag)

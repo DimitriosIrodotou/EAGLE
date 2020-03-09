@@ -1,3 +1,4 @@
+import os
 import re
 import time
 import warnings
@@ -101,7 +102,7 @@ class RADecProperties:
                 print('–––––––––––––––––––––––––––––––––––––––––––––')
         
         print('Finished RADecProperties for ' + re.split('EAGLE/|/data', simulation_path)[2] + ' in %.4s s' % (
-                time.time() - start_global_time))  # Print total time.
+            time.time() - start_global_time))  # Print total time.
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
@@ -289,7 +290,7 @@ class RADecProperties:
             2 * velocity_r_sqred))
         
         scatter = ax10.scatter(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]), np.arcsin(prc_unit_vector[:, 2]), c=np.exp(beta - 1),
-                               cmap='magma', s=1, zorder=-1)
+                               cmap='magma', vmax=1, s=1, zorder=-1)
         
         # Generate the color bar #
         cbar = plt.colorbar(scatter, ax=ax10, orientation='horizontal')
@@ -319,4 +320,6 @@ if __name__ == '__main__':
     simulation_path = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
     plots_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/RDP/'  # Path to save plots.
     data_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/RDP/'  # Path to save/load data.
+    if not os.path.exists(plots_path):
+        os.makedirs(plots_path)
     x = RADecProperties(simulation_path, tag)

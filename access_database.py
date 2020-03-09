@@ -1,3 +1,4 @@
+import os
 import os.path
 import urllib.request
 
@@ -6,7 +7,8 @@ import eagleSqlTools as sql
 
 data_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/'  # Path to save data.
 url = 'http://virgodb.cosma.dur.ac.uk/eagle-webstorage/RefL0100N1504_Subhalo/'  # URL from the database.
-
+if not os.path.exists(plots_path):
+    os.makedirs(plots_path)
 
 def download_image(group_number, subgroup_number):
     query = "SELECT \

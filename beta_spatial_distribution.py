@@ -1,3 +1,4 @@
+import os
 import re
 import time
 import warnings
@@ -15,7 +16,6 @@ import eagle_IO.eagle_IO.eagle_IO as E
 
 from matplotlib import gridspec
 from astropy_healpix import HEALPix
-from decompose_bulges import DecomposeBulges
 from rotate_galaxies import RotateCoordinates
 
 # Create a parser and add argument to read data #
@@ -32,7 +32,7 @@ warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # I
 
 class BetaSpatialDistribution:
     """
-    For each galaxy create spatial distribution maps colorcoded by beta.
+    For each galaxy create spatial distribution maps color-coded by beta.
     """
     
     
@@ -56,7 +56,7 @@ class BetaSpatialDistribution:
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e8 Msun.
         
         # for group_number in np.sort(list(set(self.subhalo_data_tmp['GroupNumber']))):  # Loop over all masked haloes.
-        for group_number in range(25, 26):  # Loop over all masked haloes.
+        for group_number in range(1, 26):  # Loop over all masked haloes.
             for subgroup_number in range(0, 1):  # Get centrals only.
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
@@ -202,7 +202,7 @@ class BetaSpatialDistribution:
         plt.close()
         plt.figure(0, figsize=(20, 15))
         
-        gs = gridspec.GridSpec(3, 2, hspace=0.07, wspace=0.07, height_ratios=[0.05, 1, 1])
+        gs = gridspec.GridSpec(3, 2, hspace=0.07, wspace=0.0, height_ratios=[0.05, 1, 1])
         axcbar = plt.subplot(gs[0, :])
         ax10 = plt.subplot(gs[1, 0])
         ax20 = plt.subplot(gs[2, 0])
@@ -255,36 +255,36 @@ class BetaSpatialDistribution:
         angular_theta_from_densest = np.arccos(
             np.sin(lat_densest) * np.sin(np.arcsin(prc_unit_vector[:, 2])) + np.cos(lat_densest) * np.cos(np.arcsin(prc_unit_vector[:, 2])) * np.cos(
                 lon_densest - np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0])))  # In radians.
+        
+        # Calculate e^beta-1 #
+        velocity_r_sqred = np.divide(np.sum(np.multiply(stellar_data_tmp['Velocity'], stellar_data_tmp['Coordinates']), axis=1) ** 2,
+                                     np.sum(np.multiply(stellar_data_tmp['Coordinates'], stellar_data_tmp['Coordinates']), axis=1))
+        beta = np.subtract(1, np.divide(
+            np.subtract(np.sum(np.multiply(stellar_data_tmp['Velocity'], stellar_data_tmp['Velocity']), axis=1), velocity_r_sqred),
+            2 * velocity_r_sqred))
+        
+        # Plot the 2D surface density projection for the disc color-coded by e^beta-1 #
         disc_mask = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))[0]
+        ax10.scatter(stellar_data_tmp['Coordinates'][disc_mask, 0], stellar_data_tmp['Coordinates'][disc_mask, 1], c=np.exp(beta[disc_mask] - 1),
+                     cmap='magma', vmax=1, s=1)
+        ax20.scatter(stellar_data_tmp['Coordinates'][disc_mask, 2], stellar_data_tmp['Coordinates'][disc_mask, 0], c=np.exp(beta[disc_mask] - 1),
+                     cmap='magma', vmax=1, s=1)
         
-        weights = stellar_data_tmp['Mass'][disc_mask]
-        vmin, vmax = 0, 5e7
-        
-        # Plot the 2D surface density projection and scatter for the disc #
-        count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][disc_mask, 0], stellar_data_tmp['Coordinates'][disc_mask, 1],
-                                               weights=weights, bins=500, range=[[-30, 30], [-30, 30]])
-        ax10.imshow(count, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', vmin=vmin, interpolation='gaussian', aspect='auto')
-        
-        count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][disc_mask, 2], stellar_data_tmp['Coordinates'][disc_mask, 0],
-                                               weights=weights, bins=500, range=[[-30, 30], [-30, 30]])
-        ax20.imshow(count, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', vmin=vmin, interpolation='gaussian', aspect='auto')
-        
-        # Plot the 2D surface density projection and scatter for the bulge #
+        # Plot the 2D surface density projection for the bulge #
         bulge_mask = np.where(angular_theta_from_densest > np.divide(np.pi, 6.0))[0]
+        # ax11.scatter(stellar_data_tmp['Coordinates'][bulge_mask, 0], stellar_data_tmp['Coordinates'][bulge_mask, 1], s=2)
+        ax21.scatter(stellar_data_tmp['Coordinates'][bulge_mask, 2], stellar_data_tmp['Coordinates'][bulge_mask, 0], c=np.exp(beta[bulge_mask] - 1),
+                     cmap='magma', vmax=1, s=1)
         
-        energy_mask = DecomposeBulges.central_bulge(bulge_mask, stellar_data_tmp)
+        scatter = ax11.scatter(stellar_data_tmp['Coordinates'][bulge_mask, 0], stellar_data_tmp['Coordinates'][bulge_mask, 1],
+                               c=np.exp(beta[bulge_mask] - 1), cmap='magma', vmax=1, s=1)
         
-        weights = stellar_data_tmp['Mass'][bulge_mask]
-        count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][bulge_mask, 0], stellar_data_tmp['Coordinates'][bulge_mask, 1],
-                                               weights=weights, bins=500, range=[[-30, 30], [-30, 30]])
-        im = ax11.imshow(count, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', vmin=vmin, interpolation='gaussian', aspect='auto')
+        # Generate the color bar #
+        cbar = plt.colorbar(scatter, cax=axcbar, orientation='horizontal')
+        cbar.set_label(r'$\mathrm{exp(\beta - 1)}$')
         
-        count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][bulge_mask, 2], stellar_data_tmp['Coordinates'][bulge_mask, 0],
-                                               weights=weights, bins=500, range=[[-30, 30], [-30, 30]])
-        ax21.imshow(count, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', vmin=vmin, interpolation='gaussian', aspect='auto')
-        
-        cbar = plt.colorbar(im, cax=axcbar, orientation='horizontal')
-        cbar.set_label(r'$\Sigma_\mathrm{\bigstar}\,\mathrm{[M_\odot\,kpc^{-2}]}$')
+        # cbar = plt.colorbar(im, cax=axcbar, orientation='horizontal')
+        # cbar.set_label(r'$\Sigma_\mathrm{\bigstar}\,\mathrm{[M_\odot\,kpc^{-2}]}$')
         axcbar.xaxis.tick_top()
         axcbar.xaxis.set_label_position("top")
         axcbar.tick_params(direction='out', which='both', right='on')
@@ -299,4 +299,6 @@ if __name__ == '__main__':
     simulation_path = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
     plots_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/BSP/'  # Path to save plots.
     data_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/'  # Path to save/load data.
+    if not os.path.exists(plots_path):
+        os.makedirs(plots_path)
     x = BetaSpatialDistribution(simulation_path, tag)

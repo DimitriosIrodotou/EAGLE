@@ -1,3 +1,4 @@
+import os
 import re
 import time
 import warnings
@@ -331,4 +332,6 @@ if __name__ == '__main__':
     simulation_path = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
     plots_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/DTTM/'  # Path to save plots.
     data_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/'  # Path to save/load data.
+    if not os.path.exists(plots_path):
+        os.makedirs(plots_path)
     x = DiscToTotalVsMass(simulation_path, tag)
