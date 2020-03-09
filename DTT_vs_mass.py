@@ -1,6 +1,5 @@
 import re
 import time
-import glob
 import warnings
 import argparse
 import matplotlib

@@ -15,6 +15,7 @@ import eagle_IO.eagle_IO.eagle_IO as E
 
 from matplotlib import gridspec
 from astropy_healpix import HEALPix
+from decompose_bulges import DecomposeBulges
 from rotate_galaxies import RotateCoordinates
 
 # Create a parser and add argument to read data #
@@ -29,9 +30,9 @@ start_global_time = time.time()  # Start the global time.
 warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
 
 
-class SpatialDistribution:
+class BetaSpatialDistribution:
     """
-    For each galaxy create spatial distribution maps.
+    For each galaxy create spatial distribution maps colorcoded by beta.
     """
     
     
@@ -98,7 +99,7 @@ class SpatialDistribution:
                 print('Plotted data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
                 print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished SpatialDistribution for ' + re.split('EAGLE/|/data', simulation_path)[2] + ' in %.4s s' % (
+        print('Finished BetaSpatialDistribution for ' + re.split('EAGLE/|/data', simulation_path)[2] + ' in %.4s s' % (
             time.time() - start_global_time))  # Print total time.
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
@@ -271,6 +272,8 @@ class SpatialDistribution:
         # Plot the 2D surface density projection and scatter for the bulge #
         bulge_mask = np.where(angular_theta_from_densest > np.divide(np.pi, 6.0))[0]
         
+        energy_mask = DecomposeBulges.central_bulge(bulge_mask, stellar_data_tmp)
+        
         weights = stellar_data_tmp['Mass'][bulge_mask]
         count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][bulge_mask, 0], stellar_data_tmp['Coordinates'][bulge_mask, 1],
                                                weights=weights, bins=500, range=[[-30, 30], [-30, 30]])
@@ -287,13 +290,13 @@ class SpatialDistribution:
         axcbar.tick_params(direction='out', which='both', right='on')
         
         # Save the plot #
-        plt.savefig(plots_path + str(group_number) + str(subgroup_number) + '-' + 'SP' + '-' + date + '.png', bbox_inches='tight')
+        plt.savefig(plots_path + str(group_number) + str(subgroup_number) + '-' + 'BSP' + '-' + date + '.png', bbox_inches='tight')
         return None
 
 
 if __name__ == '__main__':
     tag = '027_z000p101'
     simulation_path = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
-    plots_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/SP/'  # Path to save plots.
+    plots_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/BSP/'  # Path to save plots.
     data_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/'  # Path to save/load data.
-    x = SpatialDistribution(simulation_path, tag)
+    x = BetaSpatialDistribution(simulation_path, tag)
