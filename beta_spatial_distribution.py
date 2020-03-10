@@ -123,7 +123,7 @@ class BetaSpatialDistribution:
         stellar_data = {}
         particle_type = '4'
         file_type = 'PARTDATA'
-        for attribute in ['Coordinates', 'GroupNumber', 'Mass', 'ParticleBindingEnergy', 'SubGroupNumber', 'Velocity']:
+        for attribute in ['Coordinates', 'GroupNumber', 'Mass', 'SubGroupNumber', 'Velocity']:
             stellar_data[attribute] = E.read_array(file_type, simulation_path, tag, '/PartType' + particle_type + '/' + attribute, numThreads=8)
         
         # Convert attributes to astronomical units #
@@ -209,10 +209,6 @@ class BetaSpatialDistribution:
         ax11 = plt.subplot(gs[1, 1])
         ax21 = plt.subplot(gs[2, 1])
         
-        for a in [ax11, ax21]:
-            a.yaxis.tick_right()
-            a.yaxis.set_label_position("right")
-        
         for a in [ax10, ax20, ax11, ax21]:
             a.grid(True)
             a.set_xlim(-30, 30)
@@ -222,12 +218,12 @@ class BetaSpatialDistribution:
         
         ax10.set_xticklabels([])
         ax11.set_xticklabels([])
-        ax10.set_ylabel(r'$y\,\mathrm{[kpc]}$', size=16)
-        ax20.set_xlabel(r'$x\,\mathrm{[kpc]}$', size=16)
-        ax20.set_ylabel(r'$z\,\mathrm{[kpc]}$', size=16)
-        ax11.set_ylabel(r'$y\,\mathrm{[kpc]}$', size=16)
-        ax21.set_xlabel(r'$x\,\mathrm{[kpc]}$', size=16)
-        ax21.set_ylabel(r'$z\,\mathrm{[kpc]}$', size=16)
+        ax10.set_ylabel(r'$\mathrm{y\,[kpc]}$', size=16)
+        ax20.set_xlabel(r'$\mathrm{x\,[kpc]}$', size=16)
+        ax20.set_ylabel(r'$\mathrm{z\,[kpc]}$', size=16)
+        ax11.set_ylabel(r'$\mathrm{y\,[kpc]}$', size=16)
+        ax21.set_xlabel(r'$\mathrm{x\,[kpc]}$', size=16)
+        ax21.set_ylabel(r'$\mathrm{z\,[kpc]}$', size=16)
         ax10.annotate(r'Disc', xy=(-25, 25), xycoords='data', size=18)
         ax11.annotate(r'Bulge', xy=(-25, 25), xycoords='data', size=18)
         
@@ -266,25 +262,21 @@ class BetaSpatialDistribution:
         # Plot the 2D surface density projection for the disc color-coded by e^beta-1 #
         disc_mask = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))[0]
         ax10.scatter(stellar_data_tmp['Coordinates'][disc_mask, 0], stellar_data_tmp['Coordinates'][disc_mask, 1], c=np.exp(beta[disc_mask] - 1),
-                     cmap='magma', vmax=1, s=1)
-        ax20.scatter(stellar_data_tmp['Coordinates'][disc_mask, 2], stellar_data_tmp['Coordinates'][disc_mask, 0], c=np.exp(beta[disc_mask] - 1),
-                     cmap='magma', vmax=1, s=1)
+                     cmap='viridis', vmax=1, s=1)
+        ax20.scatter(stellar_data_tmp['Coordinates'][disc_mask, 0], stellar_data_tmp['Coordinates'][disc_mask, 2], c=np.exp(beta[disc_mask] - 1),
+                     cmap='viridis', vmax=1, s=1)
         
         # Plot the 2D surface density projection for the bulge #
         bulge_mask = np.where(angular_theta_from_densest > np.divide(np.pi, 6.0))[0]
-        # ax11.scatter(stellar_data_tmp['Coordinates'][bulge_mask, 0], stellar_data_tmp['Coordinates'][bulge_mask, 1], s=2)
-        ax21.scatter(stellar_data_tmp['Coordinates'][bulge_mask, 2], stellar_data_tmp['Coordinates'][bulge_mask, 0], c=np.exp(beta[bulge_mask] - 1),
-                     cmap='magma', vmax=1, s=1)
+        ax11.scatter(stellar_data_tmp['Coordinates'][bulge_mask, 0], stellar_data_tmp['Coordinates'][bulge_mask, 1], c=np.exp(beta[bulge_mask] - 1),
+                     cmap='viridis', vmax=1, s=1)
         
-        scatter = ax11.scatter(stellar_data_tmp['Coordinates'][bulge_mask, 0], stellar_data_tmp['Coordinates'][bulge_mask, 1],
-                               c=np.exp(beta[bulge_mask] - 1), cmap='magma', vmax=1, s=1)
+        scatter = ax21.scatter(stellar_data_tmp['Coordinates'][bulge_mask, 0], stellar_data_tmp['Coordinates'][bulge_mask, 2],
+                               c=np.exp(beta[bulge_mask] - 1), cmap='viridis', vmax=1, s=1)
         
         # Generate the color bar #
         cbar = plt.colorbar(scatter, cax=axcbar, orientation='horizontal')
         cbar.set_label(r'$\mathrm{exp(\beta - 1)}$')
-        
-        # cbar = plt.colorbar(im, cax=axcbar, orientation='horizontal')
-        # cbar.set_label(r'$\Sigma_\mathrm{\bigstar}\,\mathrm{[M_\odot\,kpc^{-2}]}$')
         axcbar.xaxis.tick_top()
         axcbar.xaxis.set_label_position("top")
         axcbar.tick_params(direction='out', which='both', right='on')

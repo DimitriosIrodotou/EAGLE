@@ -56,7 +56,7 @@ class RADecProperties:
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
         
         # for group_number in np.sort(list(set(self.subhalo_data_tmp['GroupNumber']))):  # Loop over all masked haloes.
-        for group_number in range(25, 26):  # Loop over all masked haloes.
+        for group_number in range(1, 26):  # Loop over all masked haloes.
             for subgroup_number in range(0, 1):
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
@@ -64,10 +64,10 @@ class RADecProperties:
                     stellar_data_tmp, glx_unit_vector = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
                     
                     # Save data in numpy arrays #
-                    np.save(data_path + 'group_number_' + str(group_number), group_number)
-                    np.save(data_path + 'subgroup_number_' + str(group_number), subgroup_number)
-                    np.save(data_path + 'glx_unit_vector_' + str(group_number), glx_unit_vector)
-                    np.save(data_path + 'stellar_data_tmp_' + str(group_number), stellar_data_tmp)
+                    np.save(data_path + 'group_numbers/' + 'group_number_' + str(group_number), group_number)
+                    np.save(data_path + 'subgroup_numbers/' + 'subgroup_number_' + str(group_number), subgroup_number)
+                    np.save(data_path + 'glx_unit_vectors/' + 'glx_unit_vector_' + str(group_number), glx_unit_vector)
+                    np.save(data_path + 'stellar_data_tmps/' + 'stellar_data_tmp_' + str(group_number), stellar_data_tmp)
                     print('Masked and saved data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                         round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
@@ -85,10 +85,10 @@ class RADecProperties:
                 elif args.l:  # Load data.
                     start_local_time = time.time()  # Start the local time.
                     
-                    group_number = np.load(data_path + 'group_number_' + str(group_number) + '.npy')
-                    subgroup_number = np.load(data_path + 'subgroup_number_' + str(group_number) + '.npy')
-                    glx_unit_vector = np.load(data_path + 'glx_unit_vector_' + str(group_number) + '.npy')
-                    stellar_data_tmp = np.load(data_path + 'stellar_data_tmp_' + str(group_number) + '.npy', allow_pickle=True)
+                    group_number = np.load(data_path + 'group_numbers/' + 'group_number_' + str(group_number) + '.npy')
+                    subgroup_number = np.load(data_path + 'subgroup_numbers/' + 'subgroup_number_' + str(group_number) + '.npy')
+                    glx_unit_vector = np.load(data_path + 'glx_unit_vectors/' + 'glx_unit_vector_' + str(group_number) + '.npy')
+                    stellar_data_tmp = np.load(data_path + 'stellar_data_tmps/' + 'stellar_data_tmp_' + str(group_number) + '.npy', allow_pickle=True)
                     stellar_data_tmp = stellar_data_tmp.item()
                     print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
                     # + ' (' + str(round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
@@ -147,7 +147,7 @@ class RADecProperties:
         """
         
         # Mask the data to select haloes more #
-        mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 2.5e8)
+        mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 1e8)
         
         # Mask the temporary dictionary for each galaxy #
         subhalo_data_tmp = {}
@@ -319,7 +319,7 @@ if __name__ == '__main__':
     tag = '027_z000p101'
     simulation_path = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
     plots_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/RDP/'  # Path to save plots.
-    data_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/RDP/'  # Path to save/load data.
+    data_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/'  # Path to save/load data.
     if not os.path.exists(plots_path):
         os.makedirs(plots_path)
     x = RADecProperties(simulation_path, tag)

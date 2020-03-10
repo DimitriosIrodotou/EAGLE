@@ -56,7 +56,7 @@ class SpatialDistribution:
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e8 Msun.
         
         # for group_number in np.sort(list(set(self.subhalo_data_tmp['GroupNumber']))):  # Loop over all masked haloes.
-        for group_number in range(25, 26):  # Loop over all masked haloes.
+        for group_number in range(1, 26):  # Loop over all masked haloes.
             for subgroup_number in range(0, 1):  # Get centrals only.
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
@@ -209,25 +209,20 @@ class SpatialDistribution:
         ax11 = plt.subplot(gs[1, 1])
         ax21 = plt.subplot(gs[2, 1])
         
-        for a in [ax11, ax21]:
-            a.yaxis.tick_right()
-            a.yaxis.set_label_position("right")
-        
         for a in [ax10, ax20, ax11, ax21]:
             a.grid(True)
             a.set_xlim(-30, 30)
             a.set_ylim(-30, 30)
-            a.set_aspect('equal')
             a.tick_params(direction='out', which='both', top='on', right='on', left='on')
         
         ax10.set_xticklabels([])
         ax11.set_xticklabels([])
-        ax10.set_ylabel(r'$y\,\mathrm{[kpc]}$', size=16)
-        ax20.set_xlabel(r'$x\,\mathrm{[kpc]}$', size=16)
-        ax20.set_ylabel(r'$z\,\mathrm{[kpc]}$', size=16)
-        ax11.set_ylabel(r'$y\,\mathrm{[kpc]}$', size=16)
-        ax21.set_xlabel(r'$x\,\mathrm{[kpc]}$', size=16)
-        ax21.set_ylabel(r'$z\,\mathrm{[kpc]}$', size=16)
+        ax10.set_ylabel(r'$\mathrm{y\, [kpc]}$', size=16)
+        ax20.set_xlabel(r'$\mathrm{x\, [kpc]}$', size=16)
+        ax20.set_ylabel(r'$\mathrm{z\, [kpc]}$', size=16)
+        ax11.set_ylabel(r'$\mathrm{y\, [kpc]}$', size=16)
+        ax21.set_xlabel(r'$\mathrm{x\, [kpc]}$', size=16)
+        ax21.set_ylabel(r'$\mathrm{z\, [kpc]}$', size=16)
         ax10.annotate(r'Disc', xy=(-25, 25), xycoords='data', size=18)
         ax11.annotate(r'Bulge', xy=(-25, 25), xycoords='data', size=18)
         
@@ -263,11 +258,11 @@ class SpatialDistribution:
         
         count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][disc_mask, 0], stellar_data_tmp['Coordinates'][disc_mask, 1],
                                                weights=weights, bins=500, range=[[-30, 30], [-30, 30]])
-        ax10.imshow(count, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', vmin=vmin, interpolation='gaussian', aspect='auto')
+        ax10.imshow(count.T, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', vmin=vmin, interpolation='gaussian', aspect='equal')
         
-        count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][disc_mask, 2], stellar_data_tmp['Coordinates'][disc_mask, 0],
+        count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][disc_mask, 0], stellar_data_tmp['Coordinates'][disc_mask, 2],
                                                weights=weights, bins=500, range=[[-30, 30], [-30, 30]])
-        ax20.imshow(count, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', vmin=vmin, interpolation='gaussian', aspect='auto')
+        ax20.imshow(count.T, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', vmin=vmin, interpolation='gaussian', aspect='equal')
         
         # Plot the 2D surface density projection and scatter for the bulge #
         bulge_mask = np.where(angular_theta_from_densest > np.divide(np.pi, 6.0))[0]
@@ -275,14 +270,15 @@ class SpatialDistribution:
         weights = stellar_data_tmp['Mass'][bulge_mask]
         count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][bulge_mask, 0], stellar_data_tmp['Coordinates'][bulge_mask, 1],
                                                weights=weights, bins=500, range=[[-30, 30], [-30, 30]])
-        im = ax11.imshow(count, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', vmin=vmin, interpolation='gaussian', aspect='auto')
+        im = ax11.imshow(count.T, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', vmin=vmin, interpolation='gaussian',
+                         aspect='equal')
         
-        count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][bulge_mask, 2], stellar_data_tmp['Coordinates'][bulge_mask, 0],
+        count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][bulge_mask, 0], stellar_data_tmp['Coordinates'][bulge_mask, 2],
                                                weights=weights, bins=500, range=[[-30, 30], [-30, 30]])
-        ax21.imshow(count, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', vmin=vmin, interpolation='gaussian', aspect='auto')
+        ax21.imshow(count.T, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', vmin=vmin, interpolation='gaussian', aspect='equal')
         
         cbar = plt.colorbar(im, cax=axcbar, orientation='horizontal')
-        cbar.set_label(r'$\Sigma_\mathrm{\bigstar}\,\mathrm{[M_\odot\,kpc^{-2}]}$')
+        cbar.set_label(r'$\mathrm{\Sigma_{\bigstar}\,[M_\odot\,kpc^{-2}]}$')
         axcbar.xaxis.tick_top()
         axcbar.xaxis.set_label_position("top")
         axcbar.tick_params(direction='out', which='both', right='on')

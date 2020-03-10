@@ -95,13 +95,10 @@ class RADecDistribution:
         stellar_data = {}
         particle_type = '4'
         file_type = 'PARTDATA'
-        for attribute in ['Coordinates', 'GroupNumber', 'Mass', 'ParticleBindingEnergy', 'SubGroupNumber', 'Velocity']:
+        for attribute in ['GroupNumber', 'SubGroupNumber']:
             stellar_data[attribute] = E.read_array(file_type, simulation_path, tag, '/PartType' + particle_type + '/' + attribute, numThreads=8)
         
         # Convert attributes to astronomical units #
-        stellar_data['Mass'] *= u.g.to(u.Msun)
-        stellar_data['Velocity'] *= u.cm.to(u.km)  # per second.
-        stellar_data['Coordinates'] *= u.cm.to(u.kpc)
         subhalo_data['CentreOfPotential'] *= u.cm.to(u.kpc)
         subhalo_data['ApertureMeasurements/Mass/030kpc'] *= u.g.to(u.Msun)
         
@@ -115,7 +112,7 @@ class RADecDistribution:
         """
         
         # Mask the data to select haloes more #
-        mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 2.5e8)
+        mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 1e8)
         
         # Mask the temporary dictionary for each galaxy #
         subhalo_data_tmp = {}
@@ -180,7 +177,7 @@ class RADecDistribution:
         density_map = density[coordinate_index]
         
         # Display data on a 2D regular raster and create a pseudo-color plot #
-        im = plt.imshow(density_map, cmap='magma_r', aspect='auto',vmin=1)
+        im = plt.imshow(density_map, cmap='magma_r', aspect='auto', vmin=1)
         cbar = plt.colorbar(im, ax=ax, orientation='horizontal')
         cbar.set_label('$\mathrm{Number\; of\; galaxies\; per\; grid\; cell}$')
         plt.pcolormesh(np.radians(ra), np.radians(dec), density_map, cmap='magma_r')

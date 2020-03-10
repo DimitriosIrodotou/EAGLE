@@ -164,7 +164,7 @@ class DiscToTotalVsMass:
         """
         
         # Mask the data to select haloes more #
-        halo_mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 2.5e8)
+        halo_mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 1e8)
         
         # Mask the temporary dictionary for each galaxy #
         subhalo_data_tmp = {}
@@ -254,6 +254,13 @@ class DiscToTotalVsMass:
         sns.set_style('ticks')
         sns.set_context('notebook', font_scale=1.5)
         
+        # Normalise
+        epsilon = 0.5 * np.subtract(1, np.cos((np.pi / 6))) / 16
+        print(epsilon)
+        print(min(disc_fractions_IT20))
+        disc_fractions_IT20 = np.divide(1, np.subtract(1, epsilon)) * np.subtract(disc_fractions_IT20, epsilon)
+        print(min(disc_fractions_IT20))
+        
         # Generate initial figure #
         plt.close()
         figure = plt.figure(figsize=(10, 22.5))
@@ -271,26 +278,26 @@ class DiscToTotalVsMass:
             a.set_xlim(1e8, 1e12)
         
         # Calculate median and 1-sigma #
-        nbin = int((max(np.log10(glx_masses)) - min(np.log10(glx_masses))) / 0.02)
-        print(nbin)
-        x_value = np.empty(nbin)
-        median = np.empty(nbin)
-        slow = np.empty(nbin)
-        shigh = np.empty(nbin)
-        x_low = min(glx_masses)
-        for i in range(nbin):
-            index = np.where((glx_masses >= x_low) & (glx_masses < x_low + 0.02))[0]
-            x_value[i] = np.mean(np.absolute(glx_masses)[index])
-            if len(index) > 0:
-                median[i] = np.nanmedian(disc_fractions_IT20[index])
-                slow[i] = np.nanpercentile(disc_fractions_IT20[index], 15.87)
-                shigh[i] = np.nanpercentile(disc_fractions_IT20[index], 84.13)
-            x_low += 0.02
-        
-        # Plot median and 1-sigma lines #
-        median_IT20, = upper.plot(x_value, median, color='black', zorder=5)
-        upper.fill_between(x_value, shigh, slow, color='black', alpha='0.5', zorder=5)
-        fill_IT20, = plt.fill(np.NaN, np.NaN, color='black', alpha=0.5, zorder=5)
+        # nbin = int((max(np.log10(glx_masses)) - min(np.log10(glx_masses))) / 0.02)
+        # print(nbin)
+        # x_value = np.empty(nbin)
+        # median = np.empty(nbin)
+        # slow = np.empty(nbin)
+        # shigh = np.empty(nbin)
+        # x_low = min(glx_masses)
+        # for i in range(nbin):
+        #     index = np.where((glx_masses >= x_low) & (glx_masses < x_low + 0.02))[0]
+        #     x_value[i] = np.mean(np.absolute(glx_masses)[index])
+        #     if len(index) > 0:
+        #         median[i] = np.nanmedian(disc_fractions_IT20[index])
+        #         slow[i] = np.nanpercentile(disc_fractions_IT20[index], 15.87)
+        #         shigh[i] = np.nanpercentile(disc_fractions_IT20[index], 84.13)
+        #     x_low += 0.02
+        #
+        # # Plot median and 1-sigma lines #
+        # median_IT20, = upper.plot(x_value, median, color='black', zorder=5)
+        # upper.fill_between(x_value, shigh, slow, color='black', alpha='0.5', zorder=5)
+        # fill_IT20, = plt.fill(np.NaN, np.NaN, color='black', alpha=0.5, zorder=5)
         
         # Calculate median and 1-sigma #
         # nbin = int((max(kappas) - min(kappas)) / 0.02)
