@@ -34,5 +34,4 @@ source activate my_python
 
 cd /cosma7/data/dp004/dc-irod1/EAGLE/python/ || exit
 
-python RA_Dec.py -l &
-python RA_Dec_properties.py -l &
+python read_add_properties.py

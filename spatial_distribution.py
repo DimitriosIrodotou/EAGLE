@@ -32,7 +32,7 @@ warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # I
 
 class SpatialDistribution:
     """
-    For each galaxy create spatial distribution maps.
+    For each galaxy create: spatial distribution maps.
     """
     
     
@@ -64,9 +64,7 @@ class SpatialDistribution:
                     stellar_data_tmp = self.mask_galaxies(group_number, subgroup_number)  # Mask galaxies and normalise data.
                     
                     # Save data in numpy arrays #
-                    np.save(data_path + 'group_numbers/' + 'group_number_' + str(group_number), group_number)
-                    np.save(data_path + 'subgroup_numbers/' + 'subgroup_number_' + str(group_number), subgroup_number)
-                    np.save(data_path + 'stellar_data_tmps/' + 'stellar_data_tmp_' + str(group_number), stellar_data_tmp)
+                    np.save(data_path + 'stellar_data_tmps/' + 'stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number), stellar_data_tmp)
                     print('Masked and saved data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                         round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
@@ -85,9 +83,9 @@ class SpatialDistribution:
                     start_local_time = time.time()  # Start the local time.
                     
                     # Load data from numpy arrays #
-                    group_number = np.load(data_path + 'group_numbers/' + 'group_number_' + str(group_number) + '.npy')
-                    subgroup_number = np.load(data_path + 'subgroup_numbers/' + 'subgroup_number_' + str(group_number) + '.npy')
-                    stellar_data_tmp = np.load(data_path + 'stellar_data_tmps/' + 'stellar_data_tmp_' + str(group_number) + '.npy', allow_pickle=True)
+                    stellar_data_tmp = np.load(
+                        data_path + 'stellar_data_tmps/' + 'stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy',
+                        allow_pickle=True)
                     stellar_data_tmp = stellar_data_tmp.item()
                     print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
@@ -99,8 +97,7 @@ class SpatialDistribution:
                 print('Plotted data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
                 print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished SpatialDistribution for ' + re.split('EAGLE/|/data', simulation_path)[2] + ' in %.4s s' % (
-            time.time() - start_global_time))  # Print total time.
+        print('Finished SpatialDistribution for ' + re.split('EAGLE/|/data', simulation_path)[2] + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
@@ -123,7 +120,7 @@ class SpatialDistribution:
         stellar_data = {}
         particle_type = '4'
         file_type = 'PARTDATA'
-        for attribute in ['Coordinates', 'GroupNumber', 'Mass', 'ParticleBindingEnergy', 'SubGroupNumber', 'Velocity']:
+        for attribute in ['Coordinates', 'GroupNumber', 'Mass', 'SubGroupNumber', 'Velocity']:
             stellar_data[attribute] = E.read_array(file_type, simulation_path, tag, '/PartType' + particle_type + '/' + attribute, numThreads=8)
         
         # Convert attributes to astronomical units #
@@ -142,7 +139,7 @@ class SpatialDistribution:
         :return: subhalo_data_tmp
         """
         
-        # Mask the data to select haloes more #
+        # Mask the halo data #
         halo_mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 1e8)
         
         # Mask the temporary dictionary for each galaxy #
@@ -217,12 +214,12 @@ class SpatialDistribution:
         
         ax10.set_xticklabels([])
         ax11.set_xticklabels([])
-        ax10.set_ylabel(r'$\mathrm{y\, [kpc]}$', size=16)
-        ax20.set_xlabel(r'$\mathrm{x\, [kpc]}$', size=16)
-        ax20.set_ylabel(r'$\mathrm{z\, [kpc]}$', size=16)
-        ax11.set_ylabel(r'$\mathrm{y\, [kpc]}$', size=16)
-        ax21.set_xlabel(r'$\mathrm{x\, [kpc]}$', size=16)
-        ax21.set_ylabel(r'$\mathrm{z\, [kpc]}$', size=16)
+        ax10.set_ylabel(r'$\mathrm{y\,[kpc]}$', size=16)
+        ax20.set_xlabel(r'$\mathrm{x\,[kpc]}$', size=16)
+        ax20.set_ylabel(r'$\mathrm{z\,[kpc]}$', size=16)
+        ax11.set_ylabel(r'$\mathrm{y\,[kpc]}$', size=16)
+        ax21.set_xlabel(r'$\mathrm{x\,[kpc]}$', size=16)
+        ax21.set_ylabel(r'$\mathrm{z\,[kpc]}$', size=16)
         ax10.annotate(r'Disc', xy=(-25, 25), xycoords='data', size=18)
         ax11.annotate(r'Bulge', xy=(-25, 25), xycoords='data', size=18)
         

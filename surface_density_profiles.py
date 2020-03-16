@@ -49,7 +49,7 @@ class SurfaceDensityProfiles:
         if not args.l:
             # Extract particle and subhalo attributes and convert them to astronomical units #
             self.stellar_data, self.subhalo_data = self.read_galaxies(simulation_path, tag)
-            print('Read data for ' + re.split('EAGLE/|/data', simulation_path)[2] + ' in %.4s s' % (time.time() - start_global_time))
+            print('Read data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
             print('–––––––––––––––––––––––––––––––––––––––––––––')
             
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher that 1e8
@@ -63,9 +63,7 @@ class SurfaceDensityProfiles:
                     stellar_data_tmp = self.mask_galaxies(group_number, subgroup_number)  # Mask galaxies and normalise data.
                     
                     # Save data in numpy arrays #
-                    np.save(data_path + 'group_numbers/' + 'group_number_' + str(group_number), group_number)
-                    np.save(data_path + 'subgroup_numbers/' + 'subgroup_number_' + str(group_number), subgroup_number)
-                    np.save(data_path + 'stellar_data_tmps/' + 'stellar_data_tmp_' + str(group_number), stellar_data_tmp)
+                    np.save(data_path + 'stellar_data_tmps/' + 'stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number), stellar_data_tmp)
                     print('Masked and saved data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                         round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
@@ -83,9 +81,9 @@ class SurfaceDensityProfiles:
                 elif args.l:  # Load data.
                     start_local_time = time.time()  # Start the local time.
                     
-                    group_number = np.load(data_path + 'group_numbers/' + 'group_number_' + str(group_number) + '.npy')
-                    subgroup_number = np.load(data_path + 'subgroup_numbers/' + 'subgroup_number_' + str(group_number) + '.npy')
-                    stellar_data_tmp = np.load(data_path + 'stellar_data_tmps/' + 'stellar_data_tmp_' + str(group_number) + '.npy', allow_pickle=True)
+                    stellar_data_tmp = np.load(
+                        data_path + 'stellar_data_tmps/' + 'stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy',
+                        allow_pickle=True)
                     stellar_data_tmp = stellar_data_tmp.item()
                     print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
@@ -97,7 +95,7 @@ class SurfaceDensityProfiles:
                 print('Plotted data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
                 print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished SurfaceDensityProfiles in %.4s s' % (time.time() - start_global_time))  # Print total time.
+        print('Finished SurfaceDensityProfiles ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
@@ -139,13 +137,13 @@ class SurfaceDensityProfiles:
         :return: subhalo_data_tmp
         """
         
-        # Mask the data to select haloes more #
-        mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 1e8)
+        # Mask the halo data #
+        halo_mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 1e8)
         
         # Mask the temporary dictionary for each galaxy #
         subhalo_data_tmp = {}
         for attribute in self.subhalo_data.keys():
-            subhalo_data_tmp[attribute] = np.copy(self.subhalo_data[attribute])[mask]
+            subhalo_data_tmp[attribute] = np.copy(self.subhalo_data[attribute])[halo_mask]
         
         return subhalo_data_tmp
     
@@ -159,19 +157,20 @@ class SurfaceDensityProfiles:
         """
         
         # Select the corresponding halo in order to get its centre of potential #
-        index = np.where(self.subhalo_data_tmp['GroupNumber'] == group_number)[0][subgroup_number]
+        halo_mask = np.where(self.subhalo_data_tmp['GroupNumber'] == group_number)[0][subgroup_number]
         
         # Mask the data to select galaxies with a given GroupNumber and SubGroupNumber and particles inside a 30kpc sphere #
-        mask = np.where((self.stellar_data['GroupNumber'] == group_number) & (self.stellar_data['SubGroupNumber'] == subgroup_number) & (
-            np.linalg.norm(np.subtract(self.stellar_data['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][index]), axis=1) <= 30.0))  # kpc
+        galaxy_mask = np.where((self.stellar_data['GroupNumber'] == group_number) & (self.stellar_data['SubGroupNumber'] == subgroup_number) & (
+            np.linalg.norm(np.subtract(self.stellar_data['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][halo_mask]),
+                           axis=1) <= 30.0))  # kpc
         
         # Mask the temporary dictionary for each galaxy #
         stellar_data_tmp = {}
         for attribute in self.stellar_data.keys():
-            stellar_data_tmp[attribute] = np.copy(self.stellar_data[attribute])[mask]
+            stellar_data_tmp[attribute] = np.copy(self.stellar_data[attribute])[galaxy_mask]
         
         # Normalise the coordinates and velocities wrt the centre of potential of the subhalo #
-        stellar_data_tmp['Coordinates'] = np.subtract(stellar_data_tmp['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][index])
+        stellar_data_tmp['Coordinates'] = np.subtract(stellar_data_tmp['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][halo_mask])
         CoM_velocity = np.divide(np.sum(stellar_data_tmp['Mass'][:, np.newaxis] * stellar_data_tmp['Velocity'], axis=0),
                                  np.sum(stellar_data_tmp['Mass'], axis=0))  # km s-1
         stellar_data_tmp['Velocity'] = np.subtract(stellar_data_tmp['Velocity'], CoM_velocity)
@@ -210,12 +209,13 @@ class SurfaceDensityProfiles:
                 x = 1.0 / n
                 b_n = -1.0 / 3.0 + 2. * n + x * (4.0 / 405. + x * (46. / 25515. + x * (131. / 1148175 - x * 2194697. / 30690717750.)))
             return b_n
-
+        
+        
         # Set the style of the plots #
         sns.set()
         sns.set_style('ticks')
         sns.set_context('notebook', font_scale=1.6)
-
+        
         # Generate the figure and define its parameters #
         plt.close()
         f = plt.figure(0, figsize=(10, 7.5))

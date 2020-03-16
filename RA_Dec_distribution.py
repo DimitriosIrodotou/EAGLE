@@ -30,7 +30,7 @@ warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # I
 
 class RADecDistribution:
     """
-    Create a ra and dec plot with the angular momentum of particles for each galaxy.
+    Create an Ra and Dec plot with the angular momentum of all galaxies.
     """
     
     
@@ -47,7 +47,7 @@ class RADecDistribution:
         if not args.l:
             # Extract particle and subhalo attributes and convert them to astronomical units #
             self.stellar_data, self.subhalo_data = self.read_galaxies(simulation_path, tag)
-            print('Read data for ' + re.split('EAGLE/|/data', simulation_path)[2] + ' in %.4s s' % (time.time() - start_global_time))
+            print('Read data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
             print('–––––––––––––––––––––––––––––––––––––––––––––')
             
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
@@ -56,7 +56,8 @@ class RADecDistribution:
                 for subgroup_number in range(0, 1):
                     start_local_time = time.time()  # Start the local time.
                     
-                    glx_unit_vector = np.load(data_path + 'glx_unit_vectors/' + 'glx_unit_vector_' + str(group_number) + '.npy')
+                    glx_unit_vector = np.load(
+                        data_path + 'glx_unit_vectors/' + 'glx_unit_vector_' + str(group_number) + '_' + str(subgroup_number) + '.npy')
                     glx_unit_vectors.append(glx_unit_vector)
                     
                     print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
@@ -71,8 +72,7 @@ class RADecDistribution:
         print('Plotted data for halo ' + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished RADecDistribution for ' + re.split('EAGLE/|/data', simulation_path)[2] + ' in %.4s s' % (
-            time.time() - start_global_time))  # Print total time.
+        print('Finished RADecDistribution for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
@@ -107,17 +107,17 @@ class RADecDistribution:
     
     def mask_haloes(self):
         """
-        A method to mask haloes.
+        Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e8 Msun.
         :return: subhalo_data_tmp
         """
         
-        # Mask the data to select haloes more #
-        mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 1e8)
+        # Mask the halo data #
+        halo_mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 1e8)
         
         # Mask the temporary dictionary for each galaxy #
         subhalo_data_tmp = {}
         for attribute in self.subhalo_data.keys():
-            subhalo_data_tmp[attribute] = np.copy(self.subhalo_data[attribute])[mask]
+            subhalo_data_tmp[attribute] = np.copy(self.subhalo_data[attribute])[halo_mask]
         
         return subhalo_data_tmp
     
@@ -125,7 +125,7 @@ class RADecDistribution:
     @staticmethod
     def plot(glx_unit_vectors):
         """
-        A method to plot a HEALPix histogram.
+        Plot Ra and Dec for all galaxies.
         :param glx_unit_vectors: from mask_galaxies
         :return: None
         """
@@ -135,7 +135,7 @@ class RADecDistribution:
         sns.set_style('ticks')
         sns.set_context('notebook', font_scale=1.6)
         
-        # Generate the figure #
+        # Generate the figure and define its parameters #
         plt.close()
         fig = plt.figure(figsize=(10, 7.5))
         ax = fig.add_subplot(projection='mollweide')

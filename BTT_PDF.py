@@ -16,10 +16,9 @@ import eagle_IO.eagle_IO.eagle_IO as E
 
 from matplotlib import gridspec
 from astropy_healpix import HEALPix
-from morpho_kinematics import MorphoKinematics
 
 # Create a parser and add argument to read data #
-parser = argparse.ArgumentParser(description='Create D/T vs stellar mass plot.')
+parser = argparse.ArgumentParser(description='Create D/T PDF plot.')
 parser.add_argument('-r', action='store_true', help='Read data')
 parser.add_argument('-l', action='store_true', help='Load data')
 parser.add_argument('-rs', action='store_true', help='Read data and save to numpy arrays')
@@ -27,12 +26,12 @@ args = parser.parse_args()
 
 date = time.strftime('%d_%m_%y_%H%M')  # Date
 start_global_time = time.time()  # Start the global time.
-warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
+warnings.filterwarnings('ignore', category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
 
 
-class DiscToTotalVsMass:
+class BulgeToTotalProbabilityDensityFunction:
     """
-    Create a disc to total ratio as a function of stellar mass plot.
+    Create a PDF of the disc to total ratio.
     """
     
     
@@ -45,7 +44,7 @@ class DiscToTotalVsMass:
         
         p = 1  # Counter.
         # Initialise empty arrays to hold the data #
-        kappas, glx_masses, disc_fractions, disc_fractions_IT20 = [], [], [], []
+        glx_masses, disc_fractions_IT20 = [], []
         
         if not args.l:
             # Extract particle and subhalo attributes and convert them to astronomical units #
@@ -60,11 +59,9 @@ class DiscToTotalVsMass:
                     if args.rs:  # Read and save data.
                         start_local_time = time.time()  # Start the local time.
                         
-                        kappa, disc_fraction, disc_fraction_IT20, glx_mass = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
+                        disc_fraction_IT20, glx_mass = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
                         
                         # Save data in numpy arrays #
-                        np.save(data_path + 'kappa_' + str(group_number) + '_' + str(subgroup_number), kappa)
-                        np.save(data_path + 'disc_fraction_' + str(group_number) + '_' + str(subgroup_number), disc_fraction)
                         np.save(data_path + 'glx_masses/' + 'glx_mass_' + str(group_number) + '_' + str(subgroup_number), glx_mass)
                         np.save(data_path + 'disc_fraction_IT20_' + str(group_number) + '_' + str(subgroup_number), disc_fraction_IT20)
                         print('Masked and saved data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
@@ -74,10 +71,8 @@ class DiscToTotalVsMass:
                     elif args.r:  # Read data.
                         start_local_time = time.time()  # Start the local time.
                         
-                        kappa, disc_fraction, disc_fraction_IT20, glx_mass = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
-                        kappas.append(kappa)
+                        disc_fraction_IT20, glx_mass = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
                         glx_masses.append(glx_mass)
-                        disc_fractions.append(disc_fraction)
                         disc_fractions_IT20.append(disc_fraction_IT20)
                         print('Masked data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                             round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
@@ -87,29 +82,18 @@ class DiscToTotalVsMass:
                     if args.l or args.rs:  # Load data.
                         start_local_time = time.time()  # Start the local time.
                         
-                        # kappa = np.load(data_path + 'kappa_' + str(group_number) + '_' + str(subgroup_number)+ '.npy')
                         glx_mass = np.load(data_path + 'glx_masses/' + 'glx_mass_' + str(group_number) + '_' + str(subgroup_number) + '.npy')
-                        # disc_fraction = np.load(data_path + 'disc_fraction_' + str(group_number) + '_' + str(subgroup_number)+ '.npy')
-                        # disc_fraction_IT20 = np.load(data_path + 'disc_fraction_IT20_' + str(group_number)+ '_' + str(subgroup_number) + '.npy')
-                        # kappas.append(kappa.item())
                         glx_masses.append(glx_mass.item())
-                        # disc_fractions.append(disc_fraction.item())
-                        # disc_fractions_IT20.append(disc_fraction_IT20.item())
                         print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
-                        # + ' (' + str(round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                         print('–––––––––––––––––––––––––––––––––––––––––––––')
             
             if args.l or args.rs:  # Load data.
-                # np.save(data_path + 'kappas', kappas)
-                np.save(data_path + 'glx_masses/' + 'glx_masses',
-                        glx_masses)  # np.save(data_path + 'disc_fractions', disc_fractions)  # np.save(data_path + 'disc_fractions_IT20',
-                # disc_fractions_IT20)
+                np.save(data_path + 'glx_masses/' + 'glx_masses', glx_masses)
+                np.save(data_path + 'disc_fractions_IT20', disc_fractions_IT20)
         else:
             start_local_time = time.time()  # Start the local time.
             
-            kappas = np.load(data_path + 'kappas/' + 'kappas.npy')
             glx_masses = np.load(data_path + 'glx_masses/' + 'glx_masses.npy')
-            disc_fractions = np.load(data_path + 'disc_fractions/' + 'disc_fractions.npy')
             disc_fractions_IT20 = np.load(data_path + 'disc_fractions_IT20/' + 'disc_fractions_IT20.npy')
             print('Loaded data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
             print('–––––––––––––––––––––––––––––––––––––––––')
@@ -117,11 +101,11 @@ class DiscToTotalVsMass:
         # Plot the data #
         start_local_time = time.time()  # Start the local time.
         
-        self.plot(kappas, disc_fractions, disc_fractions_IT20, glx_masses)
+        self.plot(disc_fractions_IT20, glx_masses)
         print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished DTTM for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished BTTPDF for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
@@ -206,13 +190,6 @@ class DiscToTotalVsMass:
                                                                                   stellar_data_tmp['Velocity'])  # Msun kpc km s-1
         prc_unit_vector = np.divide(prc_angular_momentum, np.linalg.norm(prc_angular_momentum, axis=1)[:, np.newaxis])
         
-        # Calculate kinematic diagnostics #
-        kappa, disc_fraction, orbital, vrotsig, vrots, zaxis, momentum = MorphoKinematics.kinematics_diagnostics(stellar_data_tmp['Coordinates'],
-                                                                                                                 stellar_data_tmp['Mass'],
-                                                                                                                 stellar_data_tmp['Velocity'],
-                                                                                                                 stellar_data_tmp[
-                                                                                                                     'ParticleBindingEnergy'])
-        
         # Calculate the ra and dec of the (unit vector of) angular momentum for each particle #
         ra = np.degrees(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]))
         dec = np.degrees(np.arcsin(prc_unit_vector[:, 2]))
@@ -236,15 +213,13 @@ class DiscToTotalVsMass:
         disc_mask = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))
         disc_fraction_IT20 = np.divide(np.sum(stellar_data_tmp['Mass'][disc_mask]), np.sum(stellar_data_tmp['Mass']))
         
-        return kappa, disc_fraction, disc_fraction_IT20, glx_mass
+        return disc_fraction_IT20, glx_mass
     
     
     @staticmethod
-    def plot(kappas, disc_fractions, disc_fractions_IT20, glx_masses):
+    def plot(disc_fractions_IT20, glx_masses):
         """
-        Plot the disc to total ratio as a function of stellar mass.
-        :param kappas: from mask_galaxies
-        :param disc_fractions: from mask_galaxies
+        A method to plot a HEALPix histogram.
         :param disc_fractions_IT20: from mask_galaxies
         :return: None
         """
@@ -254,91 +229,69 @@ class DiscToTotalVsMass:
         sns.set_style('ticks')
         sns.set_context('notebook', font_scale=1.5)
         
-        # Normalise
-        epsilon = 0.5 * np.subtract(1, np.cos((np.pi / 6))) / 16
-        print(epsilon)
-        print(min(disc_fractions_IT20))
-        disc_fractions_IT20 = np.divide(1, np.subtract(1, epsilon)) * np.subtract(disc_fractions_IT20, epsilon)
-        print(min(disc_fractions_IT20))
-        
         # Generate the figure and define its parameters #
         plt.close()
-        figure = plt.figure(figsize=(10, 22.5))
-        gs = gridspec.GridSpec(3, 1, wspace=0.0)
-        upper = figure.add_subplot(gs[0, 0])
-        middle = figure.add_subplot(gs[1, 0])
-        bottom = figure.add_subplot(gs[2, 0])
-        method = ['$D/T_{30\degree}$', r'$D/T_{\vec{J}_{b} = 0}$', r'$\kappa_{rot}$']
-        for i, a in enumerate([upper, middle, bottom]):
-            a.grid(True)
-            a.set_ylabel(str(method[i]))
-            a.set_xlabel(r'$M_{\star}$')
-            a.set_xscale('log')
-            a.set_ylim(-0.4, 1)
-            a.set_xlim(1e8, 1e12)
+        figure = plt.figure(0, figsize=(20, 15))
         
-        # Calculate median and 1-sigma #
-        # nbin = int((max(np.log10(glx_masses)) - min(np.log10(glx_masses))) / 0.02)
-        # print(nbin)
-        # x_value = np.empty(nbin)
-        # median = np.empty(nbin)
-        # slow = np.empty(nbin)
-        # shigh = np.empty(nbin)
-        # x_low = min(glx_masses)
-        # for i in range(nbin):
-        #     index = np.where((glx_masses >= x_low) & (glx_masses < x_low + 0.02))[0]
-        #     x_value[i] = np.mean(np.absolute(glx_masses)[index])
-        #     if len(index) > 0:
-        #         median[i] = np.nanmedian(disc_fractions_IT20[index])
-        #         slow[i] = np.nanpercentile(disc_fractions_IT20[index], 15.87)
-        #         shigh[i] = np.nanpercentile(disc_fractions_IT20[index], 84.13)
-        #     x_low += 0.02
+        gs = gridspec.GridSpec(2, 2)
+        ax00 = plt.subplot(gs[0, 0])
+        ax10 = plt.subplot(gs[1, 0])
+        ax01 = plt.subplot(gs[0, 1])
+        ax11 = plt.subplot(gs[1, 1])
+        
+        for a in [ax00, ax10, ax01, ax11]:
+            a.grid(True)  # a.set_xlabel('RA ($\degree$)')  # a.set_ylabel('Dec ($\degree$)')  # a.set_xticklabels([])
+        
+        ax00.set_ylim(0.0, 0.6)
+        ax00.set_xlabel(r'$\mathrm{(B/T)_{\bigstar}}$')
+        ax00.set_ylabel(r'$\mathrm{f(B/T)_{\bigstar}}$')
+        
+        ax10.set_xscale('log')
+        mass_mask = np.where(glx_masses > 1e10)
+        # disc_fractions_IT20 = disc_fractions_IT20[mass_mask]
+        bulge_fraction = 1 - disc_fractions_IT20
+        glx_masses = glx_masses
         #
-        # # Plot median and 1-sigma lines #
-        # median_IT20, = upper.plot(x_value, median, color='black', zorder=5)
-        # upper.fill_between(x_value, shigh, slow, color='black', alpha='0.5', zorder=5)
-        # fill_IT20, = plt.fill(np.NaN, np.NaN, color='black', alpha=0.5, zorder=5)
-        
-        # Calculate median and 1-sigma #
-        # nbin = int((max(kappas) - min(kappas)) / 0.02)
-        # x_value = np.empty(nbin)
-        # median = np.empty(nbin)
-        # slow = np.empty(nbin)
-        # shigh = np.empty(nbin)
-        # x_low = min(kappas)
-        # for i in range(nbin):
-        #     index = np.where((kappas >= x_low) & (kappas < x_low + 0.02))[0]
-        #     x_value[i] = np.mean(np.absolute(kappas)[index])
-        #     if len(index) > 0:
-        #         median[i] = np.nanmedian(disc_fractions[index])
-        #         slow[i] = np.nanpercentile(disc_fractions[index], 15.87)
-        #         shigh[i] = np.nanpercentile(disc_fractions[index], 84.13)
-        #     x_low += 0.02
+        # # Plots BBT19 bar's midpoints #
+        # BBT19 = np.genfromtxt('./Obs_Data/BBT19.csv', delimiter=',', names=['BT', 'f'])
+        # ax00.scatter(BBT19['BT'], BBT19['f'], color='red', s=3, marker='_', zorder=2, label="$\mathrm{Bluck+19}$")
         #
-        # Plot median and 1-sigma lines #
-        # median, = upper.plot(x_value, median, color='blue', zorder=5)
-        # upper.fill_between(x_value, shigh, slow, color='blue', alpha='0.5', zorder=5)
-        # fill, = plt.fill(np.NaN, np.NaN, color='black', alpha=0.5, zorder=5)
+        # # Weight each bin by the total number of values and make a histogram #
+        # weights = np.divide(np.ones_like(bulge_fraction), float(len(bulge_fraction)))
+        # ax00.hist(bulge_fraction, align='left', weights=weights, histtype='step', edgecolor='black', bins=20)
         
-        upper.scatter(glx_masses, disc_fractions_IT20)
-        middle.scatter(glx_masses, disc_fractions)
-        bottom.scatter(glx_masses, kappas)
-        # upper.legend([median_IT20, fill_IT20, median, fill],
-        #                  [r'$\mathrm{This\; work: Median}$', r'$\mathrm{This\; work: 16^{th}-84^{th}\,\%ile}$'], frameon=False, loc=2)
+        # Divisions between bulge classes #
+        logRatio = 0.5
         
-        # y_hist.hist(disc_fractions_IT20, bins=np.linspace(-1, 1, 50), histtype='step', orientation='horizontal', color='black')
-        # y_hist.hist(disc_fractions, bins=np.linspace(-1, 1, 50), histtype='step', orientation='horizontal', color='brown')
+        # Bins for histogram and plotting #
+        bins = np.logspace(8.9, 11 + 0.1, 20)
+        # Put galaxies into bins #
+        indBin = np.digitize(glx_masses, bins)
+        nBin = len(bins) - 1
+        x = np.empty(nBin)
+        yBulge = np.empty(nBin)
+        
+        # Loop over bins, counting fractions in each class #
+        for iBin in range(nBin):
+            x[iBin] = 0.5 * (bins[iBin] + bins[iBin + 1])
+            indThisBin = np.where(indBin == iBin + 1)[0]
+            allBin = len(indThisBin)
+            
+            yBulge[iBin] = len(np.where(bulge_fraction[indThisBin] > logRatio)[0]) / float(allBin)
+        
+        # Plot L-Galaxies data #
+        ax10.plot(x, yBulge, color='blue', lw=2, label="$\mathrm{Irodotou+18}$")
         
         # Save the plot #
-        plt.savefig(plots_path + 'DTTM' + '-' + date + '.png', bbox_inches='tight')
+        plt.savefig(plots_path + 'BTT_PDF' + '-' + date + '.png', bbox_inches='tight')
         return None
 
 
 if __name__ == '__main__':
     tag = '027_z000p101'
     simulation_path = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
-    plots_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/DTTM/'  # Path to save plots.
+    plots_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/BTT_PDF/'  # Path to save plots.
     data_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/'  # Path to save/load data.
     if not os.path.exists(plots_path):
         os.makedirs(plots_path)
-    x = DiscToTotalVsMass(simulation_path, tag)
+    x = BulgeToTotalProbabilityDensityFunction(simulation_path, tag)

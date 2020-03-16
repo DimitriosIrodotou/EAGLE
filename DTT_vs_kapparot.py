@@ -51,7 +51,7 @@ class DiscToTotalVsKappaRot:
         if not args.l:
             # Extract particle and subhalo attributes and convert them to astronomical units #
             self.stellar_data, self.subhalo_data = self.read_galaxies(simulation_path, tag)
-            print('Read data for ' + re.split('EAGLE/|/data', simulation_path)[2] + ' in %.4s s' % (time.time() - start_global_time))
+            print('Read data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
             print('–––––––––––––––––––––––––––––––––––––––––––––')
             
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
@@ -65,9 +65,10 @@ class DiscToTotalVsKappaRot:
                         kappa, disc_fraction, disc_fraction_IT20 = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
                         
                         # Save data in numpy arrays #
-                        np.save(data_path + 'kappas/' + 'kappa_' + str(group_number), kappa)
-                        np.save(data_path + 'disc_fractions/' + 'disc_fraction_' + str(group_number), disc_fraction)
-                        np.save(data_path + 'disc_fractions_IT20/' + 'disc_fraction_IT20_' + str(group_number), disc_fraction_IT20)
+                        np.save(data_path + 'kappas/' + 'kappa_' + str(group_number) + '_' + str(subgroup_number), kappa)
+                        np.save(data_path + 'disc_fractions/' + 'disc_fraction_' + str(group_number) + '_' + str(subgroup_number), disc_fraction)
+                        np.save(data_path + 'disc_fractions_IT20/' + 'disc_fraction_IT20_' + str(group_number) + '_' + str(subgroup_number),
+                                disc_fraction_IT20)
                         kappas.append(kappa)
                         disc_fractions.append(disc_fraction)
                         disc_fractions_IT20.append(disc_fraction_IT20)
@@ -98,17 +99,17 @@ class DiscToTotalVsKappaRot:
             kappas = np.load(data_path + 'kappas/' + 'kappas.npy')
             disc_fractions = np.load(data_path + 'disc_fractions/' + 'disc_fractions.npy')
             disc_fractions_IT20 = np.load(data_path + 'disc_fractions_IT20/' + 'disc_fractions_IT20.npy')
-            print('Loaded data for ' + re.split('EAGLE/|/data', simulation_path)[0] + ' in %.4s s' % (time.time() - start_local_time))
+            print('Loaded data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
             print('–––––––––––––––––––––––––––––––––––––––––––––')
         
         # Plot the data #
         start_local_time = time.time()  # Start the local time.
         
         self.plot(kappas, disc_fractions, disc_fractions_IT20)
-        print('Plotted data for ' + re.split('EAGLE/|/data', simulation_path)[2] + ' in %.4s s' % (time.time() - start_local_time))
+        print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished DiscToTotalVsKappaRot for ' + re.split('EAGLE/|/data', simulation_path)[2] + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished DiscToTotalVsKappaRot for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
@@ -146,11 +147,11 @@ class DiscToTotalVsKappaRot:
     
     def mask_haloes(self):
         """
-        A method to mask haloes.
+        Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e8 Msun.
         :return: subhalo_data_tmp
         """
         
-        # Mask the data to select haloes more #
+        # Mask the halo data #
         halo_mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 1e8)
         
         # Mask the temporary dictionary for each galaxy #
@@ -163,7 +164,7 @@ class DiscToTotalVsKappaRot:
     
     def mask_galaxies(self, group_number, subgroup_number):
         """
-        A method to mask galaxies.
+        Mask galaxies and normalise data.
         :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber']))
         :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
         :return: stellar_data_tmp, prc_unit_vector
@@ -174,7 +175,8 @@ class DiscToTotalVsKappaRot:
         
         # Mask the data to select galaxies with a given GroupNumber and SubGroupNumber and particles inside a 30kpc sphere #
         galaxy_mask = np.where((self.stellar_data['GroupNumber'] == group_number) & (self.stellar_data['SubGroupNumber'] == subgroup_number) & (
-            np.linalg.norm(np.subtract(self.stellar_data['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][halo_mask]), axis=1) <= 30.0))  # kpc
+            np.linalg.norm(np.subtract(self.stellar_data['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][halo_mask]),
+                           axis=1) <= 30.0))  # kpc
         
         # Mask the temporary dictionary for each galaxy #
         stellar_data_tmp = {}
@@ -194,10 +196,10 @@ class DiscToTotalVsKappaRot:
         
         # Calculate kinematic diagnostics #
         kappa_old, disc_fraction, orbital, vrotsig, vrots, zaxis, momentum = MorphoKinematics.kinematics_diagnostics(stellar_data_tmp['Coordinates'],
-                                                                                                                 stellar_data_tmp['Mass'],
-                                                                                                                 stellar_data_tmp['Velocity'],
-                                                                                                                 stellar_data_tmp[
-                                                                                                                     'ParticleBindingEnergy'])
+                                                                                                                     stellar_data_tmp['Mass'],
+                                                                                                                     stellar_data_tmp['Velocity'],
+                                                                                                                     stellar_data_tmp[
+                                                                                                                         'ParticleBindingEnergy'])
         # Rotate coordinates and velocities of stellar particles wrt galactic angular momentum #
         stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_angular_momentum, glx_angular_momentum = RotateCoordinates.rotate_Jz(
             stellar_data_tmp)
@@ -238,7 +240,7 @@ class DiscToTotalVsKappaRot:
     @staticmethod
     def plot(kappas, disc_fractions, disc_fractions_IT20):
         """
-        A method to plot a HEALPix histogram.
+        Plot the disc to total ratio as a function of kappa_rot.
         :param kappas: from mask_galaxies
         :param disc_fractions: from mask_galaxies
         :param disc_fractions_IT20: from mask_galaxies
@@ -250,7 +252,7 @@ class DiscToTotalVsKappaRot:
         sns.set_style('ticks')
         sns.set_context('notebook', font_scale=1.5)
         
-        # Generate initial figure #
+        # Generate the figure and define its parameters #
         plt.close()
         figure = plt.figure(figsize=(10, 7.5))
         gs = gridspec.GridSpec(1, 2, width_ratios=(1, 0.25), wspace=0.0)
