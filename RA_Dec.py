@@ -50,7 +50,7 @@ class RADec:
         
         p = 1  # Counter.
         # Initialise an array and a dictionary to store the data #
-        glx_unit_vector, stellar_data_tmp = [], {}
+        glx_angular_momentum, stellar_data_tmp = [], {}
         
         if not args.l:
             # Extract particle and subhalo attributes and convert them to astronomical units #
@@ -60,16 +60,17 @@ class RADec:
             
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e8 Msun.
         
-        # for group_number in np.sort(list(set(self.subhalo_data_tmp['GroupNumber']))):  # Loop over all masked haloes.
+        # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all masked haloes.
         for group_number in range(25, 26):  # Loop over all masked haloes.
             for subgroup_number in range(0, 1):  # Get centrals only.
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
                     
-                    stellar_data_tmp, glx_unit_vector = self.mask_galaxies(group_number, subgroup_number)  # Mask galaxies and normalise data.
+                    stellar_data_tmp, glx_angular_momentum = self.mask_galaxies(group_number, subgroup_number)  # Mask galaxies and normalise data.
                     
                     # Save data in numpy arrays #
-                    np.save(data_path + 'glx_unit_vectors/' + 'glx_unit_vector_' + str(group_number) + '_' + str(subgroup_number), glx_unit_vector)
+                    np.save(data_path + 'glx_angular_momenta/' + 'glx_angular_momentum_' + str(group_number) + '_' + str(subgroup_number),
+                            glx_angular_momentum)
                     np.save(data_path + 'stellar_data_tmps/' + 'stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number), stellar_data_tmp)
                     print('Masked and saved data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                         round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
@@ -79,7 +80,7 @@ class RADec:
                 elif args.r:  # Read data.
                     start_local_time = time.time()  # Start the local time.
                     
-                    stellar_data_tmp, glx_unit_vector = self.mask_galaxies(group_number, subgroup_number)  # Mask galaxies and normalise data.
+                    stellar_data_tmp, glx_angular_momentum = self.mask_galaxies(group_number, subgroup_number)  # Mask galaxies and normalise data.
                     print('Masked data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                         round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
@@ -89,8 +90,8 @@ class RADec:
                     start_local_time = time.time()  # Start the local time.
                     
                     # Load data from numpy arrays #
-                    glx_unit_vector = np.load(
-                        data_path + 'glx_unit_vectors/' + 'glx_unit_vector_' + str(group_number) + '_' + str(subgroup_number) + '.npy')
+                    glx_angular_momentum = np.load(
+                        data_path + 'glx_angular_momenta/' + 'glx_angular_momentum_' + str(group_number) + '_' + str(subgroup_number) + '.npy')
                     stellar_data_tmp = np.load(
                         data_path + 'stellar_data_tmps/' + 'stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy',
                         allow_pickle=True)
@@ -101,7 +102,7 @@ class RADec:
                 # Plot the data #
                 start_local_time = time.time()  # Start the local time.
                 
-                self.plot(stellar_data_tmp, glx_unit_vector, group_number, subgroup_number)
+                self.plot(stellar_data_tmp, glx_angular_momentum, group_number, subgroup_number)
                 print('Plotted data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
                 print('–––––––––––––––––––––––––––––––––––––––––––––')
         
@@ -163,11 +164,11 @@ class RADec:
         Mask galaxies and normalise data.
         :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber']))
         :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
-        :return: stellar_data_tmp, glx_unit_vector
+        :return: stellar_data_tmp, glx_angular_momentum
         """
         
         # Select the corresponding halo in order to get its centre of potential #
-        halo_mask = np.where(self.subhalo_data_tmp['GroupNumber'] == group_number)[0][subgroup_number]
+        halo_mask = np.where((self.subhalo_data_tmp['GroupNumber'] == group_number) & (self.subhalo_data_tmp['SubGroupNumber'] == subgroup_number))[0]
         
         # Mask the data to select galaxies with a given GroupNumber and SubGroupNumber and particles inside a 30kpc sphere #
         galaxy_mask = np.where((self.stellar_data['GroupNumber'] == group_number) & (self.stellar_data['SubGroupNumber'] == subgroup_number) & (
@@ -189,18 +190,17 @@ class RADec:
         prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
                                                                                   stellar_data_tmp['Velocity'])  # Msun kpc km s-1
         glx_angular_momentum = np.sum(prc_angular_momentum, axis=0)  # Msun kpc km s-1
-        glx_unit_vector = np.divide(glx_angular_momentum, np.linalg.norm(glx_angular_momentum))
         
-        return stellar_data_tmp, glx_unit_vector
+        return stellar_data_tmp, glx_angular_momentum
     
     
     @staticmethod
-    def plot(stellar_data_tmp, glx_unit_vector, group_number, subgroup_number):
+    def plot(stellar_data_tmp, glx_angular_momentum, group_number, subgroup_number):
         """
         Plot a HEALPix histogram from the angular momentum of particles - an angular distance plot - a surface density plot / mock image - a bar
         strength plot - a circularity distribution.
         :param stellar_data_tmp: from mask_galaxies
-        :param glx_unit_vector: from mask_galaxies
+        :param glx_angular_momentum: from mask_galaxies
         :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber']))
         :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
         :return: None
@@ -260,6 +260,7 @@ class RADec:
         ax00.annotate(r'-150', xy=(-2.5 * np.pi / 3 - np.pi / 10, -np.pi / 65), xycoords='data', size=18)
         
         # Rotate coordinates and velocities of stellar particles so the galactic angular momentum points along the x axis #
+        glx_unit_vector = np.divide(glx_angular_momentum, np.linalg.norm(glx_angular_momentum))
         stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_unit_vector, glx_unit_vector = RotateCoordinates.rotate_X(stellar_data_tmp,
                                                                                                                                      glx_unit_vector)
         

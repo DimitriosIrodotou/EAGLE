@@ -1,4 +1,5 @@
 #!/bin/bash -l
+#SBATCH --ntasks=8
 #SBATCH -A dp004
 #SBATCH -p cosma7
 #SBATCH --cpus-per-task=28

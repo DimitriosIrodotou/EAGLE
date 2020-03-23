@@ -54,7 +54,7 @@ class BulgeToTotalProbabilityDensityFunction:
             
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
             
-            for group_number in np.sort(list(set(self.subhalo_data_tmp['GroupNumber']))):  # Loop over all the accepted haloes
+            for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all the accepted haloes
                 for subgroup_number in range(0, 1):
                     if args.rs:  # Read and save data.
                         start_local_time = time.time()  # Start the local time.
@@ -167,7 +167,7 @@ class BulgeToTotalProbabilityDensityFunction:
         """
         
         # Select the corresponding halo in order to get its centre of potential #
-        halo_mask = np.where(self.subhalo_data_tmp['GroupNumber'] == group_number)[0][subgroup_number]
+        halo_mask = np.where((self.subhalo_data_tmp['GroupNumber'] == group_number) & (self.subhalo_data_tmp['SubGroupNumber'] == subgroup_number))[0]
         
         # Mask the data to select galaxies with a given GroupNumber and SubGroupNumber and particles inside a 30kpc sphere #
         galaxy_mask = np.where((self.stellar_data['GroupNumber'] == group_number) & (self.stellar_data['SubGroupNumber'] == subgroup_number) & (
@@ -227,7 +227,7 @@ class BulgeToTotalProbabilityDensityFunction:
         # Set the style of the plots #
         sns.set()
         sns.set_style('ticks')
-        sns.set_context('notebook', font_scale=1.5)
+        sns.set_context('notebook', font_scale=1.6)
         
         # Generate the figure and define its parameters #
         plt.close()
@@ -240,47 +240,43 @@ class BulgeToTotalProbabilityDensityFunction:
         ax11 = plt.subplot(gs[1, 1])
         
         for a in [ax00, ax10, ax01, ax11]:
-            a.grid(True)  # a.set_xlabel('RA ($\degree$)')  # a.set_ylabel('Dec ($\degree$)')  # a.set_xticklabels([])
-        
-        ax00.set_ylim(0.0, 0.6)
-        ax00.set_xlabel(r'$\mathrm{(B/T)_{\bigstar}}$')
-        ax00.set_ylabel(r'$\mathrm{f(B/T)_{\bigstar}}$')
+            a.grid(True)
+            a.set_ylim(0.0, 1.0)
         
         ax10.set_xscale('log')
+        ax00.set_xlabel(r'$\mathrm{(B/T)_{\bigstar}}$')
+        ax00.set_ylabel(r'$\mathrm{f(B/T)_{\bigstar}}$')
+        ax10.set_ylabel(r'$\mathrm{f(B/T>0.5)}$')
+        ax10.set_xlabel(r'$\mathrm{M_{\bigstar} / M_{\odot}}$')
+        
         mass_mask = np.where(glx_masses > 1e10)
-        # disc_fractions_IT20 = disc_fractions_IT20[mass_mask]
+        disc_fractions_IT20 = disc_fractions_IT20
         bulge_fraction = 1 - disc_fractions_IT20
-        glx_masses = glx_masses
-        #
-        # # Plots BBT19 bar's midpoints #
-        # BBT19 = np.genfromtxt('./Obs_Data/BBT19.csv', delimiter=',', names=['BT', 'f'])
-        # ax00.scatter(BBT19['BT'], BBT19['f'], color='red', s=3, marker='_', zorder=2, label="$\mathrm{Bluck+19}$")
-        #
-        # # Weight each bin by the total number of values and make a histogram #
-        # weights = np.divide(np.ones_like(bulge_fraction), float(len(bulge_fraction)))
-        # ax00.hist(bulge_fraction, align='left', weights=weights, histtype='step', edgecolor='black', bins=20)
         
-        # Divisions between bulge classes #
-        logRatio = 0.5
+        # Plots BBT19 bar's midpoints #
+        BBT19 = np.genfromtxt('./Obs_Data/BBT19.csv', delimiter=',', names=['BT', 'f'])
+        ax00.scatter(BBT19['BT'], BBT19['f'], color='red', s=3, marker='_', zorder=2, label="$\mathrm{Bluck+19}$")
         
-        # Bins for histogram and plotting #
-        bins = np.logspace(8.9, 11 + 0.1, 20)
+        # Weight each bin by its contribution to the total number of values and make a histogram #
+        weights = np.divide(np.ones_like(bulge_fraction[mass_mask]), float(len(bulge_fraction[mass_mask])))
+        ax00.hist(bulge_fraction[mass_mask], align='left', weights=weights, histtype='step', edgecolor='black', bins=20)
+        figure.text(0.0, 0.95, r'$\mathrm{M_{\bigstar}>10^{10}M_{\odot}}$', fontsize=16, transform=ax00.transAxes)
+        
         # Put galaxies into bins #
-        indBin = np.digitize(glx_masses, bins)
-        nBin = len(bins) - 1
-        x = np.empty(nBin)
-        yBulge = np.empty(nBin)
+        bins = np.logspace(9, 11.5 + 0.1, 20)
+        bin_index = np.digitize(glx_masses, bins)
+        yBulge = np.empty(len(bins) - 1)
+        glx_mass_bins = np.empty(len(bins) - 1)
         
-        # Loop over bins, counting fractions in each class #
-        for iBin in range(nBin):
-            x[iBin] = 0.5 * (bins[iBin] + bins[iBin + 1])
-            indThisBin = np.where(indBin == iBin + 1)[0]
+        # Loop over bins and count fractions in each class #
+        for iBin in range(len(bins) - 1):
+            glx_mass_bins[iBin] = 0.5 * (bins[iBin] + bins[iBin + 1])
+            indThisBin = np.where(bin_index == iBin + 1)[0]
             allBin = len(indThisBin)
-            
-            yBulge[iBin] = len(np.where(bulge_fraction[indThisBin] > logRatio)[0]) / float(allBin)
+            yBulge[iBin] = len(np.where(bulge_fraction[indThisBin] > 0.5)[0]) / float(allBin)
         
         # Plot L-Galaxies data #
-        ax10.plot(x, yBulge, color='blue', lw=2, label="$\mathrm{Irodotou+18}$")
+        ax10.plot(glx_mass_bins, yBulge, color='blue', lw=2, label="$\mathrm{Irodotou+18}$")
         
         # Save the plot #
         plt.savefig(plots_path + 'BTT_PDF' + '-' + date + '.png', bbox_inches='tight')

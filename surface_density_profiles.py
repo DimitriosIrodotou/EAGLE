@@ -54,7 +54,7 @@ class SurfaceDensityProfiles:
             
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher that 1e8
         
-        # for group_number in np.sort(list(set(self.subhalo_data_tmp['GroupNumber']))):  # Loop over all masked haloes.
+        # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all masked haloes.
         for group_number in range(1, 26):
             for subgroup_number in range(0, 1):
                 if args.rs:  # Read and save data.
@@ -157,7 +157,7 @@ class SurfaceDensityProfiles:
         """
         
         # Select the corresponding halo in order to get its centre of potential #
-        halo_mask = np.where(self.subhalo_data_tmp['GroupNumber'] == group_number)[0][subgroup_number]
+        halo_mask = np.where((self.subhalo_data_tmp['GroupNumber'] == group_number) & (self.subhalo_data_tmp['SubGroupNumber'] == subgroup_number))[0]
         
         # Mask the data to select galaxies with a given GroupNumber and SubGroupNumber and particles inside a 30kpc sphere #
         galaxy_mask = np.where((self.stellar_data['GroupNumber'] == group_number) & (self.stellar_data['SubGroupNumber'] == subgroup_number) & (
@@ -218,7 +218,7 @@ class SurfaceDensityProfiles:
         
         # Generate the figure and define its parameters #
         plt.close()
-        f = plt.figure(0, figsize=(10, 7.5))
+        figure = plt.figure(0, figsize=(10, 7.5))
         plt.grid(True)
         plt.yscale('log')
         plt.axis([0.0, 30.0, 1e6, 1e10])
@@ -259,11 +259,12 @@ class SurfaceDensityProfiles:
         masks = [disc_mask, bulge_mask]
         profiles = [exponential_profile, sersic_profile]
         for mask, color, profile, label, label2 in zip(masks, colors, profiles, labels, labels2):
-            rad = np.sqrt(
-                stellar_data_tmp['Coordinates'][:, 0][mask] ** 2 + stellar_data_tmp['Coordinates'][:, 1][mask] ** 2)  # Radius of each particle.
-            ii = np.where((abs(stellar_data_tmp['Coordinates'][:, 2][mask]) < 5))[0]  # Vertical cut in kpc.
+            component_mass = stellar_data_tmp['Mass'][mask]
+            cylindrical_distance = np.sqrt(
+                stellar_data_tmp['Coordinates'][mask, 0] ** 2 + stellar_data_tmp['Coordinates'][mask, 1] ** 2)  # Radius of each particle.
+            vertical_mask = np.where((abs(stellar_data_tmp['Coordinates'][:, 2][mask]) < 5))[0]  # Vertical cut in kpc.
             
-            mass, edges = np.histogram(rad[ii], bins=50, range=(0, 30), weights=stellar_data_tmp['Mass'][ii])
+            mass, edges = np.histogram(cylindrical_distance[vertical_mask], bins=50, range=(0, 30), weights=component_mass[vertical_mask])
             centers = 0.5 * (edges[1:] + edges[:-1])
             surface = np.pi * (edges[1:] ** 2 - edges[:-1] ** 2)
             sden = np.divide(mass, surface)
@@ -274,7 +275,7 @@ class SurfaceDensityProfiles:
             try:
                 if mask is disc_mask:
                     popt, pcov = curve_fit(profile, centers, sden, sigma=0.1 * sden, p0=[sden[0], 2])  # p0 = [I_0d, R_d]
-                    plt.plot(centers, profile(centers, popt[0], popt[1]), c=color, linestyle='dashed', label=label2)
+                    plt.plot(centers, profile(centers, popt[0], popt[1]), c=color, label=label2)
                     sden_tmp = sden
                     
                     # Calculate disc properties #
@@ -283,7 +284,7 @@ class SurfaceDensityProfiles:
                 
                 elif mask is bulge_mask:
                     popt, pcov = curve_fit(profile, centers, sden, sigma=0.1 * sden, p0=[sden[0], 2, 4])  # p0 = [I_0b, b, n]
-                    plt.plot(centers, profile(centers, popt[0], popt[1], popt[2]), c=color, linestyle='dashed', label=label2)
+                    plt.plot(centers, profile(centers, popt[0], popt[1], popt[2]), c=color, label=label2)
                     
                     # Calculate bulge properties #
                     I_0b, b, n = popt[0], popt[1], popt[2]
@@ -293,10 +294,11 @@ class SurfaceDensityProfiles:
             except RuntimeError:
                 print('WARNING: Could not fit a profile')
         
-        rad = np.sqrt(stellar_data_tmp['Coordinates'][:, 0] ** 2 + stellar_data_tmp['Coordinates'][:, 1] ** 2)  # Radius of each particle.
-        ii = np.where((abs(stellar_data_tmp['Coordinates'][:, 2]) < 5))[0]  # Vertical cut in kpc.
+        cylindrical_distance = np.sqrt(
+            stellar_data_tmp['Coordinates'][:, 0] ** 2 + stellar_data_tmp['Coordinates'][:, 1] ** 2)  # Radius of each particle.
+        vertical_mask = np.where((abs(stellar_data_tmp['Coordinates'][:, 2]) < 5))[0]  # Vertical cut in kpc.
         
-        mass, edges = np.histogram(rad[ii], bins=50, range=(0, 30), weights=stellar_data_tmp['Mass'][ii])
+        mass, edges = np.histogram(cylindrical_distance[vertical_mask], bins=50, range=(0, 30), weights=stellar_data_tmp['Mass'][vertical_mask])
         centers = 0.5 * (edges[1:] + edges[:-1])
         surface = np.pi * (edges[1:] ** 2 - edges[:-1] ** 2)
         sden = np.divide(mass, surface)
@@ -306,7 +308,7 @@ class SurfaceDensityProfiles:
         
         try:
             popt, pcov = curve_fit(total_profile, centers, sden, sigma=0.1 * sden, p0=[sden_tmp[0], 2, sden[0], 2, 4])  # p0 = [I_0d, R_d, I_0b, b, n]
-            plt.plot(centers, total_profile(centers, popt[0], popt[1], popt[2], popt[3], popt[4]), c='k')
+            plt.plot(centers, total_profile(centers, popt[0], popt[1], popt[2], popt[3], popt[4]), c='k', label=r'$\mathrm{Total}$')
             
             # Calculate galactic properties #
             I_0d, R_d, I_0b, b, n = popt[0], popt[1], popt[2], popt[3], popt[4]
@@ -318,9 +320,10 @@ class SurfaceDensityProfiles:
         except RuntimeError:
             print('WARNING: Could not fit a profile')
         
-        f.text(0.5, 0.72,
-               '\n' r'$\mathrm{n} = %.2f$' '\n' r'$\mathrm{R_{d}} = %.2f$ kpc' '\n' r'$\mathrm{R_{eff}} = %.2f$ kpc' '\n' % (n, R_d, R_eff), size=16)
-        plt.legend(loc='upper right', fontsize=16, frameon=False, numpoints=2)
+        figure.text(0.5, 0.72,
+                    '\n' r'$\mathrm{n} = %.2f$' '\n' r'$\mathrm{R_{d}} = %.2f$ kpc' '\n' r'$\mathrm{R_{eff}} = %.2f$ kpc' '\n' % (n, R_d, R_eff),
+                    size=16)
+        plt.legend(loc='upper right', fontsize=16, frameon=False, numpoints=1)
         
         # Save the plot #
         plt.savefig(plots_path + str(group_number) + str(subgroup_number) + '-' + 'SDP' + '-' + date + '.png', bbox_inches='tight')

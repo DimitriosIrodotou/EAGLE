@@ -55,7 +55,7 @@ class DiscToTotalVsMass:
             
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
             
-            for group_number in np.sort(list(set(self.subhalo_data_tmp['GroupNumber']))):  # Loop over all the accepted haloes
+            for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all the accepted haloes
                 for subgroup_number in range(0, 1):
                     if args.rs:  # Read and save data.
                         start_local_time = time.time()  # Start the local time.
@@ -183,7 +183,7 @@ class DiscToTotalVsMass:
         """
         
         # Select the corresponding halo in order to get its centre of potential #
-        halo_mask = np.where(self.subhalo_data_tmp['GroupNumber'] == group_number)[0][subgroup_number]
+        halo_mask = np.where((self.subhalo_data_tmp['GroupNumber'] == group_number) & (self.subhalo_data_tmp['SubGroupNumber'] == subgroup_number))[0]
         
         # Mask the data to select galaxies with a given GroupNumber and SubGroupNumber and particles inside a 30kpc sphere #
         galaxy_mask = np.where((self.stellar_data['GroupNumber'] == group_number) & (self.stellar_data['SubGroupNumber'] == subgroup_number) & (
@@ -252,14 +252,11 @@ class DiscToTotalVsMass:
         # Set the style of the plots #
         sns.set()
         sns.set_style('ticks')
-        sns.set_context('notebook', font_scale=1.5)
+        sns.set_context('notebook', font_scale=1.6)
         
         # Normalise
-        # epsilon = 0.5 * np.subtract(1, np.cos((np.pi / 6))) / 16
-        # print(epsilon)
-        # print(min(disc_fractions_IT20))
+        # epsilon = 0.5 * np.subtract(1, np.cos((np.pi / 6)))
         # disc_fractions_IT20 = np.divide(1, np.subtract(1, epsilon)) * np.subtract(disc_fractions_IT20, epsilon)
-        # print(min(disc_fractions_IT20))
         
         # Generate the figure and define its parameters #
         plt.close()

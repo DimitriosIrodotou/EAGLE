@@ -41,8 +41,7 @@ class RADecDistribution:
         :param tag: redshift folder
         """
         
-        # Initialise arrays and a dictionary to store the data #
-        glx_unit_vectors = []
+        glx_angular_momenta = []  # Initialise an array to store the data.
         
         if not args.l:
             # Extract particle and subhalo attributes and convert them to astronomical units #
@@ -52,23 +51,24 @@ class RADecDistribution:
             
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
             
-            for group_number in np.sort(list(set(self.subhalo_data_tmp['GroupNumber']))):  # Loop over all masked haloes.
+            for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all masked haloes.
                 for subgroup_number in range(0, 1):
                     start_local_time = time.time()  # Start the local time.
                     
-                    glx_unit_vector = np.load(
-                        data_path + 'glx_unit_vectors/' + 'glx_unit_vector_' + str(group_number) + '_' + str(subgroup_number) + '.npy')
-                    glx_unit_vectors.append(glx_unit_vector)
+                    glx_angular_momentum = np.load(
+                        data_path + 'glx_angular_momenta/' + 'glx_angular_momentum_' + str(group_number) + '_' + str(subgroup_number) + '.npy')
+                    glx_angular_momenta.append(glx_angular_momentum)
                     
                     print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
             
-            np.save(data_path + 'glx_unit_vectors/' + 'glx_unit_vectors', glx_unit_vectors)
+            np.save(data_path + 'glx_angular_momenta/' + 'glx_angular_momenta', glx_angular_momenta)
         
         # Plot the data #
         start_local_time = time.time()  # Start the local time.
-        glx_unit_vectors = np.load(data_path + 'glx_unit_vectors/' + 'glx_unit_vectors.npy')
-        self.plot(glx_unit_vectors)
+        
+        glx_angular_momenta = np.load(data_path + 'glx_angular_momenta/' + 'glx_angular_momenta.npy')
+        self.plot(glx_angular_momenta)
         print('Plotted data for halo ' + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
@@ -123,10 +123,10 @@ class RADecDistribution:
     
     
     @staticmethod
-    def plot(glx_unit_vectors):
+    def plot(glx_angular_momentum):
         """
         Plot Ra and Dec for all galaxies.
-        :param glx_unit_vectors: from mask_galaxies
+        :param glx_angular_momentum: from mask_galaxies
         :return: None
         """
         
@@ -157,6 +157,7 @@ class RADecDistribution:
         plt.annotate(r'-150', xy=(-2.5 * np.pi / 3 - np.pi / 10, -np.pi / 65), xycoords='data', size=18)
         
         # Calculate the ra and dec of the (unit vector of) angular momentum for each particle #
+        glx_unit_vectors = np.divide(glx_angular_momentum, np.linalg.norm(glx_angular_momentum))
         glx_unit_vectors = glx_unit_vectors[~np.isnan(glx_unit_vectors).any(axis=1)]
         ra = np.degrees(np.arctan2(glx_unit_vectors[:, 1], glx_unit_vectors[:, 0]))
         dec = np.degrees(np.arcsin(glx_unit_vectors[:, 2]))
