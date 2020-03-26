@@ -186,3 +186,23 @@ class MorphoKinematics:
         abc = np.sqrt(eigval[[2, 0, 1]])
         # Return
         return ellip, triax, Transform, abc
+    
+    
+    @staticmethod
+    def half_mass_radius(stellar_data_tmp):
+        """
+        stellar_data_tmp: from mask_galaxies
+        :return: half_mass_radius, prc_spherical_radius
+        """
+        # Calculate the cylindrical distance of each particle and sort their masses based on that #
+        prc_spherical_radius = np.sqrt(np.sum(stellar_data_tmp['Coordinates'] ** 2, axis=1))
+        sort = np.argsort(prc_spherical_radius)
+        sorted_prc_spherical_radius = prc_spherical_radius[sort]
+        
+        # Calculate the half mass radius of the galaxy as the radius that contains 50% of the total stellar mass #
+        total_mass = np.sum(stellar_data_tmp['Mass'])
+        cumulative_mass = np.cumsum(stellar_data_tmp['Mass'][sort])
+        index = np.argmin(np.abs(cumulative_mass - (0.9 * total_mass)))
+        half_mass_radius = sorted_prc_spherical_radius[index]
+        
+        return half_mass_radius

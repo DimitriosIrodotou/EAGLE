@@ -17,6 +17,7 @@ from scipy.special import gamma
 from astropy_healpix import HEALPix
 from scipy.optimize import curve_fit
 from rotate_galaxies import RotateCoordinates
+from morpho_kinematics import MorphoKinematics
 
 # Create a parser and add argument to read data #
 parser = argparse.ArgumentParser(description='Fit profiles.')
@@ -221,7 +222,7 @@ class SurfaceDensityProfiles:
         figure = plt.figure(0, figsize=(10, 7.5))
         plt.grid(True)
         plt.yscale('log')
-        plt.axis([0.0, 30.0, 1e6, 1e10])
+        plt.axis([0.0, 50.0, 1e6, 1e10])
         plt.xlabel("$\mathrm{R [kpc]}$", size=16)
         plt.ylabel("$\mathrm{\Sigma [M_{\odot} kpc^{-2}]}$", size=16)
         plt.tick_params(direction='out', which='both', top='on', right='on')
@@ -259,12 +260,14 @@ class SurfaceDensityProfiles:
         masks = [disc_mask, bulge_mask]
         profiles = [exponential_profile, sersic_profile]
         for mask, color, profile, label, label2 in zip(masks, colors, profiles, labels, labels2):
-            component_mass = stellar_data_tmp['Mass'][mask]
+            half_mass_radius = MorphoKinematics.half_mass_radius(stellar_data_tmp)
             cylindrical_distance = np.sqrt(
                 stellar_data_tmp['Coordinates'][mask, 0] ** 2 + stellar_data_tmp['Coordinates'][mask, 1] ** 2)  # Radius of each particle.
-            vertical_mask = np.where((abs(stellar_data_tmp['Coordinates'][:, 2][mask]) < 5))[0]  # Vertical cut in kpc.
+            spatial_mask, = np.where(
+                (abs(stellar_data_tmp['Coordinates'][:, 2][mask]) < 5))# & (cylindrical_distance <  half_mass_radius))  # Vertical cut in kpc.
+            component_mass = stellar_data_tmp['Mass'][mask]
             
-            mass, edges = np.histogram(cylindrical_distance[vertical_mask], bins=50, range=(0, 30), weights=component_mass[vertical_mask])
+            mass, edges = np.histogram(cylindrical_distance[spatial_mask], bins=50, range=(0, 30), weights=component_mass[spatial_mask])
             centers = 0.5 * (edges[1:] + edges[:-1])
             surface = np.pi * (edges[1:] ** 2 - edges[:-1] ** 2)
             sden = np.divide(mass, surface)
@@ -296,9 +299,12 @@ class SurfaceDensityProfiles:
         
         cylindrical_distance = np.sqrt(
             stellar_data_tmp['Coordinates'][:, 0] ** 2 + stellar_data_tmp['Coordinates'][:, 1] ** 2)  # Radius of each particle.
-        vertical_mask = np.where((abs(stellar_data_tmp['Coordinates'][:, 2]) < 5))[0]  # Vertical cut in kpc.
+        half_mass_radius = MorphoKinematics.half_mass_radius(stellar_data_tmp)
+        spatial_mask, = np.where(
+            (abs(stellar_data_tmp['Coordinates'][:, 2]) < 5))# & (cylindrical_distance <  half_mass_radius))  # Vertical cut in kpc.
+        plt.axvline(x=2 * half_mass_radius, c='gray', lw=3, linestyle='dashed', label=r'$\mathrm{2*R_{h}}$')  # Vertical line at 2 * R1/2.
         
-        mass, edges = np.histogram(cylindrical_distance[vertical_mask], bins=50, range=(0, 30), weights=stellar_data_tmp['Mass'][vertical_mask])
+        mass, edges = np.histogram(cylindrical_distance[spatial_mask], bins=50, range=(0, 30), weights=stellar_data_tmp['Mass'][spatial_mask])
         centers = 0.5 * (edges[1:] + edges[:-1])
         surface = np.pi * (edges[1:] ** 2 - edges[:-1] ** 2)
         sden = np.divide(mass, surface)
@@ -323,9 +329,9 @@ class SurfaceDensityProfiles:
         figure.text(0.5, 0.72,
                     '\n' r'$\mathrm{n} = %.2f$' '\n' r'$\mathrm{R_{d}} = %.2f$ kpc' '\n' r'$\mathrm{R_{eff}} = %.2f$ kpc' '\n' % (n, R_d, R_eff),
                     size=16)
-        plt.legend(loc='upper right', fontsize=16, frameon=False, numpoints=1)
         
-        # Save the plot #
+        # Create the legend and save the figure #
+        plt.legend(loc='upper right', fontsize=16, frameon=False, numpoints=1)
         plt.savefig(plots_path + str(group_number) + str(subgroup_number) + '-' + 'SDP' + '-' + date + '.png', bbox_inches='tight')
         return None
 

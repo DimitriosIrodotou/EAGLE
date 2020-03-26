@@ -57,7 +57,7 @@ class MassSize:
     @staticmethod
     def read_galaxies(sim, tag):
         """
-         A method to extract particle and subhalo attribute.
+         Extract particle and subhalo attributes and convert them to astronomical units.
         :param sim: simulation directory
         :param tag: redshift folder
         :return: stellar_data, subhalo_data
@@ -86,7 +86,7 @@ class MassSize:
 
     def mask_galaxies(self, group_number, subgroup_number):
         """
-        A method to select galaxies.
+        Mask galaxies and normalise data.
         :param group_number: from list(set(self.subhalo_data['GroupNumber']))
         :param subgroup_number: from list(set(self.subhalo_data['SubGroupNumber']))
         :return: stellar_data_tmp, mask
@@ -125,7 +125,7 @@ class MassSize:
         sns.set_style('ticks')
         sns.set_context('notebook', font_scale=1.6)
 
-        # Generate the figures #
+        # Generate the figure and define its parameters #
         plt.close()
         figure = plt.figure(0, figsize=(10, 10))
 

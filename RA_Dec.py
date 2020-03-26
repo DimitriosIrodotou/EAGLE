@@ -319,7 +319,6 @@ class RADec:
                      s=10)  # In degrees.
         ax11.axvline(x=30, c='blue', lw=3, linestyle='dashed', label='D/T= %.3f ' % disc_fraction_IT20)  # Vertical line at 30 degrees.
         ax11.axvspan(0, 30, facecolor='0.2', alpha=0.5)  # Draw a vertical span.
-        ax11.legend(loc='upper center', fontsize=16, frameon=False, scatterpoints=3)
         
         # Calculate the kinematic diagnostics #
         kappa, discfrac, orbital, vrotsig, vrots, zaxis, momentum = MorphoKinematics.kinematics_diagnostics(
@@ -336,7 +335,6 @@ class RADec:
         ydata, edges = np.histogram(orbital, bins=100, range=[-1.7, 1.7], weights=stellar_data_tmp['Mass'] / np.sum(stellar_data_tmp['Mass']))
         ydata /= edges[1:] - edges[:-1]
         ax21.plot(0.5 * (edges[1:] + edges[:-1]), ydata, label='D/T = %.3f' % disc_fraction_07)
-        ax21.legend(loc='upper left', fontsize=16, frameon=False, scatterpoints=3)
         
         # Calculate and plot the angular distance between the (unit vector of) the galactic angular momentum and all the other grid cells #
         position_of_X = np.vstack([np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2])]).T
@@ -347,7 +345,6 @@ class RADec:
                      s=10)  # In degrees.
         ax10.axvline(x=90, c='red', lw=3, linestyle='dashed', label='D/T= %.3f ' % disc_fraction_00)  # Vertical line at 30 degrees.
         ax10.axvspan(90, 180, facecolor='0.2', alpha=0.5)  # Draw a vertical span.
-        ax10.legend(loc='upper center', fontsize=16, frameon=False, scatterpoints=3)
         
         # Calculate and plot the bar strength from Fourier modes of surface density as a function of radius plot #
         nbins = 40  # Number of radial bins.
@@ -375,9 +372,12 @@ class RADec:
         a2 = np.divide(np.sqrt(alpha_2[:] ** 2 + beta_2[:] ** 2), alpha_0[:])
         
         ax20.plot(r_m, a2, label='Bar strength: %.2f' % max(a2))
-        ax20.legend(loc='upper left', fontsize=16, frameon=False, scatterpoints=3)
         
-        # Save the plot #
+        # Create the legends and save the figure #
+        ax11.legend(loc='upper center', fontsize=16, frameon=False, scatterpoints=3)
+        ax21.legend(loc='upper left', fontsize=16, frameon=False, scatterpoints=3)
+        ax10.legend(loc='upper center', fontsize=16, frameon=False, scatterpoints=3)
+        ax20.legend(loc='upper left', fontsize=16, frameon=False, scatterpoints=3)
         plt.savefig(plots_path + str(group_number) + str(subgroup_number) + '-' + 'RD' + '-' + date + '.png', bbox_inches='tight')
         return None
 

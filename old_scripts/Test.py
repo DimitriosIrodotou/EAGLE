@@ -27,7 +27,7 @@ sns.set()
 sns.set_style('ticks')
 sns.set_context('notebook', font_scale=1.6)
 
-# Generate the figure #
+# Generate the figure and define its parameters #
 plt.close()
 figure = plt.figure(0, figsize=(20, 15))
 

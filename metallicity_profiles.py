@@ -13,9 +13,7 @@ import astropy.units as u
 import matplotlib.pyplot as plt
 import eagle_IO.eagle_IO.eagle_IO as E
 
-from scipy.special import gamma
 from astropy_healpix import HEALPix
-from scipy.optimize import curve_fit
 from rotate_galaxies import RotateCoordinates
 
 # Create a parser and add argument to read data #
@@ -54,7 +52,7 @@ class MetallicityProfiles:
             
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher that 1e8
         
-        for group_number in range(23, 24):
+        for group_number in range(1, 26):
             for subgroup_number in range(0, 1):
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
@@ -199,7 +197,7 @@ class MetallicityProfiles:
         # plt.yscale('log')
         # plt.axis([0.0, 30.0, 1e6, 1e10])
         plt.xlabel("$\mathrm{R [kpc]}$", size=16)
-        plt.ylabel("$\mathrm{\Sigma [M_{\odot} kpc^{-2}]}$", size=16)
+        plt.ylabel("$\mathrm{Z [Z_{\odot} kpc^{-2}]}$", size=16)
         plt.tick_params(direction='out', which='both', top='on', right='on')
         
         # Rotate coordinates and velocities of stellar particles wrt galactic angular momentum #
@@ -238,17 +236,14 @@ class MetallicityProfiles:
                 stellar_data_tmp['Coordinates'][mask, 0] ** 2 + stellar_data_tmp['Coordinates'][mask, 1] ** 2)  # Radius of each particle.
             vertical_mask = np.where((abs(stellar_data_tmp['Coordinates'][:, 2][mask]) < 5))[0]  # Vertical cut in kpc.
             
-            metals, edges = np.histogram(cylindrical_distance[vertical_mask], bins=30, range=[0.0, 30.0],
+            metals, edges = np.histogram(cylindrical_distance[vertical_mask], bins=100, range=[0.0, 30.0],
                                          weights=component_mass[vertical_mask] * stellar_data_tmp['Metallicity'][vertical_mask])
-            mass, edges = np.histogram(cylindrical_distance[vertical_mask], bins=30, range=[0.0, 30.0], weights=component_mass[vertical_mask])
+            mass, edges = np.histogram(cylindrical_distance[vertical_mask], bins=100, range=[0.0, 30.0], weights=component_mass[vertical_mask])
             center = 0.5 * (edges[1:] + edges[:-1])
             plt.plot(center, metals / mass / 0.0134, c=color, label=label)
-            
-            # set_axes(isnap, ax, "$r\,\mathrm{[kpc]}$", "$Z\,\mathrm{[Z_\odot]}$", "$\mathrm{Gas\ metallicity}$", [0.5, 20.0])
         
+        # Create the legend and save the figure #
         plt.legend(loc='upper right', fontsize=16, frameon=False, numpoints=1)
-        
-        # Save the plot #
         plt.savefig(plots_path + str(group_number) + str(subgroup_number) + '-' + 'MP' + '-' + date + '.png', bbox_inches='tight')
         return None
 

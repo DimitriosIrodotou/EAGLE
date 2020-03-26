@@ -312,14 +312,14 @@ class DiscToTotalVsKappaRot:
         
         main_plot.scatter(kappas, disc_fractions_IT20, s=1, label='$D/T_{30\degree}$', color='black')
         main_plot.scatter(kappas, disc_fractions, s=1, label=r'$D/T_{\vec{J}_{b} = 0}$', color='brown')
-        main_plot.legend(loc='upper left', frameon=False, markerscale=5)
         # main_plot.legend([median_IT20, fill_IT20, median, fill],
         #                  [r'$\mathrm{This\; work: Median}$', r'$\mathrm{This\; work: 16^{th}-84^{th}\,\%ile}$'], frameon=False, loc=2)
         
         y_hist.hist(disc_fractions_IT20, bins=np.linspace(-1, 1, 50), histtype='step', orientation='horizontal', color='black')
         y_hist.hist(disc_fractions, bins=np.linspace(-1, 1, 50), histtype='step', orientation='horizontal', color='brown')
         
-        # Save the plot #
+        # Create the legend and save the figure #
+        main_plot.legend(loc='upper left', frameon=False, markerscale=5)
         plt.savefig(plots_path + 'DTTK' + '-' + date + '.png', bbox_inches='tight')
         return None
 

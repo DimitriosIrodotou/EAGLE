@@ -134,12 +134,12 @@ class Position3D:
     
     def mask_haloes(self):
         """
-        A method to mask haloes.
+        Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e8 Msun.
         :return: subhalo_data_tmp
         """
         
         # Mask the data to select haloes more #
-        mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 2.5e8)
+        mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 1e8)
         
         # Mask the temporary dictionary for each galaxy #
         subhalo_data_tmp = {}
@@ -151,7 +151,7 @@ class Position3D:
     
     def mask_galaxies(self, group_number, subgroup_number):
         """
-        A method to mask galaxies.
+        Mask galaxies and normalise data.
         :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber']))
         :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
         :return: stellar_data_tmp
@@ -190,7 +190,7 @@ class Position3D:
         sns.set_style('ticks')
         sns.set_context('notebook', font_scale=1.6)
         
-        # Generate the figures #
+        # Generate the figure and define its parameters #
         plt.close()
         figure = plt.figure(0, figsize=(20, 15))
         gs = gridspec.GridSpec(2, 1)

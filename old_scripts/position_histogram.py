@@ -134,12 +134,12 @@ class PositionHistogram:
     
     def mask_haloes(self):
         """
-        A method to mask haloes.
+        Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e8 Msun.
         :return: subhalo_data_tmp
         """
         
         # Mask the data to select haloes more #
-        mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 2.5e8)
+        mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 1e8)
         
         # Mask the temporary dictionary for each galaxy #
         subhalo_data_tmp = {}
@@ -151,7 +151,7 @@ class PositionHistogram:
     
     def mask_galaxies(self, group_number, subgroup_number):
         """
-        A method to mask galaxies.
+        Mask galaxies and normalise data.
         :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber']))
         :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
         :return: stellar_data_tmp
@@ -224,7 +224,7 @@ class PositionHistogram:
         # Generate the XY projection #
         count, xedges, yedges = np.histogram2d(list(zip(*stellar_data_tmp['Coordinates']))[0], list(zip(*stellar_data_tmp['Coordinates']))[1],
                                                weights=stellar_data_tmp['Mass'], bins=100, range=[[-20, 20], [-20, 20]])
-        plleft = axleft.imshow(count, extent=[-20, 20, -20, 20], origin='lower', cmap='nipy_spectral_r', interpolation='bicubic', aspect='auto')
+        plleft = axleft.imshow(count.T, extent=[-20, 20, -20, 20], origin='lower', cmap='nipy_spectral_r', interpolation='bicubic', aspect='auto')
         
         # Generate the color bar #
         cbar1 = plt.colorbar(plleft, cax=axcbar1, orientation='horizontal')
@@ -233,7 +233,7 @@ class PositionHistogram:
         # Generate the XZ projection #
         count, xedges, yedges = np.histogram2d(list(zip(*stellar_data_tmp['Coordinates']))[0], list(zip(*stellar_data_tmp['Coordinates']))[2],
                                                weights=stellar_data_tmp['Mass'], bins=100, range=[[-20, 20], [-20, 20]])
-        plmid = axmid.imshow(count, extent=[-20, 20, -20, 20], origin='lower', cmap='nipy_spectral_r', interpolation='bicubic', aspect='auto')
+        plmid = axmid.imshow(count.T, extent=[-20, 20, -20, 20], origin='lower', cmap='nipy_spectral_r', interpolation='bicubic', aspect='auto')
         # Generate the color bar #
         cbar2 = plt.colorbar(plmid, cax=axcbar2, orientation='horizontal')
         cbar2.set_label('$\Sigma_\mathrm{stars}\,\mathrm{[M_\odot\,kpc^{-2}]}$')
@@ -241,7 +241,7 @@ class PositionHistogram:
         # Generate the ZY projection #
         count, xedges, yedges = np.histogram2d(list(zip(*stellar_data_tmp['Coordinates']))[1], list(zip(*stellar_data_tmp['Coordinates']))[2],
                                                weights=stellar_data_tmp['Mass'], bins=100, range=[[-20, 20], [-20, 20]])
-        plright = axright.imshow(count, extent=[-20, 20, -20, 20], origin='lower', cmap='nipy_spectral_r', interpolation='bicubic', aspect='auto')
+        plright = axright.imshow(count.T, extent=[-20, 20, -20, 20], origin='lower', cmap='nipy_spectral_r', interpolation='bicubic', aspect='auto')
         
         # Generate the color bar #
         cbar3 = plt.colorbar(plright, cax=axcbar3, orientation='horizontal')
