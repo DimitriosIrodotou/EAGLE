@@ -202,7 +202,7 @@ class MorphoKinematics:
         # Calculate the half mass radius of the galaxy as the radius that contains 50% of the total stellar mass #
         total_mass = np.sum(stellar_data_tmp['Mass'])
         cumulative_mass = np.cumsum(stellar_data_tmp['Mass'][sort])
-        index = np.argmin(np.abs(cumulative_mass - (0.9 * total_mass)))
+        index = np.argmin(np.abs(cumulative_mass - (0.8 * total_mass)))
         half_mass_radius = sorted_prc_spherical_radius[index]
         
         return half_mass_radius

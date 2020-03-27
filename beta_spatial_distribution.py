@@ -8,7 +8,6 @@ import matplotlib
 matplotlib.use('Agg')
 
 import numpy as np
-import seaborn as sns
 import matplotlib.cbook
 import astropy.units as u
 import matplotlib.pyplot as plt
@@ -60,9 +59,8 @@ class BetaSpatialDistribution:
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
                     
-                    stellar_data_tmp = self.mask_galaxies(group_number, subgroup_number)  # Mask galaxies and normalise data.
-                    
                     # Save data in numpy arrays #
+                    stellar_data_tmp = self.mask_galaxies(group_number, subgroup_number)  # Mask galaxies and normalise data.
                     np.save(data_path + 'stellar_data_tmps/' + 'stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number), stellar_data_tmp)
                     print('Masked and saved data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                         round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
@@ -189,12 +187,6 @@ class BetaSpatialDistribution:
         :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
         :return: None
         """
-        
-        # Set the style of the plots #
-        sns.set()
-        sns.set_style('ticks')
-        sns.set_context('notebook', font_scale=1.6)
-        
         # Generate the figure and define its parameters #
         plt.close()
         plt.figure(0, figsize=(20, 15))

@@ -8,7 +8,6 @@ import matplotlib
 matplotlib.use('Agg')
 
 import numpy as np
-import seaborn as sns
 import matplotlib.cbook
 import astropy.units as u
 import matplotlib.pyplot as plt
@@ -223,12 +222,6 @@ class BulgeToTotalProbabilityDensityFunction:
         :param disc_fractions_IT20: from mask_galaxies
         :return: None
         """
-        
-        # Set the style of the plots #
-        sns.set()
-        sns.set_style('ticks')
-        sns.set_context('notebook', font_scale=1.6)
-        
         # Generate the figure and define its parameters #
         plt.close()
         figure = plt.figure(0, figsize=(20, 15))
@@ -257,7 +250,7 @@ class BulgeToTotalProbabilityDensityFunction:
         BBT19 = np.genfromtxt('./Obs_Data/BBT19.csv', delimiter=',', names=['BT', 'f'])
         ax00.scatter(BBT19['BT'], BBT19['f'], color='red', s=3, marker='_', zorder=2, label="$\mathrm{Bluck+19}$")
         
-        # Weight each bin by its contribution to the total number of values and make a histogram #
+        # Weight each bin by its contribution to the total number of values and create a histogram #
         weights = np.divide(np.ones_like(bulge_fraction[mass_mask]), float(len(bulge_fraction[mass_mask])))
         ax00.hist(bulge_fraction[mass_mask], align='left', weights=weights, histtype='step', edgecolor='black', bins=20)
         figure.text(0.0, 0.95, r'$\mathrm{M_{\bigstar}>10^{10}M_{\odot}}$', fontsize=16, transform=ax00.transAxes)

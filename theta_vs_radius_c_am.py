@@ -16,7 +16,7 @@ from astropy_healpix import HEALPix
 from rotate_galaxies import RotateCoordinates
 
 # Create a parser and add argument to read data #
-parser = argparse.ArgumentParser(description='Plot metallicity profiles.')
+parser = argparse.ArgumentParser(description='Fit profiles.')
 parser.add_argument('-r', action='store_true', help='Read data')
 parser.add_argument('-l', action='store_true', help='Load data')
 parser.add_argument('-rs', action='store_true', help='Read data and save to numpy arrays')
@@ -27,9 +27,9 @@ start_global_time = time.time()  # Start the global time.
 warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
 
 
-class MetallicityProfiles:
+class ThetaVsRadiusCAM:
     """
-    Plot metallicity radial profiles to the components produced by RA_Dec_surface_density.
+    Fit surface density profiles to the components produced by RA_Dec_surface_density.
     """
     
     
@@ -51,6 +51,7 @@ class MetallicityProfiles:
             
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher that 1e8
         
+        # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all masked haloes.
         for group_number in range(1, 26):
             for subgroup_number in range(0, 1):
                 if args.rs:  # Read and save data.
@@ -80,7 +81,6 @@ class MetallicityProfiles:
                     stellar_data_tmp = np.load(
                         data_path + 'stellar_data_tmps/' + 'stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy',
                         allow_pickle=True)
-                    
                     stellar_data_tmp = stellar_data_tmp.item()
                     print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
@@ -92,7 +92,8 @@ class MetallicityProfiles:
                 print('Plotted data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
                 print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished MetallicityProfiles for' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished ThetaVsRadiusDistribution for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (
+            time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
@@ -115,7 +116,7 @@ class MetallicityProfiles:
         stellar_data = {}
         particle_type = '4'
         file_type = 'PARTDATA'
-        for attribute in ['Coordinates', 'GroupNumber', 'Mass', 'Metallicity', 'SubGroupNumber', 'Velocity']:
+        for attribute in ['Coordinates', 'GroupNumber', 'Mass', 'SubGroupNumber', 'Velocity']:
             stellar_data[attribute] = E.read_array(file_type, simulation_path, tag, '/PartType' + particle_type + '/' + attribute, numThreads=8)
         
         # Convert attributes to astronomical units #
@@ -185,13 +186,17 @@ class MetallicityProfiles:
         """
         # Generate the figure and define its parameters #
         plt.close()
-        figure = plt.figure(0, figsize=(10, 7.5))
+        figure, ax = plt.subplots(1, figsize=(10, 7.5))
         plt.grid(True)
-        # plt.yscale('log')
-        # plt.axis([0.0, 30.0, 1e6, 1e10])
-        plt.xlabel("$\mathrm{R [kpc]}$", size=16)
-        plt.ylabel("$\mathrm{Z [Z_{\odot} kpc^{-2}]}$", size=16)
+        plt.xscale('log')
+        plt.yscale('log')
+        plt.axis([1e-2, 4e1, 1e-1, 2e2])
+        plt.xlabel(r'$\mathrm{R\;[kpc]}$', size=16)
+        plt.ylabel(r'$\mathrm{Angular\;distance\;from\;densest\;grid\;cell\;[\degree]}$', size=16)
         plt.tick_params(direction='out', which='both', top='on', right='on')
+        
+        ax.annotate(r'$\mathrm{Disc}$', xy=(1e-2, 2e1), xycoords='data', size=16)
+        ax.annotate(r'$\mathrm{Bulge}$', xy=(1e-2, 4e1), xycoords='data', size=16)
         
         # Rotate coordinates and velocities of stellar particles wrt galactic angular momentum #
         stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_angular_momentum, glx_angular_momentum = RotateCoordinates.rotate_Jz(
@@ -220,32 +225,24 @@ class MetallicityProfiles:
         disc_mask = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))[0]
         bulge_mask = np.where(angular_theta_from_densest > np.divide(np.pi, 6.0))[0]
         
-        colors = ['blue', 'red']
-        labels = ['Disc', 'Bulge']
-        masks = [disc_mask, bulge_mask]
-        for mask, color, label in zip(masks, colors, labels):
-            component_mass = stellar_data_tmp['Mass'][mask]
-            cylindrical_distance = np.sqrt(
-                stellar_data_tmp['Coordinates'][mask, 0] ** 2 + stellar_data_tmp['Coordinates'][mask, 1] ** 2)  # Radius of each particle.
-            vertical_mask = np.where((abs(stellar_data_tmp['Coordinates'][:, 2][mask]) < 5))[0]  # Vertical cut in kpc.
-            
-            metals, edges = np.histogram(cylindrical_distance[vertical_mask], bins=100, range=[0.0, 30.0],
-                                         weights=component_mass[vertical_mask] * stellar_data_tmp['Metallicity'][vertical_mask])
-            mass, edges = np.histogram(cylindrical_distance[vertical_mask], bins=100, range=[0.0, 30.0], weights=component_mass[vertical_mask])
-            center = 0.5 * (edges[1:] + edges[:-1])
-            plt.plot(center, metals / mass / 0.0134, c=color, label=label)
-        
-        # Create the legend and save the figure #
-        plt.legend(loc='upper right', fontsize=16, frameon=False, numpoints=1)
-        plt.savefig(plots_path + str(group_number) + str(subgroup_number) + '-' + 'MP' + '-' + date + '.png', bbox_inches='tight')
+        for mask in [disc_mask, bulge_mask]:
+            prc_spherical_radius = np.sqrt(np.sum(stellar_data_tmp['Coordinates'] ** 2, axis=1))  # Radius of each particle.
+            plot = plt.scatter(prc_spherical_radius[mask], angular_theta_from_densest[mask] * np.divide(180.0, np.pi),
+                               c=np.log10(np.linalg.norm(prc_angular_momentum[mask], axis=1)), vmin=5, vmax=12, cmap='nipy_spectral_r', s=3)
+        plt.axhline(y=30, c='black', lw=3, linestyle='dashed')  # Horizontal line at 30 degrees.
+        cbar = plt.colorbar(plot, ax=ax)
+        cbar.set_label(r'$\mathrm{log_{10}(|\vec{J_{prc,d}}| / (M_{\odot}\; kpc\; km\; s^{-1}))}$')
+
+        # Save the plot #
+        plt.savefig(plots_path + str(group_number) + str(subgroup_number) + '-' + 'TVRCAM' + '-' + date + '.png', bbox_inches='tight')
         return None
 
 
 if __name__ == '__main__':
     tag = '027_z000p101'
     simulation_path = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
-    plots_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/MP/'  # Path to save plots.
+    plots_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/TVRCAM/'  # Path to save plots.
     data_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/'  # Path to save/load data.
     if not os.path.exists(plots_path):
         os.makedirs(plots_path)
-    x = MetallicityProfiles(simulation_path, tag)
+    x = ThetaVsRadiusCAM(simulation_path, tag)

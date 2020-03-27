@@ -43,7 +43,7 @@ class ReadAddProperties:
             # Mask galaxies and normalise data #
             stellar_data_tmp, glx_mass, glx_angular_momentum, disc_fraction, rotational_over_dispersion, kappa = self.mask_galaxies(group_number,
                                                                                                                                     subgroup_number)
-            
+            #TODO These don't keep information properly - can't figure out which galaxy is which.
             kappas.append(kappa)
             glx_masses.append(glx_mass)
             disc_fractions.append(disc_fraction)
@@ -79,7 +79,7 @@ class ReadAddProperties:
         # Load subhalo data in h-free physical CGS units #
         subhalo_data = {}
         file_type = 'SUBFIND'
-        for attribute in ['ApertureMeasurements/Mass/030kpc', 'CentreOfPotential', 'GroupNumber', 'SubGroupNumber']:
+        for attribute in ['ApertureMeasurements/Mass/030kpc', 'CentreOfPotential', 'GroupNumber', 'InitialMassWeightedStellarAge', 'SubGroupNumber']:
             subhalo_data[attribute] = E.read_array(file_type, simulation_path, tag, '/Subhalo/' + attribute, numThreads=8)
         
         # Load particle data in h-free physical CGS units #

@@ -8,7 +8,6 @@ import matplotlib
 matplotlib.use('Agg')
 
 import numpy as np
-import seaborn as sns
 import matplotlib.cbook
 import astropy.units as u
 import matplotlib.pyplot as plt
@@ -200,12 +199,6 @@ class RADecProperties:
         :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
         :return: None
         """
-        
-        # Set the style of the plots #
-        sns.set()
-        sns.set_style('ticks')
-        sns.set_context('notebook', font_scale=1.6)
-        
         # Generate the figure and define its parameters #
         plt.close()
         figure = plt.figure(0, figsize=(20, 15))

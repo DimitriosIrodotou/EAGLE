@@ -4,32 +4,37 @@ import time
 import warnings
 import argparse
 import matplotlib
+import access_database
 
 matplotlib.use('Agg')
+
 import numpy as np
 import matplotlib.cbook
 import astropy.units as u
 import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
 import eagle_IO.eagle_IO.eagle_IO as E
 
+from matplotlib import gridspec
 from astropy_healpix import HEALPix
 from rotate_galaxies import RotateCoordinates
+from morpho_kinematics import MorphoKinematics
 
 # Create a parser and add argument to read data #
-parser = argparse.ArgumentParser(description='Plot metallicity profiles.')
+parser = argparse.ArgumentParser(description='Create bar strength plot.')
 parser.add_argument('-r', action='store_true', help='Read data')
 parser.add_argument('-l', action='store_true', help='Load data')
 parser.add_argument('-rs', action='store_true', help='Read data and save to numpy arrays')
 args = parser.parse_args()
 
-date = time.strftime('%d_%m_%y_%H%M')  # Date.
+date = time.strftime('%d_%m_%y_%H%M')  # Date
 start_global_time = time.time()  # Start the global time.
-warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
+warnings.filterwarnings('ignore', category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
 
 
-class MetallicityProfiles:
+class BarStrength:
     """
-    Plot metallicity radial profiles to the components produced by RA_Dec_surface_density.
+    For each galaxy create: a bar strength plot.
     """
     
     
@@ -37,7 +42,7 @@ class MetallicityProfiles:
         """
         A constructor method for the class.
         :param simulation_path: simulation directory
-        :param tag: redshift folder
+        :param tag: redshift directory
         """
         
         p = 1  # Counter.
@@ -49,16 +54,16 @@ class MetallicityProfiles:
             print('Read data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
             print('–––––––––––––––––––––––––––––––––––––––––––––')
             
-            self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher that 1e8
+            self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e8 Msun.
         
-        for group_number in range(1, 26):
-            for subgroup_number in range(0, 1):
+        # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all masked haloes.
+        for group_number in range(25, 26):  # Loop over all masked haloes.
+            for subgroup_number in range(0, 1):  # Get centrals only.
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
                     
-                    stellar_data_tmp = self.mask_galaxies(group_number, subgroup_number)  # Mask galaxies and normalise data.
-                    
                     # Save data in numpy arrays #
+                    stellar_data_tmp = self.mask_galaxies(group_number, subgroup_number)  # Mask galaxies and normalise data.
                     np.save(data_path + 'stellar_data_tmps/' + 'stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number), stellar_data_tmp)
                     print('Masked and saved data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                         round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
@@ -77,10 +82,10 @@ class MetallicityProfiles:
                 elif args.l:  # Load data.
                     start_local_time = time.time()  # Start the local time.
                     
+                    # Load data from numpy arrays #
                     stellar_data_tmp = np.load(
                         data_path + 'stellar_data_tmps/' + 'stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy',
                         allow_pickle=True)
-                    
                     stellar_data_tmp = stellar_data_tmp.item()
                     print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
@@ -92,7 +97,7 @@ class MetallicityProfiles:
                 print('Plotted data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
                 print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished MetallicityProfiles for' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished BarStrength for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
@@ -115,7 +120,7 @@ class MetallicityProfiles:
         stellar_data = {}
         particle_type = '4'
         file_type = 'PARTDATA'
-        for attribute in ['Coordinates', 'GroupNumber', 'Mass', 'Metallicity', 'SubGroupNumber', 'Velocity']:
+        for attribute in ['Coordinates', 'GroupNumber', 'Mass', 'SubGroupNumber', 'Velocity']:
             stellar_data[attribute] = E.read_array(file_type, simulation_path, tag, '/PartType' + particle_type + '/' + attribute, numThreads=8)
         
         # Convert attributes to astronomical units #
@@ -175,9 +180,10 @@ class MetallicityProfiles:
         return stellar_data_tmp
     
     
-    def plot(self, stellar_data_tmp, group_number, subgroup_number):
+    @staticmethod
+    def plot(stellar_data_tmp, group_number, subgroup_number):
         """
-        Plot surface density profiles.
+        Create a bar strength plot.
         :param stellar_data_tmp: from mask_galaxies
         :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber']))
         :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
@@ -185,67 +191,62 @@ class MetallicityProfiles:
         """
         # Generate the figure and define its parameters #
         plt.close()
-        figure = plt.figure(0, figsize=(10, 7.5))
+        plt.figure(0, figsize=(10, 7.5))
+        
         plt.grid(True)
-        # plt.yscale('log')
-        # plt.axis([0.0, 30.0, 1e6, 1e10])
-        plt.xlabel("$\mathrm{R [kpc]}$", size=16)
-        plt.ylabel("$\mathrm{Z [Z_{\odot} kpc^{-2}]}$", size=16)
-        plt.tick_params(direction='out', which='both', top='on', right='on')
+        plt.xlim(0.0, 10.0)
+        plt.ylim(-0.2, 1.2)
+        plt.xlabel('R [kpc]')
+        plt.ylabel('$\mathrm{A_{2}}$')
         
-        # Rotate coordinates and velocities of stellar particles wrt galactic angular momentum #
-        stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_angular_momentum, glx_angular_momentum = RotateCoordinates.rotate_Jz(
-            stellar_data_tmp)
+        # Calculate the angular momentum for each particle and for the galaxy and the unit vector parallel to the galactic angular momentum vector #
+        prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
+                                                                                  stellar_data_tmp['Velocity'])  # Msun kpc km s-1
+        glx_angular_momentum = np.sum(prc_angular_momentum, axis=0)
+        glx_unit_vector = np.divide(glx_angular_momentum, np.linalg.norm(glx_angular_momentum))
         
-        # Calculate the ra and dec of the (unit vector of) angular momentum for each particle #
-        prc_unit_vector = np.divide(prc_angular_momentum, np.linalg.norm(prc_angular_momentum, axis=1)[:, np.newaxis])
-        ra = np.degrees(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]))
-        dec = np.degrees(np.arcsin(prc_unit_vector[:, 2]))
+        # Rotate coordinates and velocities of stellar particles so the galactic angular momentum points along the x axis #
+        stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_unit_vector, glx_unit_vector = RotateCoordinates.rotate_X(stellar_data_tmp,
+                                                                                                                                     glx_unit_vector)
         
-        # Plot a HEALPix histogram #
-        nside = 2 ** 5  # Define the resolution of the grid (number of divisions along the side of a base-resolution pixel).
-        hp = HEALPix(nside=nside)  # Initialise the HEALPix pixellisation class.
-        indices = hp.lonlat_to_healpix(ra * u.deg, dec * u.deg)  # Create list of HEALPix indices from particles' ra and dec.
-        density = np.bincount(indices, minlength=hp.npix)  # Count number of points in each HEALPix pixel.
+        # Calculate and plot the bar strength from Fourier modes of surface density as a function of radius plot #
+        nbins = 40  # Number of radial bins.
+        r = np.sqrt(stellar_data_tmp['Coordinates'][:, 2] ** 2 + stellar_data_tmp['Coordinates'][:, 1] ** 2)  # Radius of each particle.
         
-        # Find location of density maximum #
-        index_densest = np.argmax(density)
-        lon_densest = (hp.healpix_to_lonlat([index_densest])[0].value + np.pi) % (2 * np.pi) - np.pi
-        lat_densest = (hp.healpix_to_lonlat([index_densest])[1].value + np.pi / 2) % (2 * np.pi) - np.pi / 2
+        # Initialise Fourier components #
+        r_m = np.zeros(nbins)
+        beta_2 = np.zeros(nbins)
+        alpha_0 = np.zeros(nbins)
+        alpha_2 = np.zeros(nbins)
         
-        # Calculate and plot the disc (bulge) mass surface density as the mass within (outside) 30 degrees from the densest pixel #
-        angular_theta_from_densest = np.arccos(
-            np.sin(lat_densest) * np.sin(np.arcsin(prc_unit_vector[:, 2])) + np.cos(lat_densest) * np.cos(np.arcsin(prc_unit_vector[:, 2])) * np.cos(
-                lon_densest - np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0])))  # In radians.
-        disc_mask = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))[0]
-        bulge_mask = np.where(angular_theta_from_densest > np.divide(np.pi, 6.0))[0]
+        # Split up galaxy in radius bins and calculate Fourier components #
+        for i in range(0, nbins):
+            r_s = float(i) * 0.25
+            r_b = float(i) * 0.25 + 0.25
+            r_m[i] = float(i) * 0.25 + 0.125
+            xfit = stellar_data_tmp['Coordinates'][:, 2][(r < r_b) & (r > r_s)]
+            yfit = stellar_data_tmp['Coordinates'][:, 1][(r < r_b) & (r > r_s)]
+            for k in range(0, len(xfit)):
+                th_i = np.arctan2(yfit[k], xfit[k])
+                alpha_0[i] = alpha_0[i] + 1
+                alpha_2[i] = alpha_2[i] + np.cos(2 * th_i)
+                beta_2[i] = beta_2[i] + np.sin(2 * th_i)
         
-        colors = ['blue', 'red']
-        labels = ['Disc', 'Bulge']
-        masks = [disc_mask, bulge_mask]
-        for mask, color, label in zip(masks, colors, labels):
-            component_mass = stellar_data_tmp['Mass'][mask]
-            cylindrical_distance = np.sqrt(
-                stellar_data_tmp['Coordinates'][mask, 0] ** 2 + stellar_data_tmp['Coordinates'][mask, 1] ** 2)  # Radius of each particle.
-            vertical_mask = np.where((abs(stellar_data_tmp['Coordinates'][:, 2][mask]) < 5))[0]  # Vertical cut in kpc.
-            
-            metals, edges = np.histogram(cylindrical_distance[vertical_mask], bins=100, range=[0.0, 30.0],
-                                         weights=component_mass[vertical_mask] * stellar_data_tmp['Metallicity'][vertical_mask])
-            mass, edges = np.histogram(cylindrical_distance[vertical_mask], bins=100, range=[0.0, 30.0], weights=component_mass[vertical_mask])
-            center = 0.5 * (edges[1:] + edges[:-1])
-            plt.plot(center, metals / mass / 0.0134, c=color, label=label)
+        a2 = np.divide(np.sqrt(alpha_2[:] ** 2 + beta_2[:] ** 2), alpha_0[:])
         
-        # Create the legend and save the figure #
-        plt.legend(loc='upper right', fontsize=16, frameon=False, numpoints=1)
-        plt.savefig(plots_path + str(group_number) + str(subgroup_number) + '-' + 'MP' + '-' + date + '.png', bbox_inches='tight')
+        plt.plot(r_m, a2, label='Bar strength: %.2f' % max(a2))
+        
+        # Create the legends and save the figure #
+        plt.legend(loc='upper left', fontsize=16, frameon=False, scatterpoints=3)
+        plt.savefig(plots_path + str(group_number) + str(subgroup_number) + '-' + 'BS' + '-' + date + '.png', bbox_inches='tight')
         return None
 
 
 if __name__ == '__main__':
     tag = '027_z000p101'
     simulation_path = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
-    plots_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/MP/'  # Path to save plots.
+    plots_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/BS/'  # Path to save plots.
     data_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/'  # Path to save/load data.
     if not os.path.exists(plots_path):
         os.makedirs(plots_path)
-    x = MetallicityProfiles(simulation_path, tag)
+    x = BarStrength(simulation_path, tag)

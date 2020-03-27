@@ -8,7 +8,6 @@ import matplotlib
 matplotlib.use('Agg')
 
 import numpy as np
-import seaborn as sns
 import matplotlib.cbook
 import astropy.units as u
 import matplotlib.pyplot as plt
@@ -246,12 +245,6 @@ class DiscToTotalVsKappaRot:
         :param disc_fractions_IT20: from mask_galaxies
         :return: None
         """
-        
-        # Set the style of the plots #
-        sns.set()
-        sns.set_style('ticks')
-        sns.set_context('notebook', font_scale=1.6)
-        
         # Generate the figure and define its parameters #
         plt.close()
         figure = plt.figure(figsize=(10, 7.5))

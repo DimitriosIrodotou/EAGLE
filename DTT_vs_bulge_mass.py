@@ -8,7 +8,6 @@ import matplotlib
 matplotlib.use('Agg')
 
 import numpy as np
-import seaborn as sns
 import matplotlib.cbook
 import astropy.units as u
 import matplotlib.pyplot as plt
@@ -248,12 +247,6 @@ class DiscToTotalVsMass:
         :param disc_fractions_IT20: from mask_galaxies
         :return: None
         """
-        
-        # Set the style of the plots #
-        sns.set()
-        sns.set_style('ticks')
-        sns.set_context('notebook', font_scale=1.6)
-        
         # Normalise
         # epsilon = 0.5 * np.subtract(1, np.cos((np.pi / 6)))
         # disc_fractions_IT20 = np.divide(1, np.subtract(1, epsilon)) * np.subtract(disc_fractions_IT20, epsilon)

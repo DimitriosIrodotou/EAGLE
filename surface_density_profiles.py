@@ -7,7 +7,6 @@ import matplotlib
 
 matplotlib.use('Agg')
 import numpy as np
-import seaborn as sns
 import matplotlib.cbook
 import astropy.units as u
 import matplotlib.pyplot as plt
@@ -56,7 +55,7 @@ class SurfaceDensityProfiles:
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher that 1e8
         
         # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all masked haloes.
-        for group_number in range(1, 26):
+        for group_number in range(15, 26):
             for subgroup_number in range(0, 1):
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
@@ -96,7 +95,8 @@ class SurfaceDensityProfiles:
                 print('Plotted data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
                 print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished SurfaceDensityProfiles ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
+        print(
+            'Finished SurfaceDensityProfiles for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
@@ -212,17 +212,12 @@ class SurfaceDensityProfiles:
             return b_n
         
         
-        # Set the style of the plots #
-        sns.set()
-        sns.set_style('ticks')
-        sns.set_context('notebook', font_scale=1.6)
-        
         # Generate the figure and define its parameters #
         plt.close()
         figure = plt.figure(0, figsize=(10, 7.5))
         plt.grid(True)
         plt.yscale('log')
-        plt.axis([0.0, 50.0, 1e6, 1e10])
+        plt.axis([0.0, 30.0, 1e6, 1e10])
         plt.xlabel("$\mathrm{R [kpc]}$", size=16)
         plt.ylabel("$\mathrm{\Sigma [M_{\odot} kpc^{-2}]}$", size=16)
         plt.tick_params(direction='out', which='both', top='on', right='on')
@@ -260,14 +255,12 @@ class SurfaceDensityProfiles:
         masks = [disc_mask, bulge_mask]
         profiles = [exponential_profile, sersic_profile]
         for mask, color, profile, label, label2 in zip(masks, colors, profiles, labels, labels2):
-            half_mass_radius = MorphoKinematics.half_mass_radius(stellar_data_tmp)
             cylindrical_distance = np.sqrt(
                 stellar_data_tmp['Coordinates'][mask, 0] ** 2 + stellar_data_tmp['Coordinates'][mask, 1] ** 2)  # Radius of each particle.
-            spatial_mask, = np.where(
-                (abs(stellar_data_tmp['Coordinates'][:, 2][mask]) < 5))# & (cylindrical_distance <  half_mass_radius))  # Vertical cut in kpc.
+            vertical_mask, = np.where(abs(stellar_data_tmp['Coordinates'][:, 2][mask]) < 5)  # Vertical cut in kpc.
             component_mass = stellar_data_tmp['Mass'][mask]
             
-            mass, edges = np.histogram(cylindrical_distance[spatial_mask], bins=50, range=(0, 30), weights=component_mass[spatial_mask])
+            mass, edges = np.histogram(cylindrical_distance[vertical_mask], bins=50, range=(0, 30), weights=component_mass[vertical_mask])
             centers = 0.5 * (edges[1:] + edges[:-1])
             surface = np.pi * (edges[1:] ** 2 - edges[:-1] ** 2)
             sden = np.divide(mass, surface)
@@ -299,12 +292,9 @@ class SurfaceDensityProfiles:
         
         cylindrical_distance = np.sqrt(
             stellar_data_tmp['Coordinates'][:, 0] ** 2 + stellar_data_tmp['Coordinates'][:, 1] ** 2)  # Radius of each particle.
-        half_mass_radius = MorphoKinematics.half_mass_radius(stellar_data_tmp)
-        spatial_mask, = np.where(
-            (abs(stellar_data_tmp['Coordinates'][:, 2]) < 5))# & (cylindrical_distance <  half_mass_radius))  # Vertical cut in kpc.
-        plt.axvline(x=2 * half_mass_radius, c='gray', lw=3, linestyle='dashed', label=r'$\mathrm{2*R_{h}}$')  # Vertical line at 2 * R1/2.
+        vertical_mask, = np.where(abs(stellar_data_tmp['Coordinates'][:, 2]) < 5)  # Vertical cut in kpc.
         
-        mass, edges = np.histogram(cylindrical_distance[spatial_mask], bins=50, range=(0, 30), weights=stellar_data_tmp['Mass'][spatial_mask])
+        mass, edges = np.histogram(cylindrical_distance[vertical_mask], bins=50, range=(0, 30), weights=stellar_data_tmp['Mass'][vertical_mask])
         centers = 0.5 * (edges[1:] + edges[:-1])
         surface = np.pi * (edges[1:] ** 2 - edges[:-1] ** 2)
         sden = np.divide(mass, surface)
