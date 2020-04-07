@@ -12,13 +12,9 @@ import numpy as np
 import matplotlib.cbook
 import astropy.units as u
 import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
 import eagle_IO.eagle_IO.eagle_IO as E
 
-from matplotlib import gridspec
-from astropy_healpix import HEALPix
 from rotate_galaxies import RotateCoordinates
-from morpho_kinematics import MorphoKinematics
 
 # Create a parser and add argument to read data #
 parser = argparse.ArgumentParser(description='Create bar strength plot.')
@@ -54,7 +50,7 @@ class BarStrength:
             print('Read data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
             print('–––––––––––––––––––––––––––––––––––––––––––––')
             
-            self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e8 Msun.
+            self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e9 Msun.
         
         # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all masked haloes.
         for group_number in range(25, 26):  # Loop over all masked haloes.
@@ -135,12 +131,12 @@ class BarStrength:
     
     def mask_haloes(self):
         """
-        Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e8 Msun.
+        Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e9 Msun.
         :return: subhalo_data_tmp
         """
         
         # Mask the halo data #
-        halo_mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 1e8)
+        halo_mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 1e9)
         
         # Mask the temporary dictionary for each galaxy #
         subhalo_data_tmp = {}
@@ -159,7 +155,7 @@ class BarStrength:
         """
         
         # Select the corresponding halo in order to get its centre of potential #
-        halo_mask = np.where((self.subhalo_data_tmp['GroupNumber'] == group_number) & (self.subhalo_data_tmp['SubGroupNumber'] == subgroup_number))[0]
+        halo_mask, = np.where((self.subhalo_data_tmp['GroupNumber'] == group_number) & (self.subhalo_data_tmp['SubGroupNumber'] == subgroup_number))
         
         # Mask the data to select galaxies with a given GroupNumber and SubGroupNumber and particles inside a 30kpc sphere #
         galaxy_mask = np.where((self.stellar_data['GroupNumber'] == group_number) & (self.stellar_data['SubGroupNumber'] == subgroup_number) & (

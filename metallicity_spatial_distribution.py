@@ -4,7 +4,6 @@ import time
 import warnings
 import argparse
 import matplotlib
-import access_database
 
 matplotlib.use('Agg')
 
@@ -12,13 +11,11 @@ import numpy as np
 import matplotlib.cbook
 import astropy.units as u
 import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
 import eagle_IO.eagle_IO.eagle_IO as E
 
 from matplotlib import gridspec
 from astropy_healpix import HEALPix
 from rotate_galaxies import RotateCoordinates
-from morpho_kinematics import MorphoKinematics
 
 # Create a parser and add argument to read data #
 parser = argparse.ArgumentParser(description='Create ra and dec plot.')
@@ -29,14 +26,12 @@ args = parser.parse_args()
 
 date = time.strftime('%d_%m_%y_%H%M')  # Date
 start_global_time = time.time()  # Start the global time.
-warnings.filterwarnings('ignore', category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
+warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
 
 
-class MultipleDecomposition:
+class MetallicitySpatialDistribution:
     """
-    For each galaxy create: a HEALPix histogram from the angular momentum of particles - an angular distance plot - a surface density plot / mock
-    image - a circularity distribution.
-    a circularity plot.
+    For each galaxy create spatial distribution maps color-coded by metallicity.
     """
     
     
@@ -58,8 +53,8 @@ class MultipleDecomposition:
             
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e9 Msun.
         
-        for group_number in list(set(self.subhalo_data_tmp['GroupNumber']))[-5:]:  # Loop over all masked haloes.
-        # for group_number in range(181341, 351445):  # Loop over all masked haloes.
+        # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all masked haloes.
+        for group_number in range(1, 26):  # Loop over all masked haloes.
             for subgroup_number in range(0, 1):  # Get centrals only.
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
@@ -99,7 +94,8 @@ class MultipleDecomposition:
                 print('Plotted data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
                 print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished MultipleDecomposition for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished MetallicitySpatialDistribution for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (
+            time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
@@ -122,7 +118,7 @@ class MultipleDecomposition:
         stellar_data = {}
         particle_type = '4'
         file_type = 'PARTDATA'
-        for attribute in ['Coordinates', 'GroupNumber', 'Mass', 'ParticleBindingEnergy', 'SubGroupNumber', 'Velocity']:
+        for attribute in ['Coordinates', 'GroupNumber', 'Mass', 'SubGroupNumber', 'Velocity']:
             stellar_data[attribute] = E.read_array(file_type, simulation_path, tag, '/PartType' + particle_type + '/' + attribute, numThreads=8)
         
         # Convert attributes to astronomical units #
@@ -185,8 +181,7 @@ class MultipleDecomposition:
     @staticmethod
     def plot(stellar_data_tmp, group_number, subgroup_number):
         """
-        Plot a HEALPix histogram from the angular momentum of particles - an angular distance plot - a surface density plot / mock image - a
-        circularity distribution.
+        Plot spatial distribution maps.
         :param stellar_data_tmp: from mask_galaxies
         :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber']))
         :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
@@ -194,47 +189,42 @@ class MultipleDecomposition:
         """
         # Generate the figure and define its parameters #
         plt.close()
-        plt.figure(0, figsize=(16, 9))
+        plt.figure(0, figsize=(20, 15))
         
-        gs = gridspec.GridSpec(2, 3)
-        ax00 = plt.subplot(gs[0, 0], projection='mollweide')
-        ax01 = plt.subplot(gs[0, 1])
-        ax02 = plt.subplot(gs[0, 2])
+        gs = gridspec.GridSpec(3, 2, hspace=0.07, wspace=0.0, height_ratios=[0.05, 1, 1])
+        axcbar = plt.subplot(gs[0, :])
         ax10 = plt.subplot(gs[1, 0])
+        ax20 = plt.subplot(gs[2, 0])
         ax11 = plt.subplot(gs[1, 1])
-        ax12 = plt.subplot(gs[1, 2])
+        ax21 = plt.subplot(gs[2, 1])
         
-        for a in [ax10, ax11, ax12]:
+        for a in [ax10, ax20, ax11, ax21]:
             a.grid(True)
+            a.set_xlim(-30, 30)
+            a.set_ylim(-30, 30)
+            a.set_aspect('equal')
+            a.set_facecolor('black')
+            a.tick_params(direction='out', which='both', top='on', right='on', labelsize=16)
         
-        for a in [ax10, ax11]:
-            a.set_xlim(-10, 190)
-            a.set_xticks(np.arange(0, 181, 20))
-        
-        ax00.set_xlabel('RA ($\degree$)')
-        ax00.set_ylabel('Dec ($\degree$)')
-        ax01.axis('off')
-        ax02.axis('off')
-        ax10.set_ylabel(r'$\mathrm{Particles\;per\;grid\;cell}$')
-        ax10.set_xlabel(r'$\mathrm{Angular\;distance\;from\;X\;(\degree)}$')
-        ax11.set_ylabel(r'$\mathrm{Particles\;per\;grid\;cell}$')
-        ax11.set_xlabel(r'$\mathrm{Angular\;distance\;from\;densest\;grid\;cell\;(\degree)}$')
-        ax12.set_xlabel(r'$\mathrm{\epsilon}$')
-        ax12.set_ylabel(r'$\mathrm{f(\epsilon)}$')
-        ax01.text(0.0, 0.95, r'$\mathrm{Face-on}$', c='w', fontsize=12, transform=ax01.transAxes)
-        ax02.text(0.0, 0.95, r'$\mathrm{Edge-on}$', c='w', fontsize=12, transform=ax02.transAxes)
-        
-        # Calculate the angular momentum for each particle and for the galaxy and the unit vector parallel to the galactic angular momentum vector #
-        prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
-                                                                                  stellar_data_tmp['Velocity'])  # Msun kpc km s-1
-        glx_angular_momentum = np.sum(prc_angular_momentum, axis=0)
-        glx_unit_vector = np.divide(glx_angular_momentum, np.linalg.norm(glx_angular_momentum))
+        ax10.set_xticklabels([])
+        ax11.set_xticklabels([])
+        ax10.set_ylabel(r'$\mathrm{y\,[kpc]}$', size=16)
+        ax20.set_xlabel(r'$\mathrm{x\,[kpc]}$', size=16)
+        ax20.set_ylabel(r'$\mathrm{z\,[kpc]}$', size=16)
+        ax11.set_ylabel(r'$\mathrm{y\,[kpc]}$', size=16)
+        ax21.set_xlabel(r'$\mathrm{x\,[kpc]}$', size=16)
+        ax21.set_ylabel(r'$\mathrm{z\,[kpc]}$', size=16)
+        ax10.annotate(r'$\mathrm{Disc}$' + '\n' + r'$\mathrm{Face-on}$', xy=(-27, 23), xycoords='data', c='w', size=16)
+        ax20.annotate(r'$\mathrm{Disc}$' + '\n' + r'$\mathrm{Edge-on}$', xy=(-27, 23), xycoords='data', c='w', size=16)
+        ax11.annotate(r'$\mathrm{Bulge}$' + '\n' + r'$\mathrm{Face-on}$', xy=(-27, 23), xycoords='data', c='w', size=16)
+        ax21.annotate(r'$\mathrm{Bulge}$' + '\n' + r'$\mathrm{Edge-on}$', xy=(-27, 23), xycoords='data', c='w', size=16)
         
         # Rotate coordinates and velocities of stellar particles so the galactic angular momentum points along the x axis #
-        stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_unit_vector, glx_unit_vector = RotateCoordinates.rotate_X(stellar_data_tmp,
-                                                                                                                                     glx_unit_vector)
+        stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_angular_momentum, glx_angular_momentum = RotateCoordinates.rotate_Jz(
+            stellar_data_tmp)
         
         # Calculate the ra and dec of the (unit vector of) angular momentum for each particle #
+        prc_unit_vector = np.divide(prc_angular_momentum, np.linalg.norm(prc_angular_momentum, axis=1)[:, np.newaxis])
         ra = np.degrees(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]))
         dec = np.degrees(np.arcsin(prc_unit_vector[:, 2]))
         
@@ -248,89 +238,42 @@ class MultipleDecomposition:
         index_densest = np.argmax(density)
         lon_densest = (hp.healpix_to_lonlat([index_densest])[0].value + np.pi) % (2 * np.pi) - np.pi
         lat_densest = (hp.healpix_to_lonlat([index_densest])[1].value + np.pi / 2) % (2 * np.pi) - np.pi / 2
-        ax00.annotate(r'$\mathrm{Density\;maximum}$', xy=(lon_densest, lat_densest), xycoords='data', xytext=(0.78, 1.00), textcoords='axes fraction',
-                      arrowprops=dict(arrowstyle='-', color='black', connectionstyle='arc3,rad=0'))  # Position of the densest pixel.
-        ax00.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=100, color='black', marker='X',
-                     zorder=5)  # Position of the galactic angular momentum.
-        
-        # Sample a 360x180 grid in ra/dec #
-        ra = np.linspace(-180.0, 180.0, num=360) * u.deg
-        dec = np.linspace(-90.0, 90.0, num=180) * u.deg
-        ra_grid, dec_grid = np.meshgrid(ra, dec)
-        
-        # Find density at each coordinate position #
-        coordinate_index = hp.lonlat_to_healpix(ra_grid, dec_grid)
-        density_map = density[coordinate_index]
-        
-        # Display data on a 2D regular raster and create a pseudo-color plot #
-        im = ax00.imshow(density_map, cmap='nipy_spectral_r', aspect='auto', norm=matplotlib.colors.LogNorm(vmin=1))
-        cbar = plt.colorbar(im, ax=ax00, orientation='horizontal')
-        cbar.set_label('$\mathrm{Particles\; per\; grid\; cell}$', size=12)
-        ax00.pcolormesh(np.radians(ra), np.radians(dec), density_map, cmap='nipy_spectral_r')
         
         # Calculate disc mass fraction as the mass within 30 degrees from the densest pixel #
         angular_theta_from_densest = np.arccos(
             np.sin(lat_densest) * np.sin(np.arcsin(prc_unit_vector[:, 2])) + np.cos(lat_densest) * np.cos(np.arcsin(prc_unit_vector[:, 2])) * np.cos(
                 lon_densest - np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0])))  # In radians.
-        disc_mask = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))
-        disc_fraction_IT20 = np.divide(np.sum(stellar_data_tmp['Mass'][disc_mask]), np.sum(stellar_data_tmp['Mass']))
         
-        # Plot the 2D surface density projections #
-        # galaxy_id = access_database.download_image(group_number, subgroup_number)
-        # img = mpimg.imread(data_path + 'images/galface_' + galaxy_id)
-        # img1 = mpimg.imread(data_path + 'images/galedge_' + galaxy_id)
-        # ax01.imshow(img)
-        # ax02.imshow(img1)
+        # Plot the 2D surface density projection for the disc color-coded by metallicity #
+        disc_mask, = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))
+        bulge_mask, = np.where(angular_theta_from_densest > np.divide(np.pi, 6.0))
         
-        # Calculate and plot the angular distance (spherical law of cosines) between the densest and all the other grid cells #
-        angular_theta_from_densest = np.arccos(
-            np.sin(lat_densest) * np.sin(np.radians(dec_grid.value)) + np.cos(lat_densest) * np.cos(np.radians(dec_grid.value)) * np.cos(
-                lon_densest - np.radians(ra_grid.value)))  # In radians.
+        axes1 = [ax10, ax11]
+        axes2 = [ax20, ax21]
+        masks = [disc_mask, bulge_mask]
+        for mask, ax1, ax2 in zip(masks, axes1, axes2):
+            ax1.scatter(stellar_data_tmp['Coordinates'][mask, 0], stellar_data_tmp['Coordinates'][mask, 1], c=stellar_data_tmp['Metallicity'][mask],
+                        cmap='Spectral', s=1)
+            scatter = ax2.scatter(stellar_data_tmp['Coordinates'][mask, 0], stellar_data_tmp['Coordinates'][mask, 2],
+                                  c=stellar_data_tmp['Metallicity'][mask], cmap='Spectral', s=1)
         
-        ax11.scatter(angular_theta_from_densest[density_map.nonzero()] * np.divide(180.0, np.pi), density_map[density_map.nonzero()], c='black',
-                     s=5)  # In degrees.
-        ax11.axvline(x=30, c='blue', lw=3, linestyle='dashed', label='D/T= %.3f ' % disc_fraction_IT20)  # Vertical line at 30 degrees.
-        ax11.axvspan(0, 30, facecolor='0.2', alpha=0.5)  # Draw a vertical span.
+        # Generate the color bar #
+        cbar = plt.colorbar(scatter, cax=axcbar, orientation='horizontal')
+        cbar.set_label(r'$\mathrm{Z\;[Z_{\odot}]}$', size=16)
+        axcbar.xaxis.tick_top()
+        axcbar.xaxis.set_label_position("top")
+        axcbar.tick_params(direction='out', which='both', right='on', labelsize=16)
         
-        # Calculate the kinematic diagnostics #
-        kappa, discfrac, orbital, vrotsig, vrots, zaxis, momentum = MorphoKinematics.kinematics_diagnostics(
-            np.fliplr(stellar_data_tmp['Coordinates']), stellar_data_tmp['Mass'], np.fliplr(stellar_data_tmp['Velocity']),
-            stellar_data_tmp['ParticleBindingEnergy'])
-        
-        # Calculate and plot the distribution of orbital circularity #
-        j, = np.where(orbital < 0.0)
-        k, = np.where((orbital > 0.7) & (orbital < 1.7))
-        l, = np.where((orbital > -1.7) & (orbital < 1.7))
-        disc_fraction_00 = 1 - 2 * np.sum(stellar_data_tmp['Mass'][j]) / np.sum(stellar_data_tmp['Mass'][l])
-        disc_fraction_07 = np.sum(stellar_data_tmp['Mass'][k]) / np.sum(stellar_data_tmp['Mass'][l])
-        
-        ydata, edges = np.histogram(orbital, bins=100, range=[-1.7, 1.7], weights=stellar_data_tmp['Mass'] / np.sum(stellar_data_tmp['Mass']))
-        ydata /= edges[1:] - edges[:-1]
-        ax12.plot(0.5 * (edges[1:] + edges[:-1]), ydata, label='D/T = %.3f' % disc_fraction_07)
-        
-        # Calculate and plot the angular distance between the (unit vector of) the galactic angular momentum and all the other grid cells #
-        position_of_X = np.vstack([np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2])]).T
-        
-        angular_theta_from_X = np.arccos(np.sin(position_of_X[0, 1]) * np.sin(np.radians(dec_grid.value)) + np.cos(position_of_X[0, 1]) * np.cos(
-            np.radians(dec_grid.value)) * np.cos(position_of_X[0, 0] - np.radians(ra_grid.value)))  # In radians.
-        ax10.scatter(angular_theta_from_X[density_map.nonzero()] * np.divide(180.0, np.pi), density_map[density_map.nonzero()], c='black',
-                     s=5)  # In degrees.
-        ax10.axvline(x=90, c='red', lw=3, linestyle='dashed', label='D/T= %.3f ' % disc_fraction_00)  # Vertical line at 30 degrees.
-        ax10.axvspan(90, 180, facecolor='0.2', alpha=0.5)  # Draw a vertical span.
-        
-        # Create the legends and save the figure #
-        ax10.legend(loc='upper center', fontsize=12, frameon=False, scatterpoints=3)
-        ax11.legend(loc='upper center', fontsize=12, frameon=False, scatterpoints=3)
-        ax12.legend(loc='upper left', fontsize=12, frameon=False, scatterpoints=3)
-        plt.savefig(plots_path + str(group_number) + str(subgroup_number) + '-' + 'MD' + '-' + date + '.png', bbox_inches='tight')
+        # Save the plot #
+        plt.savefig(plots_path + str(group_number) + str(subgroup_number) + '-' + 'MSP' + '-' + date + '.png', bbox_inches='tight')
         return None
 
 
 if __name__ == '__main__':
     tag = '027_z000p101'
     simulation_path = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
-    plots_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/MD/'  # Path to save plots.
+    plots_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/MSP/'  # Path to save plots.
     data_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/'  # Path to save/load data.
     if not os.path.exists(plots_path):
         os.makedirs(plots_path)
-    x = MultipleDecomposition(simulation_path, tag)
+    x = MetallicitySpatialDistribution(simulation_path, tag)

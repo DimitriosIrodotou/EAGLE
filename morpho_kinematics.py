@@ -189,20 +189,42 @@ class MorphoKinematics:
     
     
     @staticmethod
-    def half_mass_radius(stellar_data_tmp):
+    def r_fifty(stellar_data_tmp):
         """
+        Calculate r_50 of the galaxy as the radius that contains 50% of the total stellar mass.
         stellar_data_tmp: from mask_galaxies
-        :return: half_mass_radius, prc_spherical_radius
+        :return: r_fifty, prc_spherical_radius
         """
-        # Calculate the cylindrical distance of each particle and sort their masses based on that #
+        # Calculate the spherical distance of each particle and sort their masses based on that #
         prc_spherical_radius = np.sqrt(np.sum(stellar_data_tmp['Coordinates'] ** 2, axis=1))
         sort = np.argsort(prc_spherical_radius)
         sorted_prc_spherical_radius = prc_spherical_radius[sort]
         
-        # Calculate the half mass radius of the galaxy as the radius that contains 50% of the total stellar mass #
+        # Calculate r_50 #
         total_mass = np.sum(stellar_data_tmp['Mass'])
         cumulative_mass = np.cumsum(stellar_data_tmp['Mass'][sort])
-        index = np.argmin(np.abs(cumulative_mass - (0.8 * total_mass)))
-        half_mass_radius = sorted_prc_spherical_radius[index]
+        index = np.argmin(np.abs(cumulative_mass - (0.5 * total_mass)))
+        r_fifty = sorted_prc_spherical_radius[index]
         
-        return half_mass_radius
+        return r_fifty
+    
+    
+    @staticmethod
+    def r_ninety(stellar_data_tmp):
+        """
+        Calculate r_90 of the galaxy as the radius that contains 90% of the total stellar mass.
+        stellar_data_tmp: from mask_galaxies
+        :return: r_ninety, prc_spherical_radius
+        """
+        # Calculate the spherical distance of each particle and sort their masses based on that #
+        prc_spherical_radius = np.sqrt(np.sum(stellar_data_tmp['Coordinates'] ** 2, axis=1))
+        sort = np.argsort(prc_spherical_radius)
+        sorted_prc_spherical_radius = prc_spherical_radius[sort]
+        
+        # Calculate r_90 #
+        total_mass = np.sum(stellar_data_tmp['Mass'])
+        cumulative_mass = np.cumsum(stellar_data_tmp['Mass'][sort])
+        index = np.argmin(np.abs(cumulative_mass - (0.9 * total_mass)))
+        r_ninety = sorted_prc_spherical_radius[index]
+        
+        return r_ninety

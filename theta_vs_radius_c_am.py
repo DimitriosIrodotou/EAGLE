@@ -49,7 +49,7 @@ class ThetaVsRadiusCAM:
             print('Read data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
             print('–––––––––––––––––––––––––––––––––––––––––––––')
             
-            self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher that 1e8
+            self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher that 1e9
         
         # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all masked haloes.
         for group_number in range(1, 26):
@@ -131,12 +131,12 @@ class ThetaVsRadiusCAM:
     
     def mask_haloes(self):
         """
-        Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e8 Msun.
+        Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e9 Msun.
         :return: subhalo_data_tmp
         """
         
         # Mask the halo data #
-        halo_mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 1e8)
+        halo_mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 1e9)
         
         # Mask the temporary dictionary for each galaxy #
         subhalo_data_tmp = {}
@@ -155,7 +155,7 @@ class ThetaVsRadiusCAM:
         """
         
         # Select the corresponding halo in order to get its centre of potential #
-        halo_mask = np.where((self.subhalo_data_tmp['GroupNumber'] == group_number) & (self.subhalo_data_tmp['SubGroupNumber'] == subgroup_number))[0]
+        halo_mask, = np.where((self.subhalo_data_tmp['GroupNumber'] == group_number) & (self.subhalo_data_tmp['SubGroupNumber'] == subgroup_number))
         
         # Mask the data to select galaxies with a given GroupNumber and SubGroupNumber and particles inside a 30kpc sphere #
         galaxy_mask = np.where((self.stellar_data['GroupNumber'] == group_number) & (self.stellar_data['SubGroupNumber'] == subgroup_number) & (
@@ -193,7 +193,7 @@ class ThetaVsRadiusCAM:
         plt.axis([1e-2, 4e1, 1e-1, 2e2])
         plt.xlabel(r'$\mathrm{R\;[kpc]}$', size=16)
         plt.ylabel(r'$\mathrm{Angular\;distance\;from\;densest\;grid\;cell\;[\degree]}$', size=16)
-        plt.tick_params(direction='out', which='both', top='on', right='on')
+        plt.tick_params(direction='out', which='both', top='on', right='on', labelsize=16)
         
         ax.annotate(r'$\mathrm{Disc}$', xy=(1e-2, 2e1), xycoords='data', size=16)
         ax.annotate(r'$\mathrm{Bulge}$', xy=(1e-2, 4e1), xycoords='data', size=16)
@@ -222,8 +222,8 @@ class ThetaVsRadiusCAM:
         angular_theta_from_densest = np.arccos(
             np.sin(lat_densest) * np.sin(np.arcsin(prc_unit_vector[:, 2])) + np.cos(lat_densest) * np.cos(np.arcsin(prc_unit_vector[:, 2])) * np.cos(
                 lon_densest - np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0])))  # In radians.
-        disc_mask = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))[0]
-        bulge_mask = np.where(angular_theta_from_densest > np.divide(np.pi, 6.0))[0]
+        disc_mask, = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))
+        bulge_mask, = np.where(angular_theta_from_densest > np.divide(np.pi, 6.0))
         
         for mask in [disc_mask, bulge_mask]:
             prc_spherical_radius = np.sqrt(np.sum(stellar_data_tmp['Coordinates'] ** 2, axis=1))  # Radius of each particle.
@@ -231,7 +231,7 @@ class ThetaVsRadiusCAM:
                                c=np.log10(np.linalg.norm(prc_angular_momentum[mask], axis=1)), vmin=5, vmax=12, cmap='nipy_spectral_r', s=3)
         plt.axhline(y=30, c='black', lw=3, linestyle='dashed')  # Horizontal line at 30 degrees.
         cbar = plt.colorbar(plot, ax=ax)
-        cbar.set_label(r'$\mathrm{log_{10}(|\vec{J_{prc,d}}| / (M_{\odot}\; kpc\; km\; s^{-1}))}$')
+        cbar.set_label(r'$\mathrm{log_{10}(|\vec{J}_{prc,d}|/(M_{\odot}\; kpc\; km\; s^{-1}))}$', size=16)
 
         # Save the plot #
         plt.savefig(plots_path + str(group_number) + str(subgroup_number) + '-' + 'TVRCAM' + '-' + date + '.png', bbox_inches='tight')

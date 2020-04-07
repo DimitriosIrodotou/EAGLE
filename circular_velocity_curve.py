@@ -12,6 +12,7 @@ import astropy.units as u
 import matplotlib.pyplot as plt
 import eagle_IO.eagle_IO.eagle_IO as E
 
+from astropy.constants import G
 from astropy_healpix import HEALPix
 from rotate_galaxies import RotateCoordinates
 
@@ -27,9 +28,9 @@ start_global_time = time.time()  # Start the global time.
 warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
 
 
-class MetallicityProfiles:
+class CircularVelocityCurve:
     """
-    Plot metallicity radial profiles to the components produced by RA_Dec_surface_density.
+    Plot circular velocity curves.
     """
     
     
@@ -92,7 +93,7 @@ class MetallicityProfiles:
                 print('Plotted data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
                 print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished MetallicityProfiles for' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished CircularVelocityCurve for' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
@@ -187,65 +188,33 @@ class MetallicityProfiles:
         plt.close()
         figure = plt.figure(0, figsize=(10, 7.5))
         plt.grid(True)
-        # plt.yscale('log')
-        plt.axis([0.0, 30.0, 0, 3])
+        # plt.axis([0.0, 30.0, 0, 3])
         plt.xlabel("$\mathrm{R\;[kpc]}$", size=16)
-        plt.ylabel("$\mathrm{Z\;[Z_{\odot}]}$", size=16)
+        plt.ylabel("$\mathrm{V_{c}\;[km\;s^{-1}]}$", size=16)
         plt.tick_params(direction='out', which='both', top='on', right='on', labelsize=16)
         
-        # Rotate coordinates and velocities of stellar particles wrt galactic angular momentum #
-        stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_angular_momentum, glx_angular_momentum = RotateCoordinates.rotate_Jz(
-            stellar_data_tmp)
+        # Calculate the spherical distance of each particle and sort their masses and velocities based on that #
+        prc_spherical_radius = np.sqrt(np.sum(stellar_data_tmp['Coordinates'] ** 2, axis=1))
+        sort = np.argsort(prc_spherical_radius)
+        sorted_prc_spherical_radius = prc_spherical_radius[sort]
+        cumulative_mass = np.cumsum(stellar_data_tmp['Mass'][sort])
+        astronomical_G = G.to(u.km ** 2 * u.kpc * u.Msun ** -1 * u.s ** -2).value
+        circular_velocity = np.sqrt(np.divide(astronomical_G * cumulative_mass, sorted_prc_spherical_radius))
         
-        # Calculate the ra and dec of the (unit vector of) angular momentum for each particle #
-        prc_unit_vector = np.divide(prc_angular_momentum, np.linalg.norm(prc_angular_momentum, axis=1)[:, np.newaxis])
-        ra = np.degrees(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]))
-        dec = np.degrees(np.arcsin(prc_unit_vector[:, 2]))
-        
-        # Plot a HEALPix histogram #
-        nside = 2 ** 5  # Define the resolution of the grid (number of divisions along the side of a base-resolution pixel).
-        hp = HEALPix(nside=nside)  # Initialise the HEALPix pixellisation class.
-        indices = hp.lonlat_to_healpix(ra * u.deg, dec * u.deg)  # Create list of HEALPix indices from particles' ra and dec.
-        density = np.bincount(indices, minlength=hp.npix)  # Count number of points in each HEALPix pixel.
-        
-        # Find location of density maximum #
-        index_densest = np.argmax(density)
-        lon_densest = (hp.healpix_to_lonlat([index_densest])[0].value + np.pi) % (2 * np.pi) - np.pi
-        lat_densest = (hp.healpix_to_lonlat([index_densest])[1].value + np.pi / 2) % (2 * np.pi) - np.pi / 2
-        
-        # Calculate and plot the disc (bulge) mass surface density as the mass within (outside) 30 degrees from the densest pixel #
-        angular_theta_from_densest = np.arccos(
-            np.sin(lat_densest) * np.sin(np.arcsin(prc_unit_vector[:, 2])) + np.cos(lat_densest) * np.cos(np.arcsin(prc_unit_vector[:, 2])) * np.cos(
-                lon_densest - np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0])))  # In radians.
-        disc_mask, = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))
-        bulge_mask, = np.where(angular_theta_from_densest > np.divide(np.pi, 6.0))
-        
-        colors = ['blue', 'red']
-        labels = ['Disc', 'Bulge']
-        masks = [disc_mask, bulge_mask]
-        for mask, color, label in zip(masks, colors, labels):
-            component_mass = stellar_data_tmp['Mass'][mask]
-            cylindrical_distance = np.sqrt(
-                stellar_data_tmp['Coordinates'][mask, 0] ** 2 + stellar_data_tmp['Coordinates'][mask, 1] ** 2)  # Radius of each particle.
-            vertical_mask, = np.where(abs(stellar_data_tmp['Coordinates'][:, 2][mask]) < 5)  # Vertical cut in kpc.
-            
-            metals, edges = np.histogram(cylindrical_distance[vertical_mask], bins=100, range=[0.0, 30.0],
-                                         weights=component_mass[vertical_mask] * stellar_data_tmp['Metallicity'][vertical_mask])
-            mass, edges = np.histogram(cylindrical_distance[vertical_mask], bins=100, range=[0.0, 30.0], weights=component_mass[vertical_mask])
-            center = 0.5 * (edges[1:] + edges[:-1])
-            plt.plot(center, metals / mass / 0.0134, c=color, label=label)
+        # Plot the circular velocity curve #
+        plt.plot(sorted_prc_spherical_radius, circular_velocity, label='stars')
         
         # Create the legend and save the figure #
         plt.legend(loc='upper right', fontsize=16, frameon=False, numpoints=1)
-        plt.savefig(plots_path + str(group_number) + str(subgroup_number) + '-' + 'MP' + '-' + date + '.png', bbox_inches='tight')
+        plt.savefig(plots_path + str(group_number) + str(subgroup_number) + '-' + 'CVC' + '-' + date + '.png', bbox_inches='tight')
         return None
 
 
 if __name__ == '__main__':
     tag = '027_z000p101'
     simulation_path = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
-    plots_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/MP/'  # Path to save plots.
+    plots_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/CVC/'  # Path to save plots.
     data_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/'  # Path to save/load data.
     if not os.path.exists(plots_path):
         os.makedirs(plots_path)
-    x = MetallicityProfiles(simulation_path, tag)
+    x = CircularVelocityCurve(simulation_path, tag)

@@ -1,4 +1,5 @@
 import re
+import sys
 import time
 
 import numpy as np
@@ -34,29 +35,30 @@ class ReadAddProperties:
         print('Read data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e8 Msun.
+        self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e9 Msun.
         
-        for group_number, subgroup_number in zip(list(self.subhalo_data_tmp['GroupNumber']),
-                                                 list(self.subhalo_data_tmp['SubGroupNumber'])):  # Loop over all masked haloes and sub-haloes.
+        job_number = int(sys.argv[1])
+        print(job_number)
+        # group_numbers = np.array_split(list(self.subhalo_data_tmp['GroupNumber']), 30)
+        # subgroup_numbers = np.array_split(list(self.subhalo_data_tmp['SubGroupNumber']), 30)
+        group_numbers = np.array(1, 26)
+        subgroup_numbers = np.array(0, 1)
+        for group_number, subgroup_number in zip(group_numbers[job_number],
+                                                 subgroup_numbers[job_number]):  # Loop over all masked haloes and sub-haloes.
             start_local_time = time.time()  # Start the local time.
             
             # Mask galaxies and normalise data #
-            stellar_data_tmp, glx_mass, glx_angular_momentum, disc_fraction, rotational_over_dispersion, kappa = self.mask_galaxies(group_number,
-                                                                                                                                    subgroup_number)
-            #TODO These don't keep information properly - can't figure out which galaxy is which.
-            kappas.append(kappa)
-            glx_masses.append(glx_mass)
-            disc_fractions.append(disc_fraction)
-            glx_angular_momenta.append(glx_angular_momentum)
-            rotationals_over_dispersions.append(rotational_over_dispersion)
+            stellar_data_tmp, glx_mass, glx_angular_momentum, disc_fraction, rotational_over_dispersion, kappa, c = self.mask_galaxies(group_number,
+                                                                                                                                       subgroup_number)
+            stellar_data_tmp['c'] = c
+            stellar_data_tmp['kappa'] = kappa
+            stellar_data_tmp['glx_mass'] = glx_mass
+            stellar_data_tmp['disc_fraction'] = disc_fraction
+            stellar_data_tmp['glx_angular_momentum'] = glx_angular_momentum
+            stellar_data_tmp['rotational_over_dispersion'] = rotational_over_dispersion
             
-            # Save data in numpy arrays #
-            np.save(data_path + 'kappas/' + 'kappas', kappas)
-            np.save(data_path + 'glx_masses/' + 'glx_masses', glx_masses)
-            np.save(data_path + 'disc_fractions/' + 'disc_fractions', disc_fractions)
-            np.save(data_path + 'glx_angular_momenta/' + 'glx_angular_momenta', glx_angular_momenta)
-            np.save(data_path + 'rotationals_over_dispersions/' + 'rotationals_over_dispersions', rotationals_over_dispersions)
-            # np.save(data_path + 'stellar_data_tmps/' + 'stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number), stellar_data_tmp)
+            # Save data in numpy array #
+            np.save(data_path + 'stellar_data_tmps/' + 'stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number), stellar_data_tmp)
             
             print('Masked and saved data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                 round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
@@ -103,12 +105,12 @@ class ReadAddProperties:
     
     def mask_haloes(self):
         """
-        Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e8 Msun.
+        Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e9 Msun.
         :return: subhalo_data_tmp
         """
         
         # Mask the halo data #
-        halo_mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 1e8)
+        halo_mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 1e9)
         
         # Mask the temporary dictionary for each galaxy #
         subhalo_data_tmp = {}
@@ -127,7 +129,7 @@ class ReadAddProperties:
         """
         
         # Select the corresponding halo in order to get its centre of potential #
-        halo_mask = np.where((self.subhalo_data_tmp['GroupNumber'] == group_number) & (self.subhalo_data_tmp['SubGroupNumber'] == subgroup_number))[0]
+        halo_mask, = np.where((self.subhalo_data_tmp['GroupNumber'] == group_number) & (self.subhalo_data_tmp['SubGroupNumber'] == subgroup_number))
         
         # Mask the data to select galaxies with a given GroupNumber and SubGroupNumber and particles inside a 30kpc sphere #
         galaxy_mask = np.where((self.stellar_data['GroupNumber'] == group_number) & (self.stellar_data['SubGroupNumber'] == subgroup_number) & (
@@ -161,7 +163,10 @@ class ReadAddProperties:
         kappa = np.sum(0.5 * stellar_data_tmp['Mass'] * ((prc_spc_angular_momentum[:, 2] / prc_cylindrical_distance) ** 2)) / np.sum(
             0.5 * stellar_data_tmp['Mass'] * (np.linalg.norm(velocity, axis=1) ** 2))
         
-        return stellar_data_tmp, glx_mass, glx_angular_momentum, disc_fraction, rotational_over_dispersion, kappa
+        # Calculate the concentration index #
+        c = np.divide(MorphoKinematics.r_ninety(stellar_data_tmp), MorphoKinematics.r_fifty(stellar_data_tmp))
+        
+        return stellar_data_tmp, glx_mass, glx_angular_momentum, disc_fraction, rotational_over_dispersion, kappa, c
 
 
 if __name__ == '__main__':

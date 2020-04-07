@@ -52,7 +52,7 @@ class SurfaceDensityProfiles:
             print('Read data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
             print('–––––––––––––––––––––––––––––––––––––––––––––')
             
-            self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher that 1e8
+            self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher that 1e9
         
         # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all masked haloes.
         for group_number in range(15, 26):
@@ -134,12 +134,12 @@ class SurfaceDensityProfiles:
     
     def mask_haloes(self):
         """
-        Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e8 Msun.
+        Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e9 Msun.
         :return: subhalo_data_tmp
         """
         
         # Mask the halo data #
-        halo_mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 1e8)
+        halo_mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 1e9)
         
         # Mask the temporary dictionary for each galaxy #
         subhalo_data_tmp = {}
@@ -158,7 +158,7 @@ class SurfaceDensityProfiles:
         """
         
         # Select the corresponding halo in order to get its centre of potential #
-        halo_mask = np.where((self.subhalo_data_tmp['GroupNumber'] == group_number) & (self.subhalo_data_tmp['SubGroupNumber'] == subgroup_number))[0]
+        halo_mask, = np.where((self.subhalo_data_tmp['GroupNumber'] == group_number) & (self.subhalo_data_tmp['SubGroupNumber'] == subgroup_number))
         
         # Mask the data to select galaxies with a given GroupNumber and SubGroupNumber and particles inside a 30kpc sphere #
         galaxy_mask = np.where((self.stellar_data['GroupNumber'] == group_number) & (self.stellar_data['SubGroupNumber'] == subgroup_number) & (
@@ -218,9 +218,9 @@ class SurfaceDensityProfiles:
         plt.grid(True)
         plt.yscale('log')
         plt.axis([0.0, 30.0, 1e6, 1e10])
-        plt.xlabel("$\mathrm{R [kpc]}$", size=16)
-        plt.ylabel("$\mathrm{\Sigma [M_{\odot} kpc^{-2}]}$", size=16)
-        plt.tick_params(direction='out', which='both', top='on', right='on')
+        plt.xlabel("$\mathrm{R\;[kpc]}$", size=16)
+        plt.ylabel("$\mathrm{\Sigma\;[M_{\odot}\;kpc^{-2}]}$", size=16)
+        plt.tick_params(direction='out', which='both', top='on', right='on', labelsize=16)
         
         # Rotate coordinates and velocities of stellar particles wrt galactic angular momentum #
         stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_angular_momentum, glx_angular_momentum = RotateCoordinates.rotate_Jz(
@@ -246,8 +246,8 @@ class SurfaceDensityProfiles:
         angular_theta_from_densest = np.arccos(
             np.sin(lat_densest) * np.sin(np.arcsin(prc_unit_vector[:, 2])) + np.cos(lat_densest) * np.cos(np.arcsin(prc_unit_vector[:, 2])) * np.cos(
                 lon_densest - np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0])))  # In radians.
-        disc_mask = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))[0]
-        bulge_mask = np.where(angular_theta_from_densest > np.divide(np.pi, 6.0))[0]
+        disc_mask, = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))
+        bulge_mask, = np.where(angular_theta_from_densest > np.divide(np.pi, 6.0))
         
         colors = ['blue', 'red']
         labels = ['Disc', 'Bulge']
@@ -317,7 +317,7 @@ class SurfaceDensityProfiles:
             print('WARNING: Could not fit a profile')
         
         figure.text(0.5, 0.72,
-                    '\n' r'$\mathrm{n} = %.2f$' '\n' r'$\mathrm{R_{d}} = %.2f$ kpc' '\n' r'$\mathrm{R_{eff}} = %.2f$ kpc' '\n' % (n, R_d, R_eff),
+                    '\n' r'$\mathrm{n}=%.2f$' '\n' r'$\mathrm{R_{d}}=%.2f$ kpc' '\n' r'$\mathrm{R_{eff}}=%.2f$ kpc' '\n' % (n, R_d, R_eff),
                     size=16)
         
         # Create the legend and save the figure #

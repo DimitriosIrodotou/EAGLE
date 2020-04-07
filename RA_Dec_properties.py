@@ -52,7 +52,7 @@ class RADecProperties:
             print('Read data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
             print('–––––––––––––––––––––––––––––––––––––––––––––')
             
-            self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
+            self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e9 Msun.
         
         # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all masked haloes.
         for group_number in range(5, 6):  # Loop over all masked haloes.
@@ -60,7 +60,7 @@ class RADecProperties:
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
                     
-                    stellar_data_tmp, glx_unit_vector = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
+                    stellar_data_tmp, glx_unit_vector = self.mask_galaxies(group_number, subgroup_number)  # Mask galaxies and normalise data.
                     
                     # Save data in numpy arrays #
                     np.save(data_path + 'glx_unit_vectors/' + 'glx_unit_vector_' + str(group_number) + '_' + str(subgroup_number), glx_unit_vector)
@@ -73,7 +73,7 @@ class RADecProperties:
                 elif args.r:  # Read data.
                     start_local_time = time.time()  # Start the local time.
                     
-                    stellar_data_tmp, glx_unit_vector = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
+                    stellar_data_tmp, glx_unit_vector = self.mask_galaxies(group_number, subgroup_number)  # Mask galaxies and normalise data.
                     print('Masked data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                         round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
@@ -89,7 +89,6 @@ class RADecProperties:
                         allow_pickle=True)
                     stellar_data_tmp = stellar_data_tmp.item()
                     print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
-                    # + ' (' + str(round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
                 
                 # Plot the data #
@@ -138,12 +137,12 @@ class RADecProperties:
     
     def mask_haloes(self):
         """
-        Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e8 Msun.
+        Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e9 Msun.
         :return: subhalo_data_tmp
         """
         
         # Mask the halo data #
-        halo_mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 1e8)
+        halo_mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 1e9)
         
         # Mask the temporary dictionary for each galaxy #
         subhalo_data_tmp = {}
@@ -162,7 +161,7 @@ class RADecProperties:
         """
         
         # Select the corresponding halo in order to get its centre of potential #
-        halo_mask = np.where((self.subhalo_data_tmp['GroupNumber'] == group_number) & (self.subhalo_data_tmp['SubGroupNumber'] == subgroup_number))[0]
+        halo_mask, = np.where((self.subhalo_data_tmp['GroupNumber'] == group_number) & (self.subhalo_data_tmp['SubGroupNumber'] == subgroup_number))
         
         # Mask the data to select galaxies with a given GroupNumber and SubGroupNumber and particles inside a 30kpc sphere #
         galaxy_mask = np.where((self.stellar_data['GroupNumber'] == group_number) & (self.stellar_data['SubGroupNumber'] == subgroup_number) & (
@@ -213,19 +212,6 @@ class RADecProperties:
             a.set_xlabel('RA ($\degree$)')
             a.set_ylabel('Dec ($\degree$)')
             a.set_xticklabels([])
-            
-            # Set manually the values of the ra axis #
-            a.annotate(r'0', xy=(0 - np.pi / 40, - np.pi / 65), xycoords='data', size=18)
-            a.annotate(r'30', xy=(np.pi / 6 - np.pi / 25, - np.pi / 65), xycoords='data', size=18)
-            a.annotate(r'-30', xy=(-np.pi / 6 - np.pi / 15, - np.pi / 65), xycoords='data', size=18)
-            a.annotate(r'60', xy=(np.pi / 3 - np.pi / 25, - np.pi / 65), xycoords='data', size=18)
-            a.annotate(r'-60', xy=(-np.pi / 3 - np.pi / 15, - np.pi / 65), xycoords='data', size=18)
-            a.annotate(r'90', xy=(np.pi / 2 - np.pi / 25, - np.pi / 65), xycoords='data', size=18)
-            a.annotate(r'-90', xy=(-np.pi / 2 - np.pi / 15, -np.pi / 65), xycoords='data', size=18)
-            a.annotate(r'120', xy=(2 * np.pi / 3 - np.pi / 15, -np.pi / 65), xycoords='data', size=18)
-            a.annotate(r'-120', xy=(-2 * np.pi / 3 - np.pi / 10, -np.pi / 65), xycoords='data', size=18)
-            a.annotate(r'150', xy=(2.5 * np.pi / 3 - np.pi / 15, -np.pi / 65), xycoords='data', size=18)
-            a.annotate(r'-150', xy=(-2.5 * np.pi / 3 - np.pi / 10, -np.pi / 65), xycoords='data', size=18)
         
         # Rotate coordinates and velocities of stellar particles wrt galactic angular momentum #
         stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_unit_vector, glx_unit_vector = RotateCoordinates.rotate_X(stellar_data_tmp,
@@ -262,7 +248,7 @@ class RADecProperties:
         # Display data on a 2D regular raster and create a pseudo-color plot #
         im = ax00.imshow(density_map, cmap='nipy_spectral_r', aspect='auto', norm=matplotlib.colors.LogNorm(vmin=1))
         cbar = plt.colorbar(im, ax=ax00, orientation='horizontal')
-        cbar.set_label('$\mathrm{Particles\; per\; grid\; cell}$')
+        cbar.set_label('$\mathrm{Particles\;per\;grid\;cell}$', size=16)
         ax00.pcolormesh(np.radians(ra), np.radians(dec), density_map, cmap='nipy_spectral_r')
         
         # Plot the RA and Dec projection colour-coded by StellarFormationTime #
@@ -271,7 +257,7 @@ class RADecProperties:
         
         # Generate the color bar #
         cbar = plt.colorbar(scatter, ax=ax01, orientation='horizontal')
-        cbar.set_label('$\mathrm{StellarFormationTime}$')
+        cbar.set_label('$\mathrm{StellarFormationTime}$', size=16)
         
         # Plot the RA and Dec projection colour-coded by e^beta-1 #
         velocity_r_sqred = np.divide(np.sum(np.multiply(stellar_data_tmp['Velocity'], stellar_data_tmp['Coordinates']), axis=1) ** 2,
@@ -285,7 +271,7 @@ class RADecProperties:
         
         # Generate the color bar #
         cbar = plt.colorbar(scatter, ax=ax10, orientation='horizontal')
-        cbar.set_label(r'$\mathrm{exp(\beta - 1)}$')
+        cbar.set_label(r'$\mathrm{exp(\beta-1)}$', size=16)
         
         # Plot the RA and Dec projection colour-coded by BirthDensity #
         scatter = ax11.scatter(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]), np.arcsin(prc_unit_vector[:, 2]),
@@ -293,7 +279,7 @@ class RADecProperties:
         
         # Generate the color bar #
         cbar = plt.colorbar(scatter, ax=ax11, orientation='horizontal')
-        cbar.set_label('$\mathrm{log_{10}(Birth\;density)}$')
+        cbar.set_label('$\mathrm{log_{10}(Birth\;density)}$', size=16)
         
         # Save the plot #
         # plt.title('z ~ ' + re.split('_z0|p000', tag)[1])

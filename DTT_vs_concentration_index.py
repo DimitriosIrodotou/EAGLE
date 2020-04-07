@@ -15,9 +15,10 @@ import eagle_IO.eagle_IO.eagle_IO as E
 
 from matplotlib import gridspec
 from astropy_healpix import HEALPix
+from morpho_kinematics import MorphoKinematics
 
 # Create a parser and add argument to read data #
-parser = argparse.ArgumentParser(description='Create D/T PDF plot.')
+parser = argparse.ArgumentParser(description='Create D/T vs concentration index plot.')
 parser.add_argument('-r', action='store_true', help='Read data')
 parser.add_argument('-l', action='store_true', help='Load data')
 parser.add_argument('-rs', action='store_true', help='Read data and save to numpy arrays')
@@ -25,12 +26,12 @@ args = parser.parse_args()
 
 date = time.strftime('%d_%m_%y_%H%M')  # Date
 start_global_time = time.time()  # Start the global time.
-warnings.filterwarnings('ignore', category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
+warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
 
 
-class BulgeToTotalProbabilityDensityFunction:
+class DiscToTotalVsConcentrationIndex:
     """
-    Create a PDF of the disc to total ratio.
+    For all galaxies create: a disc to total ratio as a function of concentration index plot.
     """
     
     
@@ -43,7 +44,7 @@ class BulgeToTotalProbabilityDensityFunction:
         
         p = 1  # Counter.
         # Initialise empty arrays to hold the data #
-        glx_masses, disc_fractions_IT20 = [], []
+        cs, glx_masses, disc_fractions_IT20 = [], [], []
         
         if not args.l:
             # Extract particle and subhalo attributes and convert them to astronomical units #
@@ -53,24 +54,28 @@ class BulgeToTotalProbabilityDensityFunction:
             
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e9 Msun.
             
-            for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all the accepted haloes
+            # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all the accepted haloes
+            for group_number in range(1, 1000):  # Loop over all masked haloes.
                 for subgroup_number in range(0, 1):
                     if args.rs:  # Read and save data.
-                        start_local_time = time.time()  # Start the local time.
-                        
-                        disc_fraction_IT20, glx_mass = self.mask_galaxies(group_number, subgroup_number)  # Mask galaxies and normalise data.
-                        
-                        # Save data in numpy arrays #
-                        np.save(data_path + 'glx_masses/' + 'glx_mass_' + str(group_number) + '_' + str(subgroup_number), glx_mass)
-                        np.save(data_path + 'disc_fraction_IT20_' + str(group_number) + '_' + str(subgroup_number), disc_fraction_IT20)
-                        print('Masked and saved data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
-                            round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
-                        print('–––––––––––––––––––––––––––––––––––––––––––––')
+                        # start_local_time = time.time()  # Start the local time.
+                        #
+                        # c, disc_fraction_IT20, glx_mass = self.mask_galaxies(group_number, subgroup_number)  # Mask galaxies and normalise data.
+                        #
+                        # # Save data in numpy arrays #
+                        # np.save(data_path + 'cs/' + 'c_' + str(group_number) + '_' + str(subgroup_number), c)
+                        # np.save(data_path + 'glx_masses/' + 'glx_mass_' + str(group_number) + '_' + str(subgroup_number), glx_mass)
+                        # np.save(data_path + 'disc_fractions_IT20/' + 'disc_fraction_IT20_' + str(group_number) + '_' + str(subgroup_number),
+                        #         disc_fraction_IT20)
+                        # print('Masked and saved data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
+                        #     round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
+                        # print('–––––––––––––––––––––––––––––––––––––––––––––')
                         p += 1
                     elif args.r:  # Read data.
                         start_local_time = time.time()  # Start the local time.
                         
-                        disc_fraction_IT20, glx_mass = self.mask_galaxies(group_number, subgroup_number)  # Mask galaxies and normalise data.
+                        c, disc_fraction_IT20, glx_mass = self.mask_galaxies(group_number, subgroup_number)  # Mask galaxies and normalise data.
+                        cs.append(c)
                         glx_masses.append(glx_mass)
                         disc_fractions_IT20.append(disc_fraction_IT20)
                         print('Masked data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
@@ -81,17 +86,24 @@ class BulgeToTotalProbabilityDensityFunction:
                     if args.l or args.rs:  # Load data.
                         start_local_time = time.time()  # Start the local time.
                         
+                        c = np.load(data_path + 'cs/' + 'c_' + str(group_number) + '_' + str(subgroup_number) + '.npy')
                         glx_mass = np.load(data_path + 'glx_masses/' + 'glx_mass_' + str(group_number) + '_' + str(subgroup_number) + '.npy')
+                        disc_fraction_IT20 = np.load(
+                            data_path + 'disc_fractions_IT20/' + 'disc_fraction_IT20_' + str(group_number) + '_' + str(subgroup_number) + '.npy')
+                        cs.append(c.item())
                         glx_masses.append(glx_mass.item())
+                        disc_fractions_IT20.append(disc_fraction_IT20.item())
                         print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
                         print('–––––––––––––––––––––––––––––––––––––––––––––')
             
             if args.l or args.rs:  # Load data.
+                np.save(data_path + 'cs/' + 'cs', cs)
                 np.save(data_path + 'glx_masses/' + 'glx_masses', glx_masses)
-                np.save(data_path + 'disc_fractions_IT20', disc_fractions_IT20)
+                np.save(data_path + 'disc_fractions_IT20/' + 'disc_fractions_IT20', disc_fractions_IT20)
         else:
             start_local_time = time.time()  # Start the local time.
             
+            cs = np.load(data_path + 'cs/' + 'cs.npy')
             glx_masses = np.load(data_path + 'glx_masses/' + 'glx_masses.npy')
             disc_fractions_IT20 = np.load(data_path + 'disc_fractions_IT20/' + 'disc_fractions_IT20.npy')
             print('Loaded data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
@@ -100,11 +112,11 @@ class BulgeToTotalProbabilityDensityFunction:
         # Plot the data #
         start_local_time = time.time()  # Start the local time.
         
-        self.plot(disc_fractions_IT20, glx_masses)
+        self.plot(cs, disc_fractions_IT20, glx_masses)
         print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished BTTPDF for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished DTTCI for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
@@ -127,7 +139,7 @@ class BulgeToTotalProbabilityDensityFunction:
         stellar_data = {}
         particle_type = '4'
         file_type = 'PARTDATA'
-        for attribute in ['Coordinates', 'GroupNumber', 'Mass', 'ParticleBindingEnergy', 'SubGroupNumber', 'Velocity']:
+        for attribute in ['Coordinates', 'GroupNumber', 'Mass', 'SubGroupNumber', 'Velocity']:
             stellar_data[attribute] = E.read_array(file_type, simulation_path, tag, '/PartType' + particle_type + '/' + attribute, numThreads=8)
         
         # Convert attributes to astronomical units #
@@ -212,75 +224,70 @@ class BulgeToTotalProbabilityDensityFunction:
         disc_mask = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))
         disc_fraction_IT20 = np.divide(np.sum(stellar_data_tmp['Mass'][disc_mask]), np.sum(stellar_data_tmp['Mass']))
         
-        return disc_fraction_IT20, glx_mass
+        # Calculate the concentration index #
+        c = np.divide(MorphoKinematics.r_ninety(stellar_data_tmp), MorphoKinematics.r_fifty(stellar_data_tmp))
+        
+        return c, disc_fraction_IT20, glx_mass
     
     
     @staticmethod
-    def plot(disc_fractions_IT20, glx_masses):
+    def plot(cs, disc_fractions_IT20, glx_masses):
         """
-        A method to plot a HEALPix histogram.
+        Plot the disc to total ratio as a function of bulge mass.
+        :param c: from mask_galaxies
         :param disc_fractions_IT20: from mask_galaxies
+        :param glx_masses: from mask_galaxies
         :return: None
         """
+        # Normalise
+        # epsilon = 0.5 * np.subtract(1, np.cos((np.pi / 6)))
+        # disc_fractions_IT20 = np.divide(1, np.subtract(1, epsilon)) * np.subtract(disc_fractions_IT20, epsilon)
+        
         # Generate the figure and define its parameters #
         plt.close()
-        figure = plt.figure(0, figsize=(20, 15))
+        figure, ax = plt.subplots(1, figsize=(10, 7.5))
         
-        gs = gridspec.GridSpec(2, 2)
-        ax00 = plt.subplot(gs[0, 0])
-        ax10 = plt.subplot(gs[1, 0])
-        ax01 = plt.subplot(gs[0, 1])
-        ax11 = plt.subplot(gs[1, 1])
+        plt.grid(True)
+        plt.xscale('log')
+        plt.xlim(1e8, 1e12)
+        plt.ylim(-0.2, 1.2)
+        plt.xlabel(r'$\mathrm{M\;[M_{\odot}]}$', size=16)
+        plt.ylabel(r'$\mathrm{D/T_{30\degree}}$', size=16)
+        plt.tick_params(direction='out', which='both', top='on', right='on', left='on', labelsize=16)
         
-        for a in [ax00, ax10, ax01, ax11]:
-            a.grid(True)
-            a.set_ylim(0.0, 1.0)
-        
-        ax10.set_xscale('log')
-        ax00.set_xlabel(r'$\mathrm{(B/T)_{\bigstar}}$')
-        ax00.set_ylabel(r'$\mathrm{f(B/T)_{\bigstar}}$')
-        ax10.set_ylabel(r'$\mathrm{f(B/T>0.5)}$')
-        ax10.set_xlabel(r'$\mathrm{M_{\bigstar} / M_{\odot}}$')
-        
-        mass_mask = np.where(glx_masses > 1e10)
-        disc_fractions_IT20 = disc_fractions_IT20
-        bulge_fraction = 1 - disc_fractions_IT20
-        
-        # Plots BBT19 bar's midpoints #
-        BBT19 = np.genfromtxt('./Obs_Data/BBT19.csv', delimiter=',', names=['BT', 'f'])
-        ax00.scatter(BBT19['BT'], BBT19['f'], color='red', s=3, marker='_', zorder=2, label="$\mathrm{Bluck+19}$")
-        
-        # Weight each bin by its contribution to the total number of values and create a histogram #
-        weights = np.divide(np.ones_like(bulge_fraction[mass_mask]), float(len(bulge_fraction[mass_mask])))
-        ax00.hist(bulge_fraction[mass_mask], align='left', weights=weights, histtype='step', edgecolor='black', bins=20)
-        figure.text(0.0, 0.95, r'$\mathrm{M_{\bigstar}>10^{10}M_{\odot}}$', fontsize=16, transform=ax00.transAxes)
-        
-        # Put galaxies into bins #
-        bins = np.logspace(9, 11.5 + 0.1, 20)
-        bin_index = np.digitize(glx_masses, bins)
-        yBulge = np.empty(len(bins) - 1)
-        glx_mass_bins = np.empty(len(bins) - 1)
-        
-        # Loop over bins and count fractions in each class #
-        for iBin in range(len(bins) - 1):
-            glx_mass_bins[iBin] = 0.5 * (bins[iBin] + bins[iBin + 1])
-            indThisBin, = np.where(bin_index == iBin + 1)
-            allBin = len(indThisBin)
-            yBulge[iBin] = len(np.where(bulge_fraction[indThisBin] > 0.5)[0]) / float(allBin)
-        
-        # Plot L-Galaxies data #
-        ax10.plot(glx_mass_bins, yBulge, color='blue', lw=2, label="$\mathrm{Irodotou+18}$")
+        im = plt.scatter(glx_masses, disc_fractions_IT20, s=1, label=r'$D/T_{\vec{J}_{b} = 0}$', c=cs, cmap='nipy_spectral_r')
+        cbar = plt.colorbar(im)
+        # # Calculate median and 1-sigma #
+        # nbin = int((max(np.log10(glx_masses)) - min(np.log10(glx_masses))) / 0.02)
+        # x_value = np.empty(nbin)
+        # median = np.empty(nbin)
+        # slow = np.empty(nbin)
+        # shigh = np.empty(nbin)
+        # x_low = min(glx_masses)
+        # for i in range(nbin):
+        #     index, = np.where((glx_masses >= x_low) & (glx_masses < x_low + 0.02))
+        #     x_value[i] = np.mean(np.absolute(glx_masses)[index])
+        #     if len(index) > 0:
+        #         median[i] = np.nanmedian(disc_fractions_IT20[index])
+        #         slow[i] = np.nanpercentile(disc_fractions_IT20[index], 15.87)
+        #         shigh[i] = np.nanpercentile(disc_fractions_IT20[index], 84.13)
+        #     x_low += 0.02
+        #
+        # # Plot median and 1-sigma lines #
+        # median_IT20, = upper.plot(x_value, median, color='black', zorder=5)
+        # upper.fill_between(x_value, shigh, slow, color='black', alpha='0.5', zorder=5)
+        # fill_IT20, = plt.fill(np.NaN, np.NaN, color='black', alpha=0.5, zorder=5)
         
         # Save the plot #
-        plt.savefig(plots_path + 'BTT_PDF' + '-' + date + '.png', bbox_inches='tight')
+        plt.savefig(plots_path + 'DTTCI' + '-' + date + '.png', bbox_inches='tight')
         return None
 
 
 if __name__ == '__main__':
     tag = '027_z000p101'
     simulation_path = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
-    plots_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/BTT_PDF/'  # Path to save plots.
+    plots_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/DTTCI/'  # Path to save plots.
     data_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/'  # Path to save/load data.
     if not os.path.exists(plots_path):
         os.makedirs(plots_path)
-    x = BulgeToTotalProbabilityDensityFunction(simulation_path, tag)
+    x = DiscToTotalVsConcentrationIndex(simulation_path, tag)

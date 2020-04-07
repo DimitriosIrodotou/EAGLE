@@ -1,0 +1,32 @@
+ 
+This package (hwloc/1.11.11) has not been built for intel_2018_ompi_3.0.1
+Available builds are:
+ 
+	gnu_comp/7.3.0 	with openmpi/3.0.1
+	intel_comp/2018 	with intel_mpi/2018
+ 
+--------------------------------------------------------------------------
+Open MPI tried to fork a new process via the "execve" system call but
+failed.  Open MPI checks many things before attempting to launch a
+child process, but nothing is perfect. This error may be indicative
+of another problem on the target host, or even something as silly as
+having specified a directory for your application. Your job will now
+abort.
+
+  Local host:        m7291
+  Working dir:       /cosma7/data/dp004/dc-irod1/EAGLE/python
+  Application name:  ./
+  Error:             Permission denied
+--------------------------------------------------------------------------
+--------------------------------------------------------------------------
+mpirun was unable to start the specified application as it encountered an
+error:
+
+Error code: 1
+Error name: (null)
+Node: m7291
+
+when attempting to start process rank 0.
+--------------------------------------------------------------------------
+[m7291.pri.cosma7.alces.network:99930] 4 more processes have sent help message help-orte-odls-default.txt / execve error
+[m7291.pri.cosma7.alces.network:99930] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages

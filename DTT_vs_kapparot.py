@@ -32,7 +32,7 @@ warnings.filterwarnings('ignore', category=matplotlib.cbook.mplDeprecation)  # I
 
 class DiscToTotalVsKappaRot:
     """
-    Create a disc to total ratio as a function of kappa_rot plot.
+    For all galaxies create: a disc to total ratio as a function of kappa_rot plot.
     """
     
     
@@ -53,7 +53,7 @@ class DiscToTotalVsKappaRot:
             print('Read data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
             print('–––––––––––––––––––––––––––––––––––––––––––––')
             
-            self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
+            self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e9 Msun.
             
             # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all the accepted haloes
             for group_number in range(25, 26):  # Loop over all masked haloes.
@@ -61,7 +61,8 @@ class DiscToTotalVsKappaRot:
                     if args.rs:  # Read and save data.
                         start_local_time = time.time()  # Start the local time.
                         
-                        kappa, disc_fraction, disc_fraction_IT20 = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
+                        kappa, disc_fraction, disc_fraction_IT20 = self.mask_galaxies(group_number,
+                                                                                      subgroup_number)  # Mask galaxies and normalise data.
                         
                         # Save data in numpy arrays #
                         np.save(data_path + 'kappas/' + 'kappa_' + str(group_number) + '_' + str(subgroup_number), kappa)
@@ -79,7 +80,8 @@ class DiscToTotalVsKappaRot:
                     elif args.r:  # Read data.
                         start_local_time = time.time()  # Start the local time.
                         
-                        kappa, disc_fraction, disc_fraction_IT20 = self.mask_galaxies(group_number, subgroup_number)  # Mask the data.
+                        kappa, disc_fraction, disc_fraction_IT20 = self.mask_galaxies(group_number,
+                                                                                      subgroup_number)  # Mask galaxies and normalise data.
                         kappas.append(kappa)
                         disc_fractions.append(disc_fraction)
                         disc_fractions_IT20.append(disc_fraction_IT20)
@@ -146,12 +148,12 @@ class DiscToTotalVsKappaRot:
     
     def mask_haloes(self):
         """
-        Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e8 Msun.
+        Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e9 Msun.
         :return: subhalo_data_tmp
         """
         
         # Mask the halo data #
-        halo_mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 1e8)
+        halo_mask, = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 1e9)
         
         # Mask the temporary dictionary for each galaxy #
         subhalo_data_tmp = {}
@@ -170,7 +172,7 @@ class DiscToTotalVsKappaRot:
         """
         
         # Select the corresponding halo in order to get its centre of potential #
-        halo_mask = np.where((self.subhalo_data_tmp['GroupNumber'] == group_number) & (self.subhalo_data_tmp['SubGroupNumber'] == subgroup_number))[0]
+        halo_mask, = np.where((self.subhalo_data_tmp['GroupNumber'] == group_number) & (self.subhalo_data_tmp['SubGroupNumber'] == subgroup_number))
         
         # Mask the data to select galaxies with a given GroupNumber and SubGroupNumber and particles inside a 30kpc sphere #
         galaxy_mask = np.where((self.stellar_data['GroupNumber'] == group_number) & (self.stellar_data['SubGroupNumber'] == subgroup_number) & (
@@ -269,7 +271,7 @@ class DiscToTotalVsKappaRot:
         shigh = np.empty(nbin)
         x_low = min(kappas)
         for i in range(nbin):
-            index = np.where((kappas >= x_low) & (kappas < x_low + 0.02))[0]
+            index, = np.where((kappas >= x_low) & (kappas < x_low + 0.02))
             x_value[i] = np.mean(np.absolute(kappas)[index])
             if len(index) > 0:
                 median[i] = np.nanmedian(disc_fractions_IT20[index])
@@ -290,7 +292,7 @@ class DiscToTotalVsKappaRot:
         shigh = np.empty(nbin)
         x_low = min(kappas)
         for i in range(nbin):
-            index = np.where((kappas >= x_low) & (kappas < x_low + 0.02))[0]
+            index, = np.where((kappas >= x_low) & (kappas < x_low + 0.02))
             x_value[i] = np.mean(np.absolute(kappas)[index])
             if len(index) > 0:
                 median[i] = np.nanmedian(disc_fractions[index])

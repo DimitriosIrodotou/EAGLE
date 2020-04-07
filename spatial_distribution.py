@@ -31,7 +31,7 @@ warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # I
 
 class SpatialDistribution:
     """
-    For each galaxy create: spatial distribution maps.
+    For each galaxy create: a spatial distribution maps.
     """
     
     
@@ -51,7 +51,7 @@ class SpatialDistribution:
             print('Read data for ' + re.split('EAGLE/|/data', simulation_path)[2] + ' in %.4s s' % (time.time() - start_global_time))
             print('–––––––––––––––––––––––––––––––––––––––––––––')
             
-            self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e8 Msun.
+            self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e9 Msun.
         
         # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all masked haloes.
         for group_number in range(1, 26):  # Loop over all masked haloes.
@@ -133,12 +133,12 @@ class SpatialDistribution:
     
     def mask_haloes(self):
         """
-        Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e8 Msun.
+        Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e9 Msun.
         :return: subhalo_data_tmp
         """
         
         # Mask the halo data #
-        halo_mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 1e8)
+        halo_mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 1e9)
         
         # Mask the temporary dictionary for each galaxy #
         subhalo_data_tmp = {}
@@ -157,7 +157,7 @@ class SpatialDistribution:
         """
         
         # Select the corresponding halo in order to get its centre of potential #
-        halo_mask = np.where((self.subhalo_data_tmp['GroupNumber'] == group_number) & (self.subhalo_data_tmp['SubGroupNumber'] == subgroup_number))[0]
+        halo_mask, = np.where((self.subhalo_data_tmp['GroupNumber'] == group_number) & (self.subhalo_data_tmp['SubGroupNumber'] == subgroup_number))
         
         # Mask the data to select galaxies with a given GroupNumber and SubGroupNumber and particles inside a 30kpc sphere #
         galaxy_mask = np.where((self.stellar_data['GroupNumber'] == group_number) & (self.stellar_data['SubGroupNumber'] == subgroup_number) & (
@@ -202,7 +202,7 @@ class SpatialDistribution:
             a.grid(True)
             a.set_xlim(-30, 30)
             a.set_ylim(-30, 30)
-            a.tick_params(direction='out', which='both', top='on', right='on', left='on')
+            a.tick_params(direction='out', which='both', top='on', right='on', left='on', labelsize=16)
         
         ax10.set_xticklabels([])
         ax11.set_xticklabels([])
@@ -212,8 +212,8 @@ class SpatialDistribution:
         ax11.set_ylabel(r'$\mathrm{y\,[kpc]}$', size=16)
         ax21.set_xlabel(r'$\mathrm{x\,[kpc]}$', size=16)
         ax21.set_ylabel(r'$\mathrm{z\,[kpc]}$', size=16)
-        ax10.annotate(r'Disc', xy=(-25, 25), xycoords='data', size=18)
-        ax11.annotate(r'Bulge', xy=(-25, 25), xycoords='data', size=18)
+        ax10.annotate(r'$\mathrmDisc}$', xy=(-25, 25), xycoords='data', size=16)
+        ax11.annotate(r'$\mathrm{Bulge}$', xy=(-25, 25), xycoords='data', size=16)
         
         # Rotate coordinates and velocities of stellar particles so the galactic angular momentum points along the x axis #
         stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_angular_momentum, glx_angular_momentum = RotateCoordinates.rotate_Jz(
@@ -241,7 +241,7 @@ class SpatialDistribution:
                 lon_densest - np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0])))  # In radians.
         
         # Plot the 2D surface density projection and scatter for the disc #
-        disc_mask = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))[0]
+        disc_mask, = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))
         weights = stellar_data_tmp['Mass'][disc_mask]
         vmin, vmax = 0, 5e7
         
@@ -254,7 +254,7 @@ class SpatialDistribution:
         ax20.imshow(count.T, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', vmin=vmin, interpolation='gaussian', aspect='equal')
         
         # Plot the 2D surface density projection and scatter for the bulge #
-        bulge_mask = np.where(angular_theta_from_densest > np.divide(np.pi, 6.0))[0]
+        bulge_mask, = np.where(angular_theta_from_densest > np.divide(np.pi, 6.0))
         
         weights = stellar_data_tmp['Mass'][bulge_mask]
         count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][bulge_mask, 0], stellar_data_tmp['Coordinates'][bulge_mask, 1],
@@ -267,10 +267,10 @@ class SpatialDistribution:
         ax21.imshow(count.T, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', vmin=vmin, interpolation='gaussian', aspect='equal')
         
         cbar = plt.colorbar(im, cax=axcbar, orientation='horizontal')
-        cbar.set_label(r'$\mathrm{\Sigma_{\bigstar}\,[M_\odot\,kpc^{-2}]}$')
+        cbar.set_label(r'$\mathrm{\Sigma_{\bigstar}\,[M_\odot\,kpc^{-2}]}$', size=16)
         axcbar.xaxis.tick_top()
         axcbar.xaxis.set_label_position("top")
-        axcbar.tick_params(direction='out', which='both', right='on')
+        axcbar.tick_params(direction='out', which='both', right='on', labelsize=16)
         
         # Save the plot #
         plt.savefig(plots_path + str(group_number) + str(subgroup_number) + '-' + 'SP' + '-' + date + '.png', bbox_inches='tight')

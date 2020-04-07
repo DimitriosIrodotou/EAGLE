@@ -48,7 +48,7 @@ class RADecDistribution:
             print('Read data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
             print('–––––––––––––––––––––––––––––––––––––––––––––')
             
-            self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
+            self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e9 Msun.
             
             for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all masked haloes.
                 for subgroup_number in range(0, 1):
@@ -106,12 +106,12 @@ class RADecDistribution:
     
     def mask_haloes(self):
         """
-        Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e8 Msun.
+        Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e9 Msun.
         :return: subhalo_data_tmp
         """
         
         # Mask the halo data #
-        halo_mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 1e8)
+        halo_mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 1e9)
         
         # Mask the temporary dictionary for each galaxy #
         subhalo_data_tmp = {}
@@ -135,19 +135,6 @@ class RADecDistribution:
         
         plt.xlabel('RA ($\degree$)')
         plt.ylabel('Dec ($\degree$)')
-        
-        # Set manually the values of the ra axis #
-        plt.annotate(r'0', xy=(0 - np.pi / 40, - np.pi / 65), xycoords='data', size=18)
-        plt.annotate(r'30', xy=(np.pi / 6 - np.pi / 25, - np.pi / 65), xycoords='data', size=18)
-        plt.annotate(r'-30', xy=(-np.pi / 6 - np.pi / 15, - np.pi / 65), xycoords='data', size=18)
-        plt.annotate(r'60', xy=(np.pi / 3 - np.pi / 25, - np.pi / 65), xycoords='data', size=18)
-        plt.annotate(r'-60', xy=(-np.pi / 3 - np.pi / 15, - np.pi / 65), xycoords='data', size=18)
-        plt.annotate(r'90', xy=(np.pi / 2 - np.pi / 25, - np.pi / 65), xycoords='data', size=18)
-        plt.annotate(r'-90', xy=(-np.pi / 2 - np.pi / 15, -np.pi / 65), xycoords='data', size=18)
-        plt.annotate(r'120', xy=(2 * np.pi / 3 - np.pi / 15, -np.pi / 65), xycoords='data', size=18)
-        plt.annotate(r'-120', xy=(-2 * np.pi / 3 - np.pi / 10, -np.pi / 65), xycoords='data', size=18)
-        plt.annotate(r'150', xy=(2.5 * np.pi / 3 - np.pi / 15, -np.pi / 65), xycoords='data', size=18)
-        plt.annotate(r'-150', xy=(-2.5 * np.pi / 3 - np.pi / 10, -np.pi / 65), xycoords='data', size=18)
         
         # Calculate the ra and dec of the (unit vector of) angular momentum for each particle #
         glx_unit_vectors = np.divide(glx_angular_momentum, np.linalg.norm(glx_angular_momentum))
@@ -173,7 +160,7 @@ class RADecDistribution:
         # Display data on a 2D regular raster and create a pseudo-color plot #
         im = plt.imshow(density_map, cmap='magma_r', aspect='auto', vmin=1)
         cbar = plt.colorbar(im, ax=ax, orientation='horizontal')
-        cbar.set_label('$\mathrm{Number\; of\; galaxies\; per\; grid\; cell}$')
+        cbar.set_label('$\mathrm{Number\;of\;galaxies\;per\;grid\;cell}$', size=16)
         plt.pcolormesh(np.radians(ra), np.radians(dec), density_map, cmap='magma_r')
         
         # Save the plot #

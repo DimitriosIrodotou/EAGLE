@@ -51,7 +51,7 @@ class BetaSpatialDistribution:
             print('Read data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
             print('–––––––––––––––––––––––––––––––––––––––––––––')
             
-            self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e8 Msun.
+            self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e9 Msun.
         
         # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all masked haloes.
         for group_number in range(1, 26):  # Loop over all masked haloes.
@@ -133,12 +133,12 @@ class BetaSpatialDistribution:
     
     def mask_haloes(self):
         """
-        Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e8 Msun.
+        Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e9 Msun.
         :return: subhalo_data_tmp
         """
         
         # Mask the halo data #
-        halo_mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 1e8)
+        halo_mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 1e9)
         
         # Mask the temporary dictionary for each galaxy #
         subhalo_data_tmp = {}
@@ -157,7 +157,7 @@ class BetaSpatialDistribution:
         """
         
         # Select the corresponding halo in order to get its centre of potential #
-        halo_mask = np.where((self.subhalo_data_tmp['GroupNumber'] == group_number) & (self.subhalo_data_tmp['SubGroupNumber'] == subgroup_number))[0]
+        halo_mask, = np.where((self.subhalo_data_tmp['GroupNumber'] == group_number) & (self.subhalo_data_tmp['SubGroupNumber'] == subgroup_number))
         
         # Mask the data to select galaxies with a given GroupNumber and SubGroupNumber and particles inside a 30kpc sphere #
         galaxy_mask = np.where((self.stellar_data['GroupNumber'] == group_number) & (self.stellar_data['SubGroupNumber'] == subgroup_number) & (
@@ -203,7 +203,7 @@ class BetaSpatialDistribution:
             a.set_xlim(-30, 30)
             a.set_ylim(-30, 30)
             a.set_aspect('equal')
-            a.tick_params(direction='out', which='both', top='on', right='on', left='on')
+            a.tick_params(direction='out', which='both', top='on', right='on', left='on', labelsize=16)
         
         ax10.set_xticklabels([])
         ax11.set_xticklabels([])
@@ -213,8 +213,8 @@ class BetaSpatialDistribution:
         ax11.set_ylabel(r'$\mathrm{y\,[kpc]}$', size=16)
         ax21.set_xlabel(r'$\mathrm{x\,[kpc]}$', size=16)
         ax21.set_ylabel(r'$\mathrm{z\,[kpc]}$', size=16)
-        ax10.annotate(r'Disc', xy=(-25, 25), xycoords='data', size=18)
-        ax11.annotate(r'Bulge', xy=(-25, 25), xycoords='data', size=18)
+        ax10.annotate(r'$\mathrmDisc}$', xy=(-25, 25), xycoords='data', size=16)
+        ax11.annotate(r'$\mathrmBulge}$', xy=(-25, 25), xycoords='data', size=16)
         
         # Rotate coordinates and velocities of stellar particles so the galactic angular momentum points along the x axis #
         stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_angular_momentum, glx_angular_momentum = RotateCoordinates.rotate_Jz(
@@ -249,14 +249,14 @@ class BetaSpatialDistribution:
             2 * velocity_r_sqred))
         
         # Plot the 2D surface density projection for the disc color-coded by e^beta-1 #
-        disc_mask = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))[0]
+        disc_mask, = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))
         ax10.scatter(stellar_data_tmp['Coordinates'][disc_mask, 0], stellar_data_tmp['Coordinates'][disc_mask, 1], c=np.exp(beta[disc_mask] - 1),
                      cmap='viridis', vmax=1, s=1)
         ax20.scatter(stellar_data_tmp['Coordinates'][disc_mask, 0], stellar_data_tmp['Coordinates'][disc_mask, 2], c=np.exp(beta[disc_mask] - 1),
                      cmap='viridis', vmax=1, s=1)
         
         # Plot the 2D surface density projection for the bulge #
-        bulge_mask = np.where(angular_theta_from_densest > np.divide(np.pi, 6.0))[0]
+        bulge_mask, = np.where(angular_theta_from_densest > np.divide(np.pi, 6.0))
         ax11.scatter(stellar_data_tmp['Coordinates'][bulge_mask, 0], stellar_data_tmp['Coordinates'][bulge_mask, 1], c=np.exp(beta[bulge_mask] - 1),
                      cmap='viridis', vmax=1, s=1)
         
@@ -265,10 +265,10 @@ class BetaSpatialDistribution:
         
         # Generate the color bar #
         cbar = plt.colorbar(scatter, cax=axcbar, orientation='horizontal')
-        cbar.set_label(r'$\mathrm{exp(\beta - 1)}$')
+        cbar.set_label(r'$\mathrm{exp(\beta-1)}$', size=16)
         axcbar.xaxis.tick_top()
         axcbar.xaxis.set_label_position("top")
-        axcbar.tick_params(direction='out', which='both', right='on')
+        axcbar.tick_params(direction='out', which='both', right='on', labelsize=16)
         
         # Save the plot #
         plt.savefig(plots_path + str(group_number) + str(subgroup_number) + '-' + 'BSP' + '-' + date + '.png', bbox_inches='tight')
