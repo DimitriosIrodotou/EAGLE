@@ -27,17 +27,16 @@ class RotateCoordinates:
         Ryz = np.matmul(Ry, Rz)
         
         # Rotate the coordinates and velocities of stellar particles #
-        stellar_data_tmp['Coordinates'] = np.matmul(Ryz, stellar_data_tmp['Coordinates'][..., None]).squeeze()
-        stellar_data_tmp['Velocity'] = np.matmul(Ryz, stellar_data_tmp['Velocity'][..., None]).squeeze()
+        coordinates = np.matmul(Ryz, stellar_data_tmp['Coordinates'][..., None]).squeeze()
+        velocities = np.matmul(Ryz, stellar_data_tmp['Velocity'][..., None]).squeeze()
         
         # Calculate the angular momentum for each particle and for the galaxy and the unit vector parallel to the galactic angular momentum vector #
-        prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
-                                                                                  stellar_data_tmp['Velocity'])  # Msun kpc km s-1
+        prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(coordinates, velocities)  # Msun kpc km s-1
         glx_angular_momentum = np.sum(prc_angular_momentum, axis=0)  # Msun kpc km s-1
         glx_unit_vector = np.divide(glx_angular_momentum, np.linalg.norm(glx_angular_momentum))
         prc_unit_vector = np.divide(prc_angular_momentum, np.linalg.norm(prc_angular_momentum, axis=1)[:, np.newaxis])
         
-        return stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_unit_vector, glx_unit_vector
+        return coordinates, velocities, prc_unit_vector, glx_unit_vector
     
     
     @staticmethod
@@ -104,14 +103,12 @@ class RotateCoordinates:
         transform = np.eye(3, 3) + vx + (vx * vx) * ((1 - c[0, 0]) / s ** 2)
         
         # Rotate the coordinates and velocities #
-        stellar_data_tmp['Coordinates'] = np.array(
-            [np.matmul(transform, stellar_data_tmp['Coordinates'][i].T) for i in range(0, len(stellar_data_tmp['Coordinates']))])[:, 0]
-        stellar_data_tmp['Velocity'] = np.array(
-            [np.matmul(transform, stellar_data_tmp['Velocity'][i].T) for i in range(0, len(stellar_data_tmp['Velocity']))])[:, 0]
+        coordinates = np.array([np.matmul(transform, stellar_data_tmp['Coordinates'][i].T) for i in range(0, len(stellar_data_tmp['Coordinates']))])[
+                      :, 0]
+        velocities = np.array([np.matmul(transform, stellar_data_tmp['Velocity'][i].T) for i in range(0, len(stellar_data_tmp['Velocity']))])[:, 0]
         
         # Calculate the rotated angular momentum of the galaxy #
-        prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
-                                                                                  stellar_data_tmp['Velocity'])  # Msun kpc km s-1
+        prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(coordinates, velocities)  # Msun kpc km s-1
         glx_angular_momentum = np.sum(prc_angular_momentum, axis=0)  # Msun kpc km s-1
         
-        return stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_angular_momentum, glx_angular_momentum
+        return coordinates, velocities, prc_angular_momentum, glx_angular_momentum

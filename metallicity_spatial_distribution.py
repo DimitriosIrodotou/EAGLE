@@ -47,7 +47,7 @@ class MetallicitySpatialDistribution:
         
         if not args.l:
             # Extract particle and subhalo attributes and convert them to astronomical units #
-            self.stellar_data, self.subhalo_data = self.read_galaxies(simulation_path, tag)
+            self.stellar_data, self.subhalo_data = self.read_attributes(simulation_path, tag)
             print('Read data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
             print('–––––––––––––––––––––––––––––––––––––––––––––')
             
@@ -61,7 +61,7 @@ class MetallicitySpatialDistribution:
                     
                     # Save data in numpy arrays #
                     stellar_data_tmp = self.mask_galaxies(group_number, subgroup_number)  # Mask galaxies and normalise data.
-                    np.save(data_path + 'stellar_data_tmps/' + 'stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number), stellar_data_tmp)
+                    np.save(data_path + 'stellar_data_tmps/stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number), stellar_data_tmp)
                     print('Masked and saved data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                         round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
@@ -81,7 +81,7 @@ class MetallicitySpatialDistribution:
                     
                     # Load data from numpy arrays #
                     stellar_data_tmp = np.load(
-                        data_path + 'stellar_data_tmps/' + 'stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy',
+                        data_path + 'stellar_data_tmps/stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy',
                         allow_pickle=True)
                     stellar_data_tmp = stellar_data_tmp.item()
                     print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
@@ -100,7 +100,7 @@ class MetallicitySpatialDistribution:
     
     
     @staticmethod
-    def read_galaxies(simulation_path, tag):
+    def read_attributes(simulation_path, tag):
         """
         Extract particle and subhalo attributes and convert them to astronomical units.
         :param simulation_path: simulation directory
@@ -255,7 +255,7 @@ class MetallicitySpatialDistribution:
             ax1.scatter(stellar_data_tmp['Coordinates'][mask, 0], stellar_data_tmp['Coordinates'][mask, 1], c=stellar_data_tmp['Metallicity'][mask],
                         cmap='Spectral', s=1)
             scatter = ax2.scatter(stellar_data_tmp['Coordinates'][mask, 0], stellar_data_tmp['Coordinates'][mask, 2],
-                                  c=stellar_data_tmp['Metallicity'][mask], cmap='Spectral', s=1)
+                                  c=stellar_data_tmp['Metallicity'][mask] / 0.0134, cmap='Spectral', s=1)
         
         # Generate the color bar #
         cbar = plt.colorbar(scatter, cax=axcbar, orientation='horizontal')
@@ -265,7 +265,7 @@ class MetallicitySpatialDistribution:
         axcbar.tick_params(direction='out', which='both', right='on', labelsize=16)
         
         # Save the plot #
-        plt.savefig(plots_path + str(group_number) + str(subgroup_number) + '-' + 'MSP' + '-' + date + '.png', bbox_inches='tight')
+        plt.savefig(plots_path + str(group_number) + '_' + str(subgroup_number) + '-' + 'MSP' + '-' + date + '.png', bbox_inches='tight')
         return None
 
 

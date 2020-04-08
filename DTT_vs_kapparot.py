@@ -49,7 +49,7 @@ class DiscToTotalVsKappaRot:
         
         if not args.l:
             # Extract particle and subhalo attributes and convert them to astronomical units #
-            self.stellar_data, self.subhalo_data = self.read_galaxies(simulation_path, tag)
+            self.stellar_data, self.subhalo_data = self.read_attributes(simulation_path, tag)
             print('Read data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
             print('–––––––––––––––––––––––––––––––––––––––––––––')
             
@@ -115,7 +115,7 @@ class DiscToTotalVsKappaRot:
     
     
     @staticmethod
-    def read_galaxies(simulation_path, tag):
+    def read_attributes(simulation_path, tag):
         """
         Extract particle and subhalo attributes and convert them to astronomical units.
         :param simulation_path: simulation directory

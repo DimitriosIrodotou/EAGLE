@@ -18,7 +18,7 @@ from matplotlib import gridspec
 from rotate_galaxies import RotateCoordinates
 
 # Create a parser and add argument to read data #
-parser = argparse.ArgumentParser(description='Create RA and Dec with properties.')
+parser = argparse.ArgumentParser(description='Create RA and Dec with attributes.')
 parser.add_argument('-r', action='store_true', help='Read data')
 parser.add_argument('-l', action='store_true', help='Load data')
 parser.add_argument('-rs', action='store_true', help='Read data and save to numpy arrays')
@@ -29,9 +29,9 @@ start_global_time = time.time()  # Start the global time.
 warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
 
 
-class RADecProperties:
+class RADecAttributes:
     """
-    For each galaxy create: an RA and Dec plots from the angular momentum of particles colour-coded by different properties.
+    For each galaxy create: an RA and Dec plots from the angular momentum of particles colour-coded by different attributes.
     """
     
     
@@ -48,7 +48,7 @@ class RADecProperties:
         
         if not args.l:
             # Extract particle and subhalo attributes and convert them to astronomical units #
-            self.stellar_data, self.subhalo_data = self.read_galaxies(simulation_path, tag)
+            self.stellar_data, self.subhalo_data = self.read_attributes(simulation_path, tag)
             print('Read data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
             print('–––––––––––––––––––––––––––––––––––––––––––––')
             
@@ -64,7 +64,7 @@ class RADecProperties:
                     
                     # Save data in numpy arrays #
                     np.save(data_path + 'glx_unit_vectors/' + 'glx_unit_vector_' + str(group_number) + '_' + str(subgroup_number), glx_unit_vector)
-                    np.save(data_path + 'stellar_data_tmps/' + 'stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number), stellar_data_tmp)
+                    np.save(data_path + 'stellar_data_tmps/stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number), stellar_data_tmp)
                     print('Masked and saved data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                         round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
@@ -85,7 +85,7 @@ class RADecProperties:
                     glx_unit_vector = np.load(
                         data_path + 'glx_unit_vectors/' + 'glx_unit_vector_' + str(group_number) + '_' + str(subgroup_number) + '.npy')
                     stellar_data_tmp = np.load(
-                        data_path + 'stellar_data_tmps/' + 'stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy',
+                        data_path + 'stellar_data_tmps/stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy',
                         allow_pickle=True)
                     stellar_data_tmp = stellar_data_tmp.item()
                     print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
@@ -98,12 +98,12 @@ class RADecProperties:
                 print('Plotted data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
                 print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished RADecProperties for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished RADecAttributes for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
     @staticmethod
-    def read_galaxies(simulation_path, tag):
+    def read_attributes(simulation_path, tag):
         """
         Extract particle and subhalo attributes and convert them to astronomical units.
         :param simulation_path: simulation directory
@@ -191,7 +191,7 @@ class RADecProperties:
     @staticmethod
     def plot(stellar_data_tmp, glx_unit_vector, group_number, subgroup_number):
         """
-        Plot RA and Dec from the angular momentum of particles colour-coded by different properties.
+        Plot RA and Dec from the angular momentum of particles colour-coded by different attributes.
         :param stellar_data_tmp: from mask_galaxies
         :param glx_unit_vector: from mask_galaxies
         :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber']))
@@ -234,7 +234,7 @@ class RADecProperties:
         ax00.annotate(r'Density maximum', xy=(lon_densest, lat_densest), xycoords='data', xytext=(0.78, 1.00), textcoords='axes fraction',
                       arrowprops=dict(arrowstyle="-", color='black', connectionstyle="arc3,rad=0"))  # Position of the denset pixel.
         ax00.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black', marker='X',
-                     zorder=5)  # Position of the galactic angular momentum.
+                     facecolors='none', zorder=5)  # Position of the galactic angular momentum.
         
         # Sample a 360x180 grid in ra/dec #
         ra = np.linspace(-180.0, 180.0, num=360) * u.deg
@@ -283,7 +283,7 @@ class RADecProperties:
         
         # Save the plot #
         # plt.title('z ~ ' + re.split('_z0|p000', tag)[1])
-        plt.savefig(plots_path + str(group_number) + str(subgroup_number) + '-' + 'RDP' + '-' + date + '.png', bbox_inches='tight')
+        plt.savefig(plots_path + str(group_number) + '_' + str(subgroup_number) + '-' + 'RDP' + '-' + date + '.png', bbox_inches='tight')
         
         return None
 
@@ -299,4 +299,4 @@ if __name__ == '__main__':
     data_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/'  # Path to save/load data.
     if not os.path.exists(plots_path):
         os.makedirs(plots_path)
-    x = RADecProperties(simulation_path, tag)
+    x = RADecAttributes(simulation_path, tag)

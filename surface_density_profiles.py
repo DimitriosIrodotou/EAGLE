@@ -48,7 +48,7 @@ class SurfaceDensityProfiles:
         
         if not args.l:
             # Extract particle and subhalo attributes and convert them to astronomical units #
-            self.stellar_data, self.subhalo_data = self.read_galaxies(simulation_path, tag)
+            self.stellar_data, self.subhalo_data = self.read_attributes(simulation_path, tag)
             print('Read data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
             print('–––––––––––––––––––––––––––––––––––––––––––––')
             
@@ -63,7 +63,7 @@ class SurfaceDensityProfiles:
                     stellar_data_tmp = self.mask_galaxies(group_number, subgroup_number)  # Mask galaxies and normalise data.
                     
                     # Save data in numpy arrays #
-                    np.save(data_path + 'stellar_data_tmps/' + 'stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number), stellar_data_tmp)
+                    np.save(data_path + 'stellar_data_tmps/stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number), stellar_data_tmp)
                     print('Masked and saved data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                         round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
@@ -82,7 +82,7 @@ class SurfaceDensityProfiles:
                     start_local_time = time.time()  # Start the local time.
                     
                     stellar_data_tmp = np.load(
-                        data_path + 'stellar_data_tmps/' + 'stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy',
+                        data_path + 'stellar_data_tmps/stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy',
                         allow_pickle=True)
                     stellar_data_tmp = stellar_data_tmp.item()
                     print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
@@ -101,7 +101,7 @@ class SurfaceDensityProfiles:
     
     
     @staticmethod
-    def read_galaxies(simulation_path, tag):
+    def read_attributes(simulation_path, tag):
         """
         Extract particle and subhalo attributes and convert them to astronomical units.
         :param simulation_path: simulation directory
@@ -274,7 +274,7 @@ class SurfaceDensityProfiles:
                     plt.plot(centers, profile(centers, popt[0], popt[1]), c=color, label=label2)
                     sden_tmp = sden
                     
-                    # Calculate disc properties #
+                    # Calculate disc attributes #
                     I_0d, R_d = popt[0], popt[1]
                     disk_mass = 2.0 * np.pi * I_0d * R_d ** 2
                 
@@ -282,7 +282,7 @@ class SurfaceDensityProfiles:
                     popt, pcov = curve_fit(profile, centers, sden, sigma=0.1 * sden, p0=[sden[0], 2, 4])  # p0 = [I_0b, b, n]
                     plt.plot(centers, profile(centers, popt[0], popt[1], popt[2]), c=color, label=label2)
                     
-                    # Calculate bulge properties #
+                    # Calculate bulge attributes #
                     I_0b, b, n = popt[0], popt[1], popt[2]
                     R_eff = b * sersic_b_n(n) ** n
                     bulge_mass = np.pi * I_0b * R_eff ** 2 * gamma(2.0 / n + 1)
@@ -306,7 +306,7 @@ class SurfaceDensityProfiles:
             popt, pcov = curve_fit(total_profile, centers, sden, sigma=0.1 * sden, p0=[sden_tmp[0], 2, sden[0], 2, 4])  # p0 = [I_0d, R_d, I_0b, b, n]
             plt.plot(centers, total_profile(centers, popt[0], popt[1], popt[2], popt[3], popt[4]), c='k', label=r'$\mathrm{Total}$')
             
-            # Calculate galactic properties #
+            # Calculate galactic attributes #
             I_0d, R_d, I_0b, b, n = popt[0], popt[1], popt[2], popt[3], popt[4]
             R_eff = b * sersic_b_n(n) ** n
             disk_mass = 2.0 * np.pi * I_0d * R_d ** 2
@@ -322,7 +322,7 @@ class SurfaceDensityProfiles:
         
         # Create the legend and save the figure #
         plt.legend(loc='upper right', fontsize=16, frameon=False, numpoints=1)
-        plt.savefig(plots_path + str(group_number) + str(subgroup_number) + '-' + 'SDP' + '-' + date + '.png', bbox_inches='tight')
+        plt.savefig(plots_path + str(group_number) + '_' + str(subgroup_number) + '-' + 'SDP' + '-' + date + '.png', bbox_inches='tight')
         return None
 
 

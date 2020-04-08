@@ -52,21 +52,21 @@ class MultipleDecomposition:
         
         if not args.l:
             # Extract particle and subhalo attributes and convert them to astronomical units #
-            self.stellar_data, self.subhalo_data = self.read_galaxies(simulation_path, tag)
+            self.stellar_data, self.subhalo_data = self.read_attributes(simulation_path, tag)
             print('Read data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
             print('–––––––––––––––––––––––––––––––––––––––––––––')
             
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e9 Msun.
         
-        for group_number in list(set(self.subhalo_data_tmp['GroupNumber']))[-5:]:  # Loop over all masked haloes.
-        # for group_number in range(181341, 351445):  # Loop over all masked haloes.
+        # for group_number in list(set(self.subhalo_data_tmp['GroupNumber']))[-5:]:  # Loop over all masked haloes.
+        for group_number in range(1, 26):  # Loop over all masked haloes.
             for subgroup_number in range(0, 1):  # Get centrals only.
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
                     
                     # Save data in numpy arrays #
                     stellar_data_tmp = self.mask_galaxies(group_number, subgroup_number)  # Mask galaxies and normalise data.
-                    np.save(data_path + 'stellar_data_tmps/' + 'stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number), stellar_data_tmp)
+                    np.save(data_path + 'stellar_data_tmps/stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number), stellar_data_tmp)
                     print('Masked and saved data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                         round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
@@ -86,7 +86,7 @@ class MultipleDecomposition:
                     
                     # Load data from numpy arrays #
                     stellar_data_tmp = np.load(
-                        data_path + 'stellar_data_tmps/' + 'stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy',
+                        data_path + 'stellar_data_tmps/stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy',
                         allow_pickle=True)
                     stellar_data_tmp = stellar_data_tmp.item()
                     print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
@@ -104,7 +104,7 @@ class MultipleDecomposition:
     
     
     @staticmethod
-    def read_galaxies(simulation_path, tag):
+    def read_attributes(simulation_path, tag):
         """
         Extract particle and subhalo attributes and convert them to astronomical units.
         :param simulation_path: simulation directory
@@ -251,7 +251,7 @@ class MultipleDecomposition:
         ax00.annotate(r'$\mathrm{Density\;maximum}$', xy=(lon_densest, lat_densest), xycoords='data', xytext=(0.78, 1.00), textcoords='axes fraction',
                       arrowprops=dict(arrowstyle='-', color='black', connectionstyle='arc3,rad=0'))  # Position of the densest pixel.
         ax00.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=100, color='black', marker='X',
-                     zorder=5)  # Position of the galactic angular momentum.
+                     facecolors='none', zorder=5)  # Position of the galactic angular momentum.
         
         # Sample a 360x180 grid in ra/dec #
         ra = np.linspace(-180.0, 180.0, num=360) * u.deg
@@ -276,11 +276,11 @@ class MultipleDecomposition:
         disc_fraction_IT20 = np.divide(np.sum(stellar_data_tmp['Mass'][disc_mask]), np.sum(stellar_data_tmp['Mass']))
         
         # Plot the 2D surface density projections #
-        # galaxy_id = access_database.download_image(group_number, subgroup_number)
-        # img = mpimg.imread(data_path + 'images/galface_' + galaxy_id)
-        # img1 = mpimg.imread(data_path + 'images/galedge_' + galaxy_id)
-        # ax01.imshow(img)
-        # ax02.imshow(img1)
+        galaxy_id = access_database.download_image(group_number, subgroup_number)
+        img = mpimg.imread(data_path + 'images/galface_' + galaxy_id)
+        img1 = mpimg.imread(data_path + 'images/galedge_' + galaxy_id)
+        ax01.imshow(img)
+        ax02.imshow(img1)
         
         # Calculate and plot the angular distance (spherical law of cosines) between the densest and all the other grid cells #
         angular_theta_from_densest = np.arccos(
@@ -322,7 +322,7 @@ class MultipleDecomposition:
         ax10.legend(loc='upper center', fontsize=12, frameon=False, scatterpoints=3)
         ax11.legend(loc='upper center', fontsize=12, frameon=False, scatterpoints=3)
         ax12.legend(loc='upper left', fontsize=12, frameon=False, scatterpoints=3)
-        plt.savefig(plots_path + str(group_number) + str(subgroup_number) + '-' + 'MD' + '-' + date + '.png', bbox_inches='tight')
+        plt.savefig(plots_path + str(group_number) + '_' + str(subgroup_number) + '-' + 'MD' + '-' + date + '.png', bbox_inches='tight')
         return None
 
 

@@ -38,35 +38,35 @@ class MorphoKinematics:
         :return: kappa, discfrac, orbi, vrotsig, vrots, delta, zaxis, glx_angular_momentum_magnitude
         """
         
-        # Group the properties of the particles #
-        prc_properties = np.vstack([coordinates.T, masses, velocities.T, particlebindingenergy]).T
-        prc_distances = np.linalg.norm(prc_properties[:, :3], axis=1)
-        glx_mass = np.sum(prc_properties[:, 3])
+        # Group the attributes of the particles #
+        prc_attributes = np.vstack([coordinates.T, masses, velocities.T, particlebindingenergy]).T
+        prc_distances = np.linalg.norm(prc_attributes[:, :3], axis=1)
+        glx_mass = np.sum(prc_attributes[:, 3])
         
         # Calculate the angular momenta #
-        prc_s_angular_momentum = np.cross(prc_properties[:, :3], prc_properties[:, 4:7])
-        glx_angular_momentum = np.sum(prc_properties[:, 3][:, np.newaxis] * prc_s_angular_momentum, axis=0)
+        prc_s_angular_momentum = np.cross(prc_attributes[:, :3], prc_attributes[:, 4:7])
+        glx_angular_momentum = np.sum(prc_attributes[:, 3][:, np.newaxis] * prc_s_angular_momentum, axis=0)
         glx_angular_momentum_magnitude = np.linalg.norm(glx_angular_momentum)
         
         # Calculate cylindrical quantities #
         zaxis = (glx_angular_momentum / glx_angular_momentum_magnitude)  # Unit vector pointing along the glx_angular_momentum direction.
-        zheight = np.sum(zaxis * prc_properties[:, :3], axis=1)  # Projection of the coordinate vectors on the unit vector.
-        cylposition = prc_properties[:, :3] - zheight[:, np.newaxis] * [zaxis]
+        zheight = np.sum(zaxis * prc_attributes[:, :3], axis=1)  # Projection of the coordinate vectors on the unit vector.
+        cylposition = prc_attributes[:, :3] - zheight[:, np.newaxis] * [zaxis]
         cyldistances = np.sqrt(prc_distances ** 2 - zheight ** 2)
         smomentumz = np.sum(zaxis * prc_s_angular_momentum, axis=1)
         vrots = smomentumz / cyldistances
-        vrads = np.sum(cylposition * prc_properties[:, 4:7] / cyldistances[:, np.newaxis], axis=1)
-        vheis = np.sum(zaxis * prc_properties[:, 4:7], axis=1)
+        vrads = np.sum(cylposition * prc_attributes[:, 4:7] / cyldistances[:, np.newaxis], axis=1)
+        vheis = np.sum(zaxis * prc_attributes[:, 4:7], axis=1)
         
         # Calculate kinetic energy fraction invested in co-rotation #
-        Mvrot2 = np.sum((prc_properties[:, 3] * vrots ** 2)[vrots > 0])
-        kappa = Mvrot2 / np.sum(prc_properties[:, 3] * (np.linalg.norm(prc_properties[:, 4:7], axis=1)) ** 2)
+        Mvrot2 = np.sum((prc_attributes[:, 3] * vrots ** 2)[vrots > 0])
+        kappa = Mvrot2 / np.sum(prc_attributes[:, 3] * (np.linalg.norm(prc_attributes[:, 4:7], axis=1)) ** 2)
         
         # Calculate disc-to-total masses fraction estimated from the counter-rotating bulge #
-        discfrac = 1 - 2 * np.sum(prc_properties[vrots <= 0, 3]) / glx_mass
+        discfrac = 1 - 2 * np.sum(prc_attributes[vrots <= 0, 3]) / glx_mass
         
         # Calculate the mean orbital circularity #
-        sbindingenergy = prc_properties[:, 7]
+        sbindingenergy = prc_attributes[:, 7]
         sortE = np.argsort(sbindingenergy)
         unsortE = np.argsort(sortE)
         jzE = np.vstack([sbindingenergy, smomentumz]).T[sortE]
@@ -74,10 +74,10 @@ class MorphoKinematics:
         orbi = np.median(orbital)
         
         # Calculate rotation-to-dispersion and dispersion anisotropy
-        Vrot = np.abs(MorphoKinematics.cumsummedian(vrots, weights=prc_properties[:, 3]))
-        SigmaXY = np.sqrt(np.average(np.sum(prc_properties[:, [3]] * np.vstack([vrads, vrots]).T ** 2, axis=0) / glx_mass))  #
+        Vrot = np.abs(MorphoKinematics.cumsummedian(vrots, weights=prc_attributes[:, 3]))
+        SigmaXY = np.sqrt(np.average(np.sum(prc_attributes[:, [3]] * np.vstack([vrads, vrots]).T ** 2, axis=0) / glx_mass))  #
         SigmaO = np.sqrt(SigmaXY ** 2 - .5 * Vrot ** 2)
-        # SigmaZ = np.sqrt(np.average(vheis ** 2, weights=prc_properties[:, 3]))
+        # SigmaZ = np.sqrt(np.average(vheis ** 2, weights=prc_attributes[:, 3]))
         vrotsig = Vrot / SigmaO
         # delta = 1 - (SigmaZ / SigmaO) ** 2
         
