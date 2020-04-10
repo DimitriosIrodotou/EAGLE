@@ -213,8 +213,8 @@ class BetaSpatialDistribution:
         ax11.set_ylabel(r'$\mathrm{y\,[kpc]}$', size=16)
         ax21.set_xlabel(r'$\mathrm{x\,[kpc]}$', size=16)
         ax21.set_ylabel(r'$\mathrm{z\,[kpc]}$', size=16)
-        ax10.annotate(r'$\mathrmDisc}$', xy=(-25, 25), xycoords='data', size=16)
-        ax11.annotate(r'$\mathrmBulge}$', xy=(-25, 25), xycoords='data', size=16)
+        ax10.annotate(r'$\mathrm{Disc}$', xy=(-25, 25), xycoords='data', size=16)
+        ax11.annotate(r'$\mathrm{Bulge}$', xy=(-25, 25), xycoords='data', size=16)
         
         # Rotate coordinates and velocities of stellar particles so the galactic angular momentum points along the x axis #
         stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_angular_momentum, glx_angular_momentum = RotateCoordinates.rotate_Jz(

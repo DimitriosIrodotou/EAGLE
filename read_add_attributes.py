@@ -50,8 +50,7 @@ class ReadAddAttributes:
             # Save data in numpy array #
             np.save(data_path + 'stellar_data_tmps/stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number), stellar_data_tmp)
             np.save(data_path + 'gaseous_data_tmps/gaseous_data_tmp_' + str(group_number) + '_' + str(subgroup_number), gaseous_data_tmp)
-            np.save(data_path + 'dark_matter_data_tmps/dark_matter_data_tmp_' + str(group_number) + '_' + str(subgroup_number),
-                    dark_matter_data_tmp)
+            np.save(data_path + 'dark_matter_data_tmps/dark_matter_data_tmp_' + str(group_number) + '_' + str(subgroup_number), dark_matter_data_tmp)
             np.save(data_path + 'subhalo_data_tmps/subhalo_data_tmp_' + str(group_number) + '_' + str(subgroup_number), self.subhalo_data_tmp)
             np.save(data_path + 'FOF_data_tmps/FOF_data_tmp_' + str(group_number) + '_' + str(subgroup_number), self.FOF_data)
             
@@ -76,23 +75,22 @@ class ReadAddAttributes:
         stellar_data, gaseous_data, dark_matter_data = {}, {}, {}
         file_type = 'PARTDATA'
         particle_type = '4'
-        for attribute in ['BirthDensity', 'Coordinates', 'GroupNumber', 'Mass', 'Metallicity', 'ParticleBindingEnergy', 'ParticleIDs',
-                          'StellarFormationTime', 'SubGroupNumber', 'Velocity']:
+        for attribute in ['BirthDensity', 'Coordinates', 'GroupNumber', 'Mass', 'Metallicity', 'ParticleBindingEnergy', 'StellarFormationTime',
+                          'SubGroupNumber', 'Velocity']:
             stellar_data[attribute] = E.read_array(file_type, simulation_path, tag, '/PartType' + particle_type + '/' + attribute, numThreads=8)
         
         particle_type = '0'
-        for attribute in ['Coordinates', 'GroupNumber', 'Mass', 'ParticleIDs', 'StarFormationRate', 'SubGroupNumber', 'Velocity']:
+        for attribute in ['Coordinates', 'GroupNumber', 'Mass', 'StarFormationRate', 'SubGroupNumber', 'Velocity']:
             gaseous_data[attribute] = E.read_array(file_type, simulation_path, tag, '/PartType' + particle_type + '/' + attribute, numThreads=8)
         
         particle_type = '1'
-        for attribute in ['Coordinates', 'GroupNumber', 'ParticleIDs', 'SubGroupNumber', 'Velocity']:
+        for attribute in ['Coordinates', 'GroupNumber', 'SubGroupNumber', 'Velocity']:
             dark_matter_data[attribute] = E.read_array(file_type, simulation_path, tag, '/PartType' + particle_type + '/' + attribute, numThreads=8)
         
         # Load subhalo data in h-free physical CGS units #
         subhalo_data = {}
         file_type = 'SUBFIND'
-        for attribute in ['ApertureMeasurements/Mass/030kpc', 'CentreOfPotential', 'GroupNumber', 'IDMostBound', 'InitialMassWeightedStellarAge',
-                          'SubGroupNumber']:
+        for attribute in ['ApertureMeasurements/Mass/030kpc', 'CentreOfPotential', 'GroupNumber', 'InitialMassWeightedStellarAge', 'SubGroupNumber']:
             subhalo_data[attribute] = E.read_array(file_type, simulation_path, tag, '/Subhalo/' + attribute, numThreads=8)
         
         # Load FOF data in h-free physical CGS units #
@@ -174,16 +172,6 @@ class ReadAddAttributes:
         # Normalise the coordinates and velocities wrt the centre of potential of the subhalo #
         for data in [stellar_data_tmp, gaseous_data_tmp, dark_matter_data_tmp]:
             data['Coordinates'] = np.subtract(data['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][halo_mask])
-        
-        # if self.subhalo_data_tmp['IDMostBound'][halo_mask] in stellar_data_tmp['ParticleIDs']:
-        #     CoM_velocity = stellar_data_tmp['Velocity'][np.where(stellar_data_tmp['ParticleIDs'] == self.subhalo_data_tmp['IDMostBound'][
-        #     halo_mask])]
-        # elif self.subhalo_data_tmp['IDMostBound'][halo_mask] in dark_matter_data_tmp['ParticleIDs']:
-        #     CoM_velocity = dark_matter_data_tmp['Velocity'][
-        #         np.where(dark_matter_data_tmp['ParticleIDs'] == self.subhalo_data_tmp['IDMostBound'][halo_mask])]
-        # elif self.subhalo_data_tmp['IDMostBound'][halo_mask] in gaseous_data_tmp['ParticleIDs']:
-        #     CoM_velocity = gaseous_data_tmp['Velocity'][np.where(gaseous_data_tmp['ParticleIDs'] == self.subhalo_data_tmp['IDMostBound'][
-        #     halo_mask])]
         
         CoM_velocity = np.divide(np.sum(stellar_data_tmp['Mass'][:, np.newaxis] * stellar_data_tmp['Velocity'], axis=0) + np.sum(
             gaseous_data_tmp['Mass'][:, np.newaxis] * gaseous_data_tmp['Velocity'], axis=0) + np.sum(
