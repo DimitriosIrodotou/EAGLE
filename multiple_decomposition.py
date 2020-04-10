@@ -59,7 +59,7 @@ class MultipleDecomposition:
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e9 Msun.
         
         # for group_number in list(set(self.subhalo_data_tmp['GroupNumber']))[-5:]:  # Loop over all masked haloes.
-        for group_number in range(1, 26):  # Loop over all masked haloes.
+        for group_number in range(25, 26):  # Loop over all masked haloes.
             for subgroup_number in range(0, 1):  # Get centrals only.
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
@@ -242,7 +242,7 @@ class MultipleDecomposition:
         nside = 2 ** 5  # Define the resolution of the grid (number of divisions along the side of a base-resolution pixel).
         hp = HEALPix(nside=nside)  # Initialise the HEALPix pixellisation class.
         indices = hp.lonlat_to_healpix(ra * u.deg, dec * u.deg)  # Create list of HEALPix indices from particles' ra and dec.
-        density = np.bincount(indices, minlength=hp.npix)  # Count number of points in each HEALPix pixel.
+        density = np.bincount(indices, minlength=hp.npix)  # Count number of data points in each HEALPix pixel.
         
         # Find location of density maximum and plot its positions and the ra and dec of the galactic angular momentum #
         index_densest = np.argmax(density)

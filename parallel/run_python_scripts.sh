@@ -1,12 +1,11 @@
 #!/bin/bash -l
 #SBATCH -p cosma7 # Specify the system.
-#SBATCH --ntasks=5 # Set the number of of nodes.
-#SBATCH --cpus-per-task=28 # Set the number of cores per node (28 for COSMA7).
-
+#SBATCH --ntasks=1 # Set the number of of nodes.
+#SBATCH --cpus-per-task=8 # Set the number of cores per node (maximum 28 for COSMA7).
 #SBATCH -A dp004 # Set the name of the project.
 #SBATCH --job-name=Python_DI # Set the name of the job.
 #SBATCH -t 0-72:00 # Set a time limit (3 days for COSMA7).
-#SBATCH --array=1-5 # Run 28 copies of the code
+#SBATCH --array=1-5 # Run 5 copies of the code
 # Folders to save the log files #
 #SBATCH -o out/slurm.%N.%j.out
 #SBATCH -e err/slurm.%N.%j.err
@@ -30,5 +29,5 @@ module unload python
 module load anaconda3/5.2.0
 source activate my_python
 
-# Run the program 30 times (on 5 cores).
-mpirun -np $SLURM_NTASKS python /cosma7/data/dp004/dc-irod1/EAGLE/python/read_add_properties.py $SLURM_ARRAY_TASK_ID
+# Run the program 5 times on 3 cores.
+mpirun -np $SLURM_NTASKS python /cosma7/data/dp004/dc-irod1/EAGLE/python/read_add_attributes.py $SLURM_ARRAY_TASK_ID

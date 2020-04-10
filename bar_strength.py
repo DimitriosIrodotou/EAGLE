@@ -4,7 +4,6 @@ import time
 import warnings
 import argparse
 import matplotlib
-import access_database
 
 matplotlib.use('Agg')
 
@@ -106,18 +105,18 @@ class BarStrength:
         :return: stellar_data, subhalo_data
         """
         
-        # Load subhalo data in h-free physical CGS units #
-        subhalo_data = {}
-        file_type = 'SUBFIND'
-        for attribute in ['ApertureMeasurements/Mass/030kpc', 'CentreOfPotential', 'GroupNumber', 'SubGroupNumber']:
-            subhalo_data[attribute] = E.read_array(file_type, simulation_path, tag, '/Subhalo/' + attribute, numThreads=8)
-        
         # Load particle data in h-free physical CGS units #
         stellar_data = {}
         particle_type = '4'
         file_type = 'PARTDATA'
         for attribute in ['Coordinates', 'GroupNumber', 'Mass', 'SubGroupNumber', 'Velocity']:
             stellar_data[attribute] = E.read_array(file_type, simulation_path, tag, '/PartType' + particle_type + '/' + attribute, numThreads=8)
+        
+        # Load subhalo data in h-free physical CGS units #
+        subhalo_data = {}
+        file_type = 'SUBFIND'
+        for attribute in ['ApertureMeasurements/Mass/030kpc', 'CentreOfPotential', 'GroupNumber', 'SubGroupNumber']:
+            subhalo_data[attribute] = E.read_array(file_type, simulation_path, tag, '/Subhalo/' + attribute, numThreads=8)
         
         # Convert attributes to astronomical units #
         stellar_data['Mass'] *= u.g.to(u.Msun)

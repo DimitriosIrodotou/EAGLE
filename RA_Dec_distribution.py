@@ -146,7 +146,7 @@ class RADecDistribution:
         nside = 2 ** 5  # Define the resolution of the grid (number of divisions along the side of a base-resolution pixel).
         hp = HEALPix(nside=nside)  # Initialise the HEALPix pixellisation class.
         indices = hp.lonlat_to_healpix(ra * u.deg, dec * u.deg)  # Create list of HEALPix indices from particles' ra and dec.
-        density = np.bincount(indices, minlength=hp.npix)  # Count number of points in each HEALPix pixel.
+        density = np.bincount(indices, minlength=hp.npix)  # Count number of data points in each HEALPix pixel.
         
         # Sample a 360x180 grid in ra/dec #
         ra = np.linspace(-180.0, 180.0, num=360) * u.deg

@@ -108,18 +108,18 @@ class BetaSpatialDistribution:
         :return: stellar_data, subhalo_data
         """
         
-        # Load subhalo data in h-free physical CGS units #
-        subhalo_data = {}
-        file_type = 'SUBFIND'
-        for attribute in ['ApertureMeasurements/Mass/030kpc', 'CentreOfPotential', 'GroupNumber', 'SubGroupNumber']:
-            subhalo_data[attribute] = E.read_array(file_type, simulation_path, tag, '/Subhalo/' + attribute, numThreads=8)
-        
         # Load particle data in h-free physical CGS units #
         stellar_data = {}
         particle_type = '4'
         file_type = 'PARTDATA'
         for attribute in ['Coordinates', 'GroupNumber', 'Mass', 'SubGroupNumber', 'Velocity']:
             stellar_data[attribute] = E.read_array(file_type, simulation_path, tag, '/PartType' + particle_type + '/' + attribute, numThreads=8)
+        
+        # Load subhalo data in h-free physical CGS units #
+        subhalo_data = {}
+        file_type = 'SUBFIND'
+        for attribute in ['ApertureMeasurements/Mass/030kpc', 'CentreOfPotential', 'GroupNumber', 'SubGroupNumber']:
+            subhalo_data[attribute] = E.read_array(file_type, simulation_path, tag, '/Subhalo/' + attribute, numThreads=8)
         
         # Convert attributes to astronomical units #
         stellar_data['Mass'] *= u.g.to(u.Msun)
@@ -229,7 +229,7 @@ class BetaSpatialDistribution:
         nside = 2 ** 5  # Define the resolution of the grid (number of divisions along the side of a base-resolution pixel).
         hp = HEALPix(nside=nside)  # Initialise the HEALPix pixellisation class.
         indices = hp.lonlat_to_healpix(ra * u.deg, dec * u.deg)  # Create list of HEALPix indices from particles' ra and dec.
-        density = np.bincount(indices, minlength=hp.npix)  # Count number of points in each HEALPix pixel.
+        density = np.bincount(indices, minlength=hp.npix)  # Count number of data points in each HEALPix pixel.
         
         # Find location of density maximum and plot its positions and the ra and dec of the galactic angular momentum #
         index_densest = np.argmax(density)

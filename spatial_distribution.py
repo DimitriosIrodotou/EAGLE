@@ -54,7 +54,7 @@ class SpatialDistribution:
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e9 Msun.
         
         # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all masked haloes.
-        for group_number in range(1, 26):  # Loop over all masked haloes.
+        for group_number in range(25, 26):  # Loop over all masked haloes.
             for subgroup_number in range(0, 1):  # Get centrals only.
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
@@ -212,7 +212,7 @@ class SpatialDistribution:
         ax11.set_ylabel(r'$\mathrm{y\,[kpc]}$', size=16)
         ax21.set_xlabel(r'$\mathrm{x\,[kpc]}$', size=16)
         ax21.set_ylabel(r'$\mathrm{z\,[kpc]}$', size=16)
-        ax10.annotate(r'$\mathrmDisc}$', xy=(-25, 25), xycoords='data', size=16)
+        ax10.annotate(r'$\mathrm{Disc}$', xy=(-25, 25), xycoords='data', size=16)
         ax11.annotate(r'$\mathrm{Bulge}$', xy=(-25, 25), xycoords='data', size=16)
         
         # Rotate coordinates and velocities of stellar particles so the galactic angular momentum points along the x axis #
@@ -228,7 +228,7 @@ class SpatialDistribution:
         nside = 2 ** 5  # Define the resolution of the grid (number of divisions along the side of a base-resolution pixel).
         hp = HEALPix(nside=nside)  # Initialise the HEALPix pixellisation class.
         indices = hp.lonlat_to_healpix(ra * u.deg, dec * u.deg)  # Create list of HEALPix indices from particles' ra and dec.
-        density = np.bincount(indices, minlength=hp.npix)  # Count number of points in each HEALPix pixel.
+        density = np.bincount(indices, minlength=hp.npix)  # Count number of data points in each HEALPix pixel.
         
         # Find location of density maximum and plot its positions and the ra and dec of the galactic angular momentum #
         index_densest = np.argmax(density)
@@ -273,14 +273,14 @@ class SpatialDistribution:
         axcbar.tick_params(direction='out', which='both', right='on', labelsize=16)
         
         # Save the plot #
-        plt.savefig(plots_path + str(group_number) + '_' + str(subgroup_number) + '-' + 'SP' + '-' + date + '.png', bbox_inches='tight')
+        plt.savefig(plots_path + str(group_number) + '_' + str(subgroup_number) + '-' + 'SD' + '-' + date + '.png', bbox_inches='tight')
         return None
 
 
 if __name__ == '__main__':
     tag = '027_z000p101'
     simulation_path = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
-    plots_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/SP/'  # Path to save plots.
+    plots_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/SD/'  # Path to save plots.
     data_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/'  # Path to save/load data.
     if not os.path.exists(plots_path):
         os.makedirs(plots_path)
