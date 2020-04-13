@@ -239,7 +239,6 @@ class AddAttributes:
         """
         A constructor method for the class.
         """
-        
         # Extract particle and subhalo attributes and convert them to astronomical units #
         self.subhalo_data = self.read_attributes(simulation_path, tag)
         print('Read data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
@@ -248,17 +247,18 @@ class AddAttributes:
         self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e9 Msun.
         
         job_number = int(sys.argv[1]) - 1
-        # group_numbers = np.array_split(list(self.subhalo_data_tmp['GroupNumber']), 30)
-        # subgroup_numbers = np.array_split(list(self.subhalo_data_tmp['SubGroupNumber']), 30)
-        group_numbers = np.array_split(np.arange(1, 26), 5)
-        subgroup_numbers = np.zeros(25, dtype=int)
+        group_numbers = np.array_split(list(self.subhalo_data_tmp['GroupNumber']), 30)
+        subgroup_numbers = np.array_split(list(self.subhalo_data_tmp['SubGroupNumber']), 30)
         
-        for group_number, subgroup_number in zip(group_numbers[job_number], subgroup_numbers):  # Loop over all masked haloes and sub-haloes.
+        for group_number, subgroup_number in zip(group_numbers[job_number],
+                                                 subgroup_numbers[job_number]):  # Loop over all masked haloes and sub-haloes.
             start_local_time = time.time()  # Start the local time.
             
+            # Load data #
             stellar_data_tmp = np.load(data_path + 'stellar_data_tmps/stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy',
                                        allow_pickle=True)
             stellar_data_tmp = stellar_data_tmp.item()
+            
             stellar_data_tmp['disc_mask_IT20'], stellar_data_tmp['bulge_mask_IT20'] = self.decomposition_IT20(stellar_data_tmp)
             
             # Save data in numpy array #
@@ -267,6 +267,7 @@ class AddAttributes:
             print(
                 'Masked and saved data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (time.time() - start_local_time))
             print('–––––––––––––––––––––––––––––––––––––––––––––')
+        
         print('Finished AddAttributes for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
@@ -350,9 +351,124 @@ class AddAttributes:
         return disc_mask, bulge_mask
 
 
+class AppendAttributes:
+    """
+    For each galaxy: load its stellar_data_tmp dictionary and append the attribute(s).
+    """
+    
+    
+    def __init__(self, simulation_path, tag):
+        """
+        A constructor method for the class.
+        """
+        # Initialise arrays to store the data #
+        glx_angular_momenta, glx_masses, glx_cs, glx_kappas, disc_fractions_IT20, disc_fractions, disc_metallicities, bulge_metallicities, \
+        glx_rotational_over_dispersion, subgroup_numbers = [], [], [], [], [], [], [], [], [], []
+        
+        # Extract particle and subhalo attributes and convert them to astronomical units #
+        self.subhalo_data = self.read_attributes(simulation_path, tag)
+        print('Read data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
+        print('–––––––––––––––––––––––––––––––––––––––––––––')
+        
+        self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e9 Msun.
+        
+        for group_number, subgroup_number in zip(list(self.subhalo_data_tmp['GroupNumber']),
+                                                 list(self.subhalo_data_tmp['SubGroupNumber'])):  # Loop over all masked haloes and sub-haloes.
+            start_local_time = time.time()  # Start the local time.
+            
+            # Load data #
+            stellar_data_tmp = np.load(data_path + 'stellar_data_tmps/stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy',
+                                       allow_pickle=True)
+            stellar_data_tmp = stellar_data_tmp.item()
+            
+            # Calculate attributes #
+            glx_mass = np.sum(stellar_data_tmp['Mass'])
+            prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
+                                                                                      stellar_data_tmp['Velocity'])  # Msun kpc km s-1
+            glx_angular_momentum = np.sum(prc_angular_momentum, axis=0)
+            
+            masks = [stellar_data_tmp['disc_mask_IT20'], stellar_data_tmp['bulge_mask_IT20']]
+            for i, mask in enumerate(masks):
+                component_mass = np.sum(stellar_data_tmp['Mass'][mask])
+                metals = np.divide(stellar_data_tmp['Metallicity'][mask] * stellar_data_tmp['Mass'][mask], component_mass)
+                if i == 0:
+                    stellar_data_tmp['disc_metallicity'] = np.sum(metals) / 0.0134  # In solar metallicity.
+                else:
+                    stellar_data_tmp['bulge_metallicity'] = np.sum(metals) / 0.0134  # In solar metallicity.
+            
+            # Append attributes into a single array #
+            glx_masses.append(glx_mass)
+            glx_cs.append(stellar_data_tmp['c'])
+            subgroup_numbers.append(subgroup_number)
+            glx_kappas.append(stellar_data_tmp['kappa'])
+            glx_angular_momenta.append(glx_angular_momentum)
+            disc_fractions.append(stellar_data_tmp['disc_fraction'])
+            disc_metallicities.append(stellar_data_tmp['disc_metallicity'])
+            bulge_metallicities.append(stellar_data_tmp['bulge_metallicity'])
+            glx_rotational_over_dispersion.append(stellar_data_tmp['rotational_over_dispersion'])
+            disc_fraction_IT20 = np.divide(np.sum(stellar_data_tmp['Mass'][stellar_data_tmp['disc_mask_IT20']]), np.sum(stellar_data_tmp['Mass']))
+            disc_fractions_IT20.append(disc_fraction_IT20)
+            
+            print(
+                'Masked and saved data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (time.time() - start_local_time))
+            print('–––––––––––––––––––––––––––––––––––––––––––––')
+        
+        # Save data in numpy array #
+        np.save(data_path + 'glx_cs', glx_cs)
+        np.save(data_path + 'glx_masses', glx_masses)
+        np.save(data_path + 'glx_kappas', glx_kappas)
+        np.save(data_path + 'disc_fractions', disc_fractions)
+        np.save(data_path + 'disc_metallicities', disc_metallicities)
+        np.save(data_path + 'disc_fractions_IT20', disc_fractions_IT20)
+        np.save(data_path + 'glx_angular_momenta', glx_angular_momenta)
+        np.save(data_path + 'bulge_metallicities', bulge_metallicities)
+        np.save(data_path + 'glx_rotational_over_dispersion', glx_rotational_over_dispersion)
+        
+        print('Finished AppendAttributes for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
+        print('–––––––––––––––––––––––––––––––––––––––––––––')
+    
+    
+    @staticmethod
+    def read_attributes(simulation_path, tag):
+        """
+        Extract subhalo attributes and convert them to astronomical units.
+        :param simulation_path: simulation directory
+        :param tag: redshift folder
+        :return: subhalo_data
+        """
+        
+        # Load subhalo data in h-free physical CGS units #
+        subhalo_data = {}
+        file_type = 'SUBFIND'
+        for attribute in ['ApertureMeasurements/Mass/030kpc', 'GroupNumber', 'SubGroupNumber']:
+            subhalo_data[attribute] = E.read_array(file_type, simulation_path, tag, '/Subhalo/' + attribute, numThreads=8)
+        
+        subhalo_data['ApertureMeasurements/Mass/030kpc'] *= u.g.to(u.Msun)
+        
+        return subhalo_data
+    
+    
+    def mask_haloes(self):
+        """
+        Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e9 Msun.
+        :return: subhalo_data_tmp
+        """
+        
+        # Mask the halo data #
+        halo_mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 1e9)
+        
+        # Mask the temporary dictionary for each galaxy #
+        subhalo_data_tmp = {}
+        for attribute in self.subhalo_data.keys():
+            subhalo_data_tmp[attribute] = np.copy(self.subhalo_data[attribute])[halo_mask]
+        
+        return subhalo_data_tmp
+
+
 if __name__ == '__main__':
     tag = '027_z000p101'
     simulation_path = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
     data_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/'  # Path to save/load data.
     # x = ReadAttributes(simulation_path, tag)
-    x = AddAttributes(simulation_path, tag)
+    # x = AddAttributes(simulation_path, tag)
+    x = AppendAttributes(simulation_path, tag)

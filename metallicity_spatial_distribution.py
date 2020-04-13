@@ -252,8 +252,8 @@ class MetallicitySpatialDistribution:
         axes2 = [ax20, ax21]
         masks = [disc_mask, bulge_mask]
         for mask, ax1, ax2 in zip(masks, axes1, axes2):
-            ax1.scatter(stellar_data_tmp['Coordinates'][mask, 0], stellar_data_tmp['Coordinates'][mask, 1], c=stellar_data_tmp['Metallicity'][mask],
-                        cmap='Spectral', s=1)
+            ax1.scatter(stellar_data_tmp['Coordinates'][mask, 0], stellar_data_tmp['Coordinates'][mask, 1],
+                        c=stellar_data_tmp['Metallicity'][mask] / 0.0134, cmap='Spectral', s=1)
             scatter = ax2.scatter(stellar_data_tmp['Coordinates'][mask, 0], stellar_data_tmp['Coordinates'][mask, 2],
                                   c=stellar_data_tmp['Metallicity'][mask] / 0.0134, cmap='Spectral', s=1)
         
