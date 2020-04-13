@@ -50,7 +50,7 @@ class DiscToTotalVsConcentrationIndex:
             # Extract particle and subhalo attributes and convert them to astronomical units #
             self.stellar_data, self.subhalo_data = self.read_attributes(simulation_path, tag)
             print('Read data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
-            print('–––––––––––––––––––––––––––––––––––––––––')
+            print('–––––––––––––––––––––––––––––––––––––––––––––')
             
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e9 Msun.
             
@@ -67,7 +67,8 @@ class DiscToTotalVsConcentrationIndex:
                         # np.save(data_path + 'glx_masses/' + 'glx_mass_' + str(group_number) + '_' + str(subgroup_number), glx_mass)
                         # np.save(data_path + 'disc_fractions_IT20/' + 'disc_fraction_IT20_' + str(group_number) + '_' + str(subgroup_number),
                         #         disc_fraction_IT20)
-                        # print('Masked and saved data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
+                        # print('Masked and saved data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (time.time() -
+                        # start_local_time) + ' (' + str(
                         #     round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                         # print('–––––––––––––––––––––––––––––––––––––––––––––')
                         p += 1
@@ -78,8 +79,8 @@ class DiscToTotalVsConcentrationIndex:
                         cs.append(c)
                         glx_masses.append(glx_mass)
                         disc_fractions_IT20.append(disc_fraction_IT20)
-                        print('Masked data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
-                            round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
+                        print('Masked data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (
+                            time.time() - start_local_time) + ' (' + str(round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                         print('–––––––––––––––––––––––––––––––––––––––––––––')
                         p += 1  # Increase the count by one.
                     
@@ -93,7 +94,8 @@ class DiscToTotalVsConcentrationIndex:
                         cs.append(c.item())
                         glx_masses.append(glx_mass.item())
                         disc_fractions_IT20.append(disc_fraction_IT20.item())
-                        print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
+                        print('Loaded data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (
+                                time.time() - start_local_time))
                         print('–––––––––––––––––––––––––––––––––––––––––––––')
             
             if args.l or args.rs:  # Load data.
@@ -107,7 +109,7 @@ class DiscToTotalVsConcentrationIndex:
             glx_masses = np.load(data_path + 'glx_masses/' + 'glx_masses.npy')
             disc_fractions_IT20 = np.load(data_path + 'disc_fractions_IT20/' + 'disc_fractions_IT20.npy')
             print('Loaded data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
-            print('–––––––––––––––––––––––––––––––––––––––––')
+            print('–––––––––––––––––––––––––––––––––––––––––––––')
         
         # Plot the data #
         start_local_time = time.time()  # Start the local time.

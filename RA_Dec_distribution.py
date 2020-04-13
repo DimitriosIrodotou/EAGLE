@@ -58,7 +58,7 @@ class RADecDistribution:
                         data_path + 'glx_angular_momenta/' + 'glx_angular_momentum_' + str(group_number) + '_' + str(subgroup_number) + '.npy')
                     glx_angular_momenta.append(glx_angular_momentum)
                     
-                    print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
+                    print('Loaded data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (time.time() - start_local_time))
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
             
             np.save(data_path + 'glx_angular_momenta/' + 'glx_angular_momenta', glx_angular_momenta)

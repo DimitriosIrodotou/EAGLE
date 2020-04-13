@@ -72,8 +72,8 @@ class DiscToTotalVsKappaRot:
                         kappas.append(kappa)
                         disc_fractions.append(disc_fraction)
                         disc_fractions_IT20.append(disc_fraction_IT20)
-                        print('Masked and saved data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
-                            round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
+                        print('Masked and saved data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (
+                            time.time() - start_local_time) + ' (' + str(round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                         print('–––––––––––––––––––––––––––––––––––––––––––––')
                         p += 1
                     
@@ -85,8 +85,8 @@ class DiscToTotalVsKappaRot:
                         kappas.append(kappa)
                         disc_fractions.append(disc_fraction)
                         disc_fractions_IT20.append(disc_fraction_IT20)
-                        print('Masked data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
-                            round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
+                        print('Masked data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (
+                            time.time() - start_local_time) + ' (' + str(round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                         print('–––––––––––––––––––––––––––––––––––––––––––––')
                         p += 1  # Increase the count by one.
             

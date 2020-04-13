@@ -7,6 +7,7 @@ import numpy as np
 import astropy.units as u
 import eagle_IO.eagle_IO.eagle_IO as E
 
+from astropy_healpix import HEALPix
 from rotate_galaxies import RotateCoordinates
 from morpho_kinematics import MorphoKinematics
 
@@ -14,9 +15,9 @@ date = time.strftime('%d_%m_%y_%H%M')  # Date
 start_global_time = time.time()  # Start the global time.
 
 
-class ReadAddAttributes:
+class ReadAttributes:
     """
-    For each galaxy: load its stellar_data_tmp dictionary and add the new attribute(s).
+    For each galaxy: read in and save its attribute(s).
     """
     
     
@@ -36,12 +37,11 @@ class ReadAddAttributes:
         self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e9 Msun.
         
         job_number = int(sys.argv[1]) - 1
-        # group_numbers = np.array_split(list(self.subhalo_data_tmp['GroupNumber']), 30)
-        # subgroup_numbers = np.array_split(list(self.subhalo_data_tmp['SubGroupNumber']), 30)
-        group_numbers = np.array_split(np.arange(1, 26), 5)
-        subgroup_numbers = np.zeros(25, dtype=int)
+        group_numbers = np.array_split(list(self.subhalo_data_tmp['GroupNumber']), 30)
+        subgroup_numbers = np.array_split(list(self.subhalo_data_tmp['SubGroupNumber']), 30)
         
-        for group_number, subgroup_number in zip(group_numbers[job_number], subgroup_numbers):  # Loop over all masked haloes and sub-haloes.
+        for group_number, subgroup_number in zip(group_numbers[job_number],
+                                                 subgroup_numbers[job_number]):  # Loop over all masked haloes and sub-haloes.
             start_local_time = time.time()  # Start the local time.
             
             # Mask galaxies and normalise data #
@@ -52,14 +52,14 @@ class ReadAddAttributes:
             np.save(data_path + 'gaseous_data_tmps/gaseous_data_tmp_' + str(group_number) + '_' + str(subgroup_number), gaseous_data_tmp)
             np.save(data_path + 'dark_matter_data_tmps/dark_matter_data_tmp_' + str(group_number) + '_' + str(subgroup_number), dark_matter_data_tmp)
             np.save(data_path + 'subhalo_data_tmps/subhalo_data_tmp_' + str(group_number) + '_' + str(subgroup_number), self.subhalo_data_tmp)
-            np.save(data_path + 'FOF_data_tmps/FOF_data_tmp_' + str(group_number) + '_' + str(subgroup_number), self.FOF_data)
+            np.save(data_path + 'FOF_data_tmps/FOF_data_tmp_' + str(group_number), self.FOF_data)
             
-            print('Masked and saved data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
-                round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
+            print('Masked and saved data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (
+                time.time() - start_local_time) + ' (' + str(round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
             print('–––––––––––––––––––––––––––––––––––––––––––––')
             p += 1
         
-        print('Finished ReadAddAttributes for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished ReadAttributes for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
@@ -229,8 +229,130 @@ class ReadAddAttributes:
         return particle_masses
 
 
+class AddAttributes:
+    """
+    For each galaxy: load its stellar_data_tmp dictionary and add the new attribute(s).
+    """
+    
+    
+    def __init__(self, simulation_path, tag):
+        """
+        A constructor method for the class.
+        """
+        
+        # Extract particle and subhalo attributes and convert them to astronomical units #
+        self.subhalo_data = self.read_attributes(simulation_path, tag)
+        print('Read data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
+        print('–––––––––––––––––––––––––––––––––––––––––––––')
+        
+        self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e9 Msun.
+        
+        job_number = int(sys.argv[1]) - 1
+        # group_numbers = np.array_split(list(self.subhalo_data_tmp['GroupNumber']), 30)
+        # subgroup_numbers = np.array_split(list(self.subhalo_data_tmp['SubGroupNumber']), 30)
+        group_numbers = np.array_split(np.arange(1, 26), 5)
+        subgroup_numbers = np.zeros(25, dtype=int)
+        
+        for group_number, subgroup_number in zip(group_numbers[job_number], subgroup_numbers):  # Loop over all masked haloes and sub-haloes.
+            start_local_time = time.time()  # Start the local time.
+            
+            stellar_data_tmp = np.load(data_path + 'stellar_data_tmps/stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy',
+                                       allow_pickle=True)
+            stellar_data_tmp = stellar_data_tmp.item()
+            stellar_data_tmp['disc_mask_IT20'], stellar_data_tmp['bulge_mask_IT20'] = self.decomposition_IT20(stellar_data_tmp)
+            
+            # Save data in numpy array #
+            np.save(data_path + 'stellar_data_tmps/stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number), stellar_data_tmp)
+            
+            print(
+                'Masked and saved data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (time.time() - start_local_time))
+            print('–––––––––––––––––––––––––––––––––––––––––––––')
+        print('Finished AddAttributes for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
+        print('–––––––––––––––––––––––––––––––––––––––––––––')
+    
+    
+    @staticmethod
+    def read_attributes(simulation_path, tag):
+        """
+        Extract subhalo attributes and convert them to astronomical units.
+        :param simulation_path: simulation directory
+        :param tag: redshift folder
+        :return: subhalo_data
+        """
+        
+        # Load subhalo data in h-free physical CGS units #
+        subhalo_data = {}
+        file_type = 'SUBFIND'
+        for attribute in ['ApertureMeasurements/Mass/030kpc', 'GroupNumber', 'SubGroupNumber']:
+            subhalo_data[attribute] = E.read_array(file_type, simulation_path, tag, '/Subhalo/' + attribute, numThreads=8)
+        
+        subhalo_data['ApertureMeasurements/Mass/030kpc'] *= u.g.to(u.Msun)
+        
+        return subhalo_data
+    
+    
+    def mask_haloes(self):
+        """
+        Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e9 Msun.
+        :return: subhalo_data_tmp
+        """
+        
+        # Mask the halo data #
+        halo_mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 1e9)
+        
+        # Mask the temporary dictionary for each galaxy #
+        subhalo_data_tmp = {}
+        for attribute in self.subhalo_data.keys():
+            subhalo_data_tmp[attribute] = np.copy(self.subhalo_data[attribute])[halo_mask]
+        
+        return subhalo_data_tmp
+    
+    
+    @staticmethod
+    def decomposition_IT20(stellar_data_tmp):
+        """
+        
+        :param stellar_data_tmp:
+        :return:
+        """
+        
+        # Calculate the angular momentum for each particle and for the galaxy and the unit vector parallel to the galactic angular momentum vector #
+        prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
+                                                                                  stellar_data_tmp['Velocity'])  # Msun kpc km s-1
+        glx_angular_momentum = np.sum(prc_angular_momentum, axis=0)
+        glx_unit_vector = np.divide(glx_angular_momentum, np.linalg.norm(glx_angular_momentum))
+        
+        # Rotate coordinates and velocities of stellar particles wrt galactic angular momentum #
+        coordinates, velocity, prc_unit_vector, glx_unit_vector = RotateCoordinates.rotate_X(stellar_data_tmp, glx_unit_vector)
+        
+        # Calculate the ra and dec of the (unit vector of) angular momentum for each particle #
+        ra = np.degrees(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]))
+        dec = np.degrees(np.arcsin(prc_unit_vector[:, 2]))
+        
+        # Plot a HEALPix histogram #
+        nside = 2 ** 5  # Define the resolution of the grid (number of divisions along the side of a base-resolution pixel).
+        hp = HEALPix(nside=nside)  # Initialise the HEALPix pixellisation class.
+        indices = hp.lonlat_to_healpix(ra * u.deg, dec * u.deg)  # Create list of HEALPix indices from particles' ra and dec.
+        density = np.bincount(indices, minlength=hp.npix)  # Count number of data points in each HEALPix pixel.
+        
+        # Find location of density maximum #
+        index_densest = np.argmax(density)
+        lon_densest = (hp.healpix_to_lonlat([index_densest])[0].value + np.pi) % (2 * np.pi) - np.pi
+        lat_densest = (hp.healpix_to_lonlat([index_densest])[1].value + np.pi / 2) % (2 * np.pi) - np.pi / 2
+        
+        # Calculate and plot the disc (bulge) mass surface density as the mass within (outside) 30 degrees from the densest pixel #
+        angular_theta_from_densest = np.arccos(
+            np.sin(lat_densest) * np.sin(np.arcsin(prc_unit_vector[:, 2])) + np.cos(lat_densest) * np.cos(np.arcsin(prc_unit_vector[:, 2])) * np.cos(
+                lon_densest - np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0])))  # In radians.
+        disc_mask, = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))
+        bulge_mask, = np.where(angular_theta_from_densest > np.divide(np.pi, 6.0))
+        
+        return disc_mask, bulge_mask
+
+
 if __name__ == '__main__':
     tag = '027_z000p101'
     simulation_path = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
     data_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/'  # Path to save/load data.
-    x = ReadAddAttributes(simulation_path, tag)
+    # x = ReadAttributes(simulation_path, tag)
+    x = AddAttributes(simulation_path, tag)
