@@ -16,7 +16,6 @@ from scipy.special import gamma
 from astropy_healpix import HEALPix
 from scipy.optimize import curve_fit
 from rotate_galaxies import RotateCoordinates
-from morpho_kinematics import MorphoKinematics
 
 # Create a parser and add argument to read data #
 parser = argparse.ArgumentParser(description='Fit profiles.')
@@ -162,8 +161,7 @@ class SurfaceDensityProfiles:
         
         # Mask the data to select galaxies with a given GroupNumber and SubGroupNumber and particles inside a 30kpc sphere #
         galaxy_mask = np.where((self.stellar_data['GroupNumber'] == group_number) & (self.stellar_data['SubGroupNumber'] == subgroup_number) & (
-            np.linalg.norm(np.subtract(self.stellar_data['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][halo_mask]),
-                           axis=1) <= 30.0))  # kpc
+            np.linalg.norm(self.stellar_data['Coordinates'] - self.subhalo_data_tmp['CentreOfPotential'][halo_mask], axis=1) <= 30.0))  # In kpc.
         
         # Mask the temporary dictionary for each galaxy #
         stellar_data_tmp = {}
@@ -171,10 +169,10 @@ class SurfaceDensityProfiles:
             stellar_data_tmp[attribute] = np.copy(self.stellar_data[attribute])[galaxy_mask]
         
         # Normalise the coordinates and velocities wrt the centre of potential of the subhalo #
-        stellar_data_tmp['Coordinates'] = np.subtract(stellar_data_tmp['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][halo_mask])
+        stellar_data_tmp['Coordinates'] = stellar_data_tmp['Coordinates'] - self.subhalo_data_tmp['CentreOfPotential'][halo_mask]
         CoM_velocity = np.divide(np.sum(stellar_data_tmp['Mass'][:, np.newaxis] * stellar_data_tmp['Velocity'], axis=0),
-                                 np.sum(stellar_data_tmp['Mass'], axis=0))  # km s-1
-        stellar_data_tmp['Velocity'] = np.subtract(stellar_data_tmp['Velocity'], CoM_velocity)
+                                 np.sum(stellar_data_tmp['Mass'], axis=0))  # In km s-1.
+        stellar_data_tmp['Velocity'] = stellar_data_tmp['Velocity'] - CoM_velocity
         
         return stellar_data_tmp
     

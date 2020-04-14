@@ -162,7 +162,7 @@ class BetaSpatialDistribution:
         # Mask the data to select galaxies with a given GroupNumber and SubGroupNumber and particles inside a 30kpc sphere #
         galaxy_mask = np.where((self.stellar_data['GroupNumber'] == group_number) & (self.stellar_data['SubGroupNumber'] == subgroup_number) & (
             np.linalg.norm(np.subtract(self.stellar_data['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][halo_mask]),
-                           axis=1) <= 30.0))  # kpc
+                           axis=1) <= 30.0))  # In kpc.
         
         # Mask the temporary dictionary for each galaxy #
         stellar_data_tmp = {}
@@ -172,7 +172,7 @@ class BetaSpatialDistribution:
         # Normalise the coordinates and velocities wrt the centre of potential of the subhalo #
         stellar_data_tmp['Coordinates'] = np.subtract(stellar_data_tmp['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][halo_mask])
         CoM_velocity = np.divide(np.sum(stellar_data_tmp['Mass'][:, np.newaxis] * stellar_data_tmp['Velocity'], axis=0),
-                                 np.sum(stellar_data_tmp['Mass'], axis=0))  # km s-1
+                                 np.sum(stellar_data_tmp['Mass'], axis=0))  # In km s-1.
         stellar_data_tmp['Velocity'] = np.subtract(stellar_data_tmp['Velocity'], CoM_velocity)
         
         return stellar_data_tmp
@@ -242,10 +242,10 @@ class BetaSpatialDistribution:
                 lon_densest - np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0])))  # In radians.
         
         # Calculate e^beta-1 #
-        velocity_r_sqred = np.divide(np.sum(np.multiply(stellar_data_tmp['Velocity'], stellar_data_tmp['Coordinates']), axis=1) ** 2,
-                                     np.sum(np.multiply(stellar_data_tmp['Coordinates'], stellar_data_tmp['Coordinates']), axis=1))
+        velocity_r_sqred = np.divide(np.sum(stellar_data_tmp['Velocity'] * stellar_data_tmp['Coordinates'], axis=1) ** 2,
+                                     np.sum(stellar_data_tmp['Coordinates'] * stellar_data_tmp['Coordinates'], axis=1))
         beta = np.subtract(1, np.divide(
-            np.subtract(np.sum(np.multiply(stellar_data_tmp['Velocity'], stellar_data_tmp['Velocity']), axis=1), velocity_r_sqred),
+            np.subtract(np.sum(stellar_data_tmp['Velocity']* stellar_data_tmp['Velocity'], axis=1), velocity_r_sqred),
             2 * velocity_r_sqred))
         
         # Plot the 2D surface density projection for the disc color-coded by e^beta-1 #

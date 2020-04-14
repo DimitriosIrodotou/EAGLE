@@ -16,7 +16,7 @@ import eagle_IO.eagle_IO.eagle_IO as E
 from matplotlib import gridspec
 from astropy_healpix import HEALPix
 from rotate_galaxies import RotateCoordinates
-from morpho_kinematics import MorphoKinematics
+from morpho_kinematics import MorphoKinematic
 
 # Create a parser and add argument to read data #
 parser = argparse.ArgumentParser(description='Create D/T vs kappa_rot plot.')
@@ -177,7 +177,7 @@ class DiscToTotalVsKappaRot:
         # Mask the data to select galaxies with a given GroupNumber and SubGroupNumber and particles inside a 30kpc sphere #
         galaxy_mask = np.where((self.stellar_data['GroupNumber'] == group_number) & (self.stellar_data['SubGroupNumber'] == subgroup_number) & (
             np.linalg.norm(np.subtract(self.stellar_data['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][halo_mask]),
-                           axis=1) <= 30.0))  # kpc
+                           axis=1) <= 30.0))  # In kpc.
         
         # Mask the temporary dictionary for each galaxy #
         stellar_data_tmp = {}
@@ -187,16 +187,16 @@ class DiscToTotalVsKappaRot:
         # Normalise the coordinates and velocities wrt the centre of potential of the subhalo #
         stellar_data_tmp['Coordinates'] = np.subtract(stellar_data_tmp['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][halo_mask])
         CoM_velocity = np.divide(np.sum(stellar_data_tmp['Mass'][:, np.newaxis] * stellar_data_tmp['Velocity'], axis=0),
-                                 np.sum(stellar_data_tmp['Mass'], axis=0))  # km s-1
+                                 np.sum(stellar_data_tmp['Mass'], axis=0))  # In km s-1.
         stellar_data_tmp['Velocity'] = np.subtract(stellar_data_tmp['Velocity'], CoM_velocity)
         
         # Calculate the angular momentum for each particle and for the galaxy and the unit vector parallel to the galactic angular momentum vector #
         prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
-                                                                                  stellar_data_tmp['Velocity'])  # Msun kpc km s-1
+                                                                                  stellar_data_tmp['Velocity'])  # In Msun kpc km s-1.
         prc_unit_vector = np.divide(prc_angular_momentum, np.linalg.norm(prc_angular_momentum, axis=1)[:, np.newaxis])
         
         # Calculate kinematic diagnostics #
-        kappa_old, disc_fraction, orbital, vrotsig, vrots, zaxis, momentum = MorphoKinematics.kinematics_diagnostics(stellar_data_tmp['Coordinates'],
+        kappa_old, disc_fraction, orbital, vrotsig, vrots, zaxis, momentum = MorphoKinematic.kinematic_diagnostics(stellar_data_tmp['Coordinates'],
                                                                                                                      stellar_data_tmp['Mass'],
                                                                                                                      stellar_data_tmp['Velocity'],
                                                                                                                      stellar_data_tmp[

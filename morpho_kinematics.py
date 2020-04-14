@@ -2,7 +2,7 @@ import numpy as np
 from scipy import interpolate, linalg
 
 
-class MorphoKinematics:
+class MorphoKinematic:
     
     @staticmethod
     def cumsummedian(a, weights=None):
@@ -12,6 +12,7 @@ class MorphoKinematics:
         :param weights: Weights.
         :return: P (median)
         """
+        
         if weights is None:
             weights = np.ones(np.array(a).shape)
         A = np.array(a).astype('float')
@@ -28,7 +29,7 @@ class MorphoKinematics:
     
     
     @staticmethod
-    def kinematics_diagnostics(coordinates, masses, velocities, particlebindingenergy):
+    def kinematic_diagnostics(coordinates, masses, velocities, particlebindingenergy):
         """
         Calculate various kinematics parameters
         :param coordinates: Coordinates of particles.
@@ -74,7 +75,7 @@ class MorphoKinematics:
         orbi = np.median(orbital)
         
         # Calculate rotation-to-dispersion and dispersion anisotropy
-        Vrot = np.abs(MorphoKinematics.cumsummedian(vrots, weights=prc_attributes[:, 3]))
+        Vrot = np.abs(MorphoKinematic.cumsummedian(vrots, weights=prc_attributes[:, 3]))
         SigmaXY = np.sqrt(np.average(np.sum(prc_attributes[:, [3]] * np.vstack([vrads, vrots]).T ** 2, axis=0) / glx_mass))  #
         SigmaO = np.sqrt(SigmaXY ** 2 - .5 * Vrot ** 2)
         # SigmaZ = np.sqrt(np.average(vheis ** 2, weights=prc_attributes[:, 3]))
@@ -127,6 +128,7 @@ class MorphoKinematics:
         :param reduced_structure:
         :return:
         """
+        
         particlesall = np.vstack([coordinates.T, masses, velocities.T]).T
         # Calculate prc_distances
         distancesall = np.linalg.norm(particlesall[:, :3], axis=1)
@@ -195,6 +197,7 @@ class MorphoKinematics:
         stellar_data_tmp: from mask_galaxies
         :return: r_fifty, prc_spherical_radius
         """
+        
         # Calculate the spherical distance of each particle and sort their masses based on that #
         prc_spherical_radius = np.sqrt(np.sum(stellar_data_tmp['Coordinates'] ** 2, axis=1))
         sort = np.argsort(prc_spherical_radius)
@@ -216,6 +219,7 @@ class MorphoKinematics:
         stellar_data_tmp: from mask_galaxies
         :return: r_ninety, prc_spherical_radius
         """
+        
         # Calculate the spherical distance of each particle and sort their masses based on that #
         prc_spherical_radius = np.sqrt(np.sum(stellar_data_tmp['Coordinates'] ** 2, axis=1))
         sort = np.argsort(prc_spherical_radius)

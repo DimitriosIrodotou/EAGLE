@@ -84,7 +84,7 @@ class BulgeToTotalProbabilityDensityFunction:
                         glx_mass = np.load(data_path + 'glx_masses/' + 'glx_mass_' + str(group_number) + '_' + str(subgroup_number) + '.npy')
                         glx_masses.append(glx_mass.item())
                         print('Loaded data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (
-                                time.time() - start_local_time))
+                            time.time() - start_local_time))
                         print('–––––––––––––––––––––––––––––––––––––––––––––')
             
             if args.l or args.rs:  # Load data.
@@ -93,15 +93,16 @@ class BulgeToTotalProbabilityDensityFunction:
         else:
             start_local_time = time.time()  # Start the local time.
             
-            glx_masses = np.load(data_path + 'glx_masses/' + 'glx_masses.npy')
-            disc_fractions_IT20 = np.load(data_path + 'disc_fractions_IT20/' + 'disc_fractions_IT20.npy')
+            glx_masses = np.load(data_path + 'glx_masses.npy')
+            subgroup_numbers = np.load(data_path + 'subgroup_numbers.npy')
+            disc_fractions_IT20 = np.load(data_path + 'disc_fractions_IT20.npy')
             print('Loaded data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
             print('–––––––––––––––––––––––––––––––––––––––––––––')
         
         # Plot the data #
         start_local_time = time.time()  # Start the local time.
         
-        self.plot(disc_fractions_IT20, glx_masses)
+        self.plot(glx_masses, subgroup_numbers, disc_fractions_IT20)
         print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
@@ -172,7 +173,7 @@ class BulgeToTotalProbabilityDensityFunction:
         # Mask the data to select galaxies with a given GroupNumber and SubGroupNumber and particles inside a 30kpc sphere #
         galaxy_mask = np.where((self.stellar_data['GroupNumber'] == group_number) & (self.stellar_data['SubGroupNumber'] == subgroup_number) & (
             np.linalg.norm(np.subtract(self.stellar_data['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][halo_mask]),
-                           axis=1) <= 30.0))  # kpc
+                           axis=1) <= 30.0))  # In kpc.
         
         # Mask the temporary dictionary for each galaxy #
         stellar_data_tmp = {}
@@ -182,12 +183,12 @@ class BulgeToTotalProbabilityDensityFunction:
         # Normalise the coordinates and velocities wrt the centre of potential of the subhalo #
         stellar_data_tmp['Coordinates'] = np.subtract(stellar_data_tmp['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][halo_mask])
         CoM_velocity = np.divide(np.sum(stellar_data_tmp['Mass'][:, np.newaxis] * stellar_data_tmp['Velocity'], axis=0),
-                                 np.sum(stellar_data_tmp['Mass'], axis=0))  # km s-1
+                                 np.sum(stellar_data_tmp['Mass'], axis=0))  # In km s-1.
         stellar_data_tmp['Velocity'] = np.subtract(stellar_data_tmp['Velocity'], CoM_velocity)
         
         # Calculate the angular momentum for each particle and for the galaxy and the unit vector parallel to the galactic angular momentum vector #
         prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
-                                                                                  stellar_data_tmp['Velocity'])  # Msun kpc km s-1
+                                                                                  stellar_data_tmp['Velocity'])  # In Msun kpc km s-1.
         prc_unit_vector = np.divide(prc_angular_momentum, np.linalg.norm(prc_angular_momentum, axis=1)[:, np.newaxis])
         
         # Calculate the ra and dec of the (unit vector of) angular momentum for each particle #
@@ -217,12 +218,13 @@ class BulgeToTotalProbabilityDensityFunction:
     
     
     @staticmethod
-    def plot(disc_fractions_IT20, glx_masses):
+    def plot(glx_masses, subgroup_numbers, disc_fractions_IT20):
         """
         A method to plot a HEALPix histogram.
         :param disc_fractions_IT20: from mask_galaxies
         :return: None
         """
+        
         # Generate the figure and define its parameters #
         plt.close()
         figure = plt.figure(0, figsize=(20, 15))
@@ -235,16 +237,15 @@ class BulgeToTotalProbabilityDensityFunction:
         
         for a in [ax00, ax10, ax01, ax11]:
             a.grid(True)
-            a.set_ylim(0.0, 1.0)
+            a.set_ylim(0.0, 1.2)
         
         ax10.set_xscale('log')
-        ax00.set_xlabel(r'$\mathrm{(B/T)_{\bigstar}}$')
-        ax00.set_ylabel(r'$\mathrm{f(B/T)_{\bigstar}}$')
-        ax10.set_ylabel(r'$\mathrm{f(B/T>0.5)}$')
-        ax10.set_xlabel(r'$\mathrm{M_{\bigstar} / M_{\odot}}$')
+        ax00.set_xlabel(r'$\mathrm{(B/T)_{\bigstar}}$', size=16)
+        ax00.set_ylabel(r'$\mathrm{f(B/T)_{\bigstar}}$', size=16)
+        ax10.set_ylabel(r'$\mathrm{f(B/T>0.5)}$', size=16)
+        ax10.set_xlabel(r'$\mathrm{M_{\bigstar} / M_{\odot}}$', size=16)
         
         mass_mask = np.where(glx_masses > 1e10)
-        disc_fractions_IT20 = disc_fractions_IT20
         bulge_fraction = 1 - disc_fractions_IT20
         
         # Plots BBT19 bar's midpoints #
@@ -269,8 +270,40 @@ class BulgeToTotalProbabilityDensityFunction:
             allBin = len(indThisBin)
             yBulge[iBin] = len(np.where(bulge_fraction[indThisBin] > 0.5)[0]) / float(allBin)
         
-        # Plot L-Galaxies data #
+        # Plot data #
         ax10.plot(glx_mass_bins, yBulge, color='blue', lw=2, label="$\mathrm{Irodotou+18}$")
+        
+        satellites, = np.where(subgroup_numbers != 0)
+        # Put galaxies into bins #
+        bins = np.logspace(9, 11.5 + 0.1, 20)
+        bin_index = np.digitize(glx_masses[satellites], bins)
+        yBulge = np.empty(len(bins) - 1)
+        glx_mass_bins = np.empty(len(bins) - 1)
+        
+        # Loop over bins and count fractions in each class #
+        for iBin in range(len(bins) - 1):
+            glx_mass_bins[iBin] = 0.5 * (bins[iBin] + bins[iBin + 1])
+            indThisBin, = np.where(bin_index == iBin + 1)
+            allBin = len(indThisBin)
+            yBulge[iBin] = len(np.where(bulge_fraction[indThisBin] > 0.5)[0]) / float(allBin)
+        
+        ax01.plot(glx_mass_bins, yBulge, color='blue', lw=2, label="$\mathrm{Irodotou+18}$")
+
+        centrals, = np.where(subgroup_numbers == 0)
+        # Put galaxies into bins #
+        bins = np.logspace(9, 11.5 + 0.1, 20)
+        bin_index = np.digitize(glx_masses[centrals], bins)
+        yBulge = np.empty(len(bins) - 1)
+        glx_mass_bins = np.empty(len(bins) - 1)
+
+        # Loop over bins and count fractions in each class #
+        for iBin in range(len(bins) - 1):
+            glx_mass_bins[iBin] = 0.5 * (bins[iBin] + bins[iBin + 1])
+            indThisBin, = np.where(bin_index == iBin + 1)
+            allBin = len(indThisBin)
+            yBulge[iBin] = len(np.where(bulge_fraction[indThisBin] > 0.5)[0]) / float(allBin)
+
+        ax11.plot(glx_mass_bins, yBulge, color='blue', lw=2, label="$\mathrm{Irodotou+18}$")
         
         # Save the plot #
         plt.savefig(plots_path + 'BTT_PDF' + '-' + date + '.png', bbox_inches='tight')

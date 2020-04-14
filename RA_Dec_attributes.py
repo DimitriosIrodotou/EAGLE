@@ -166,7 +166,7 @@ class RADecAttributes:
         # Mask the data to select galaxies with a given GroupNumber and SubGroupNumber and particles inside a 30kpc sphere #
         galaxy_mask = np.where((self.stellar_data['GroupNumber'] == group_number) & (self.stellar_data['SubGroupNumber'] == subgroup_number) & (
             np.linalg.norm(np.subtract(self.stellar_data['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][halo_mask]),
-                           axis=1) <= 30.0))  # kpc
+                           axis=1) <= 30.0))  # In kpc.
         
         # Mask the temporary dictionary for each galaxy #
         stellar_data_tmp = {}
@@ -176,13 +176,13 @@ class RADecAttributes:
         # Normalise the coordinates and velocities wrt the centre of mass of the subhalo #
         stellar_data_tmp['Coordinates'] = np.subtract(stellar_data_tmp['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][halo_mask])
         CoM_velocity = np.divide(np.sum(stellar_data_tmp['Mass'][:, np.newaxis] * stellar_data_tmp['Velocity'], axis=0),
-                                 np.sum(stellar_data_tmp['Mass']))  # km s-1
+                                 np.sum(stellar_data_tmp['Mass']))  # In km s-1.
         stellar_data_tmp['Velocity'] = np.subtract(stellar_data_tmp['Velocity'], CoM_velocity)
         
         # Calculate the angular momentum for each particle and for the galaxy and the unit vector parallel to the galactic angular momentum vector #
         prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
-                                                                                  stellar_data_tmp['Velocity'])  # Msun kpc km s-1
-        glx_angular_momentum = np.sum(prc_angular_momentum, axis=0)  # Msun kpc km s-1
+                                                                                  stellar_data_tmp['Velocity'])  # In Msun kpc km s-1.
+        glx_angular_momentum = np.sum(prc_angular_momentum, axis=0)  # In Msun kpc km s-1.
         glx_unit_vector = np.divide(glx_angular_momentum, np.linalg.norm(glx_angular_momentum))
         
         return stellar_data_tmp, glx_unit_vector
@@ -260,10 +260,9 @@ class RADecAttributes:
         cbar.set_label('$\mathrm{StellarFormationTime}$', size=16)
         
         # Plot the RA and Dec projection colour-coded by e^beta-1 #
-        velocity_r_sqred = np.divide(np.sum(np.multiply(stellar_data_tmp['Velocity'], stellar_data_tmp['Coordinates']), axis=1) ** 2,
-                                     np.sum(np.multiply(stellar_data_tmp['Coordinates'], stellar_data_tmp['Coordinates']), axis=1))
-        beta = np.subtract(1, np.divide(
-            np.subtract(np.sum(np.multiply(stellar_data_tmp['Velocity'], stellar_data_tmp['Velocity']), axis=1), velocity_r_sqred),
+        velocity_r_sqred = np.divide(np.sum(stellar_data_tmp['Velocity'] * stellar_data_tmp['Coordinates'], axis=1) ** 2,
+                                     np.sum(stellar_data_tmp['Coordinates'] * stellar_data_tmp['Coordinates'], axis=1))
+        beta = np.subtract(1, np.divide(np.subtract(np.sum(stellar_data_tmp['Velocity'] * stellar_data_tmp['Velocity'], axis=1), velocity_r_sqred),
             2 * velocity_r_sqred))
         
         scatter = ax10.scatter(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]), np.arcsin(prc_unit_vector[:, 2]), c=np.exp(beta - 1),

@@ -160,7 +160,7 @@ class ThetaVsRadiusCAM:
         # Mask the data to select galaxies with a given GroupNumber and SubGroupNumber and particles inside a 30kpc sphere #
         galaxy_mask = np.where((self.stellar_data['GroupNumber'] == group_number) & (self.stellar_data['SubGroupNumber'] == subgroup_number) & (
             np.linalg.norm(np.subtract(self.stellar_data['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][halo_mask]),
-                           axis=1) <= 30.0))  # kpc
+                           axis=1) <= 30.0))  # In kpc.
         
         # Mask the temporary dictionary for each galaxy #
         stellar_data_tmp = {}
@@ -170,7 +170,7 @@ class ThetaVsRadiusCAM:
         # Normalise the coordinates and velocities wrt the centre of potential of the subhalo #
         stellar_data_tmp['Coordinates'] = np.subtract(stellar_data_tmp['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][halo_mask])
         CoM_velocity = np.divide(np.sum(stellar_data_tmp['Mass'][:, np.newaxis] * stellar_data_tmp['Velocity'], axis=0),
-                                 np.sum(stellar_data_tmp['Mass'], axis=0))  # km s-1
+                                 np.sum(stellar_data_tmp['Mass'], axis=0))  # In km s-1.
         stellar_data_tmp['Velocity'] = np.subtract(stellar_data_tmp['Velocity'], CoM_velocity)
         
         return stellar_data_tmp
@@ -184,6 +184,7 @@ class ThetaVsRadiusCAM:
         :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
         :return: None
         """
+        
         # Generate the figure and define its parameters #
         plt.close()
         figure, ax = plt.subplots(1, figsize=(10, 7.5))
