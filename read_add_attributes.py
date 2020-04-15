@@ -48,11 +48,11 @@ class ReadAttributes:
             stellar_data_tmp, gaseous_data_tmp, dark_matter_data_tmp = self.mask_galaxies(group_number, subgroup_number)
             
             # Save data in numpy array #
+            np.save(data_path + 'FOF_data_tmps/FOF_data_tmp_' + str(group_number), self.FOF_data)
+            np.save(data_path + 'subhalo_data_tmps/subhalo_data_tmp_' + str(group_number) + '_' + str(subgroup_number), self.subhalo_data_tmp)
             np.save(data_path + 'stellar_data_tmps/stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number), stellar_data_tmp)
             np.save(data_path + 'gaseous_data_tmps/gaseous_data_tmp_' + str(group_number) + '_' + str(subgroup_number), gaseous_data_tmp)
             np.save(data_path + 'dark_matter_data_tmps/dark_matter_data_tmp_' + str(group_number) + '_' + str(subgroup_number), dark_matter_data_tmp)
-            np.save(data_path + 'subhalo_data_tmps/subhalo_data_tmp_' + str(group_number) + '_' + str(subgroup_number), self.subhalo_data_tmp)
-            np.save(data_path + 'FOF_data_tmps/FOF_data_tmp_' + str(group_number), self.FOF_data)
             
             print('Masked and saved data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (
                 time.time() - start_local_time) + ' (' + str(round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
@@ -237,12 +237,15 @@ class AddAttributes:
                                                  subgroup_numbers[job_number]):  # Loop over all masked haloes and sub-haloes.
             start_local_time = time.time()  # Start the local time.
             
+            if group_number == 7413:
+                print("Encountered 7413")
+                continue
+            
             # Load data #
             stellar_data_tmp = np.load(data_path + 'stellar_data_tmps/stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy',
                                        allow_pickle=True)
             stellar_data_tmp = stellar_data_tmp.item()
             
-            del stellar_data_tmp['kappa']
             stellar_data_tmp['c'] = self.concentration_index(stellar_data_tmp)
             stellar_data_tmp['kappa_corotation'] = self.kappa_corotation(stellar_data_tmp)
             stellar_data_tmp['disc_mask_IT20'], stellar_data_tmp['bulge_mask_IT20'] = self.decomposition_IT20(stellar_data_tmp)
@@ -401,7 +404,7 @@ class AppendAttributes:
         
         # Initialise arrays to store the data #
         glx_angular_momenta, glx_masses, glx_cs, glx_kappas_corotation, disc_fractions_IT20, disc_fractions, disc_metallicities, \
-        bulge_metallicities, glx_rotational_over_dispersion, subgroup_numbers = [], [], [], [], [], [], [], [], [], []
+        bulge_metallicities, glx_rotational_over_dispersion, group_numbers, subgroup_numbers = [], [], [], [], [], [], [], [], [], [], []
         
         # Extract particle and subhalo attributes and convert them to astronomical units #
         self.subhalo_data = self.read_attributes(simulation_path, tag)
@@ -409,9 +412,11 @@ class AppendAttributes:
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
         self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e9 Msun.
-        
         for group_number, subgroup_number in zip(list(self.subhalo_data_tmp['GroupNumber']),
                                                  list(self.subhalo_data_tmp['SubGroupNumber'])):  # Loop over all masked haloes and sub-haloes.
+            if group_number == 7413:
+                print("Encountered 7413")
+                continue
             start_local_time = time.time()  # Start the local time.
             
             # Load data #
@@ -420,31 +425,32 @@ class AppendAttributes:
             stellar_data_tmp = stellar_data_tmp.item()
             
             # Calculate attributes #
-            # glx_mass = np.sum(stellar_data_tmp['Mass'])
-            # prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
-            #                                                                           stellar_data_tmp['Velocity'])  # In Msun kpc km s-1.
-            # glx_angular_momentum = np.sum(prc_angular_momentum, axis=0)
+            glx_mass = np.sum(stellar_data_tmp['Mass'])
+            prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
+                                                                                      stellar_data_tmp['Velocity'])  # In Msun kpc km s-1.
+            glx_angular_momentum = np.sum(prc_angular_momentum, axis=0)
             
-            # for i, mask in enumerate(stellar_data_tmp['disc_mask_IT20'], stellar_data_tmp['bulge_mask_IT20']):
-            #     component_mass = np.sum(stellar_data_tmp['Mass'][mask])
-            #     metals = np.divide(stellar_data_tmp['Metallicity'][mask] * stellar_data_tmp['Mass'][mask], component_mass)
-            #     if i == 0:
-            #         stellar_data_tmp['disc_metallicity'] = np.divide(np.sum(metals), 0.0134)  # In solar metallicity.
-            #     else:
-            #         stellar_data_tmp['bulge_metallicity'] = np.divide(np.sum(metals), 0.0134)  # In solar metallicity.
+            for i, mask in enumerate(stellar_data_tmp['disc_mask_IT20'], stellar_data_tmp['bulge_mask_IT20']):
+                component_mass = np.sum(stellar_data_tmp['Mass'][mask])
+                metals = np.divide(stellar_data_tmp['Metallicity'][mask] * stellar_data_tmp['Mass'][mask], component_mass)
+                if i == 0:
+                    stellar_data_tmp['disc_metallicity'] = np.divide(np.sum(metals), 0.0134)  # In solar metallicity.
+                else:
+                    stellar_data_tmp['bulge_metallicity'] = np.divide(np.sum(metals), 0.0134)  # In solar metallicity.
             
-            # Append attributes into a single array #
-            # glx_masses.append(glx_mass)
-            # glx_cs.append(stellar_data_tmp['c'])
-            # subgroup_numbers.append(subgroup_number)
-            # glx_angular_momenta.append(glx_angular_momentum)
-            # disc_fractions.append(stellar_data_tmp['disc_fraction'])
-            # disc_metallicities.append(stellar_data_tmp['disc_metallicity'])
-            # bulge_metallicities.append(stellar_data_tmp['bulge_metallicity'])
+            # Append attributes into single arrays #
+            glx_masses.append(glx_mass)
+            group_numbers.append(group_number)
+            glx_cs.append(stellar_data_tmp['c'])
+            subgroup_numbers.append(subgroup_number)
+            glx_angular_momenta.append(glx_angular_momentum)
+            disc_fractions.append(stellar_data_tmp['disc_fraction'])
+            disc_metallicities.append(stellar_data_tmp['disc_metallicity'])
+            bulge_metallicities.append(stellar_data_tmp['bulge_metallicity'])
             glx_kappas_corotation.append(stellar_data_tmp['kappa_corotation'])
-            # glx_rotational_over_dispersion.append(stellar_data_tmp['rotational_over_dispersion'])
-            # disc_fraction_IT20 = np.divide(np.sum(stellar_data_tmp['Mass'][stellar_data_tmp['disc_mask_IT20']]), np.sum(stellar_data_tmp['Mass']))
-            # disc_fractions_IT20.append(disc_fraction_IT20)
+            glx_rotational_over_dispersion.append(stellar_data_tmp['rotational_over_dispersion'])
+            disc_fraction_IT20 = np.divide(np.sum(stellar_data_tmp['Mass'][stellar_data_tmp['disc_mask_IT20']]), np.sum(stellar_data_tmp['Mass']))
+            disc_fractions_IT20.append(disc_fraction_IT20)
             
             print(
                 'Masked and saved data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (time.time() - start_local_time))
@@ -453,6 +459,7 @@ class AppendAttributes:
         # Save data in numpy array #
         np.save(data_path + 'glx_cs', glx_cs)
         np.save(data_path + 'glx_masses', glx_masses)
+        np.save(data_path + 'group_numbers', group_numbers)
         np.save(data_path + 'disc_fractions', disc_fractions)
         np.save(data_path + 'subgroup_numbers', subgroup_numbers)
         np.save(data_path + 'disc_metallicities', disc_metallicities)
