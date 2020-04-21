@@ -3,6 +3,7 @@ import re
 import time
 import warnings
 import matplotlib
+import plot_tools
 
 matplotlib.use('Agg')
 
@@ -47,7 +48,7 @@ class DiscToTotalVsMorphologicalParameters:
         print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished DTTMP for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished DTT_MP for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
@@ -87,63 +88,30 @@ class DiscToTotalVsMorphologicalParameters:
         
         axes = [ax10, ax11, ax12, ax13]
         cbar_axes = [ax00, ax01, ax02, ax03]
+        thresholds = [2.5, 0.4, 0.5, 0.55]
         x_attributes = [concentration_indices, kappas_corotation, disc_fractions, rotationals_over_dispersions]
         labels = [r'$\mathrm{Concentration\;index}$', r'$\mathrm{\kappa_{co}}$', r'$\mathrm{D/T_{\vec{J}_{b}=0}}$', r'$\mathrm{V_{rot}/\sigma}$']
-        for axis, cbar_axis, x_attribute, label in zip(axes, cbar_axes, x_attributes, labels):
+        for axis, cbar_axis, x_attribute, label, threshold in zip(axes, cbar_axes, x_attributes, labels, thresholds):
             # Plot attributes #
             hb = axis.hexbin(x_attribute, disc_fractions_IT20, bins='log', gridsize=100, label=r'$D/T_{\vec{J}_{b} = 0}$', cmap=cmap)
-            
-            cbar = plt.colorbar(hb, cax=cbar_axis, orientation='horizontal')
-            cbar.set_label(r'$\mathrm{log_{10}(Counts\;per\;hexbin) }$', size=16)
-            cbar_axis.xaxis.tick_top()
-            cbar_axis.xaxis.set_label_position("top")
+            plot_tools.create_colorbar(cbar_axis, hb, r'$\mathrm{Counts\;per\;hexbin}$', 'horizontal')
             
             # Plot median and 1-sigma lines #
-            x_value, median, shigh, slow = self.median_1sigma(x_attribute, disc_fractions_IT20, 0.03)
+            x_value, median, shigh, slow = plot_tools.median_1sigma(x_attribute, disc_fractions_IT20, 0.03)
             axis.plot(x_value, median, color='silver', linewidth=5, zorder=5)
             axis.fill_between(x_value, shigh, slow, color='silver', alpha='0.5', zorder=5)
             
+            axis.axvline(x=threshold, c='tab:red')  # Plot threshold lines.
+            
             axis.set_xlabel(label, size=16)
         # Save the plot #
-        plt.savefig(plots_path + 'DTTMP' + '-' + date + '.png', bbox_inches='tight')
+        plt.savefig(plots_path + 'DTT_MP' + '-' + date + '.png', bbox_inches='tight')
         return None
-    
-    
-    @staticmethod
-    def median_1sigma(x, y, delta):
-        """
-        Calculate the median and 1-sigma lines.
-        :param x:
-        :param y:
-        :param delta:
-        :return:
-        """
-        # Initialise arrays #
-        nbin = int((max(np.log10(x)) - min(np.log10(x))) / delta)
-        x_value = np.empty(nbin)
-        median = np.empty(nbin)
-        slow = np.empty(nbin)
-        shigh = np.empty(nbin)
-        x_low = min(np.log10(x))
-        
-        # Loop over all bins and calculate the median and 1-sigma lines #
-        for i in range(nbin):
-            index, = np.where((np.log10(x) >= x_low) & (np.log10(x) < x_low + delta))
-            x_value[i] = np.mean(x[index])
-            if len(index) > 0:
-                median[i] = np.nanmedian(y[index])
-            slow[i] = np.nanpercentile(y[index], 15.87)
-            shigh[i] = np.nanpercentile(y[index], 84.13)
-            x_low += delta
-        
-        return x_value, median, shigh, slow
 
 
 if __name__ == '__main__':
     tag = '027_z000p101'
     simulation_path = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
-    plots_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/DTTMP/'  # Path to save plots.
+    plots_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/'  # Path to save plots.
     data_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/'  # Path to save/load data.
-    if not os.path.exists(plots_path):
-        os.makedirs(plots_path)
     x = DiscToTotalVsMorphologicalParameters(simulation_path, tag)

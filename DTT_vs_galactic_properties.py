@@ -3,6 +3,7 @@ import re
 import time
 import warnings
 import matplotlib
+import plot_tools
 
 matplotlib.use('Agg')
 
@@ -31,6 +32,8 @@ class DiscToTotalVsGalacticProperties:
         """
         start_local_time = time.time()  # Start the local time.
         
+        gas_masses = np.load(data_path + 'glx_gaseous_masses.npy')
+        glx_star_formation_rates = np.load(data_path + 'glx_star_formation_rate.npy')
         stellar_masses = np.load(data_path + 'glx_stellar_masses.npy')
         stellar_angular_momenta = np.load(data_path + 'glx_stellar_angular_momenta.npy')
         disc_fractions_IT20 = np.load(data_path + 'glx_disc_fractions_IT20.npy')
@@ -40,20 +43,21 @@ class DiscToTotalVsGalacticProperties:
         # Plot the data #
         start_local_time = time.time()  # Start the local time.
         
-        self.plot(disc_fractions_IT20, stellar_masses, stellar_angular_momenta)
+        self.plot(disc_fractions_IT20, stellar_masses, stellar_angular_momenta, gas_masses, glx_star_formation_rates)
         print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished DTTGP for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished DTT_GP for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
-    def plot(self, disc_fractions_IT20, stellar_masses, stellar_angular_momenta):
+    def plot(self, disc_fractions_IT20, stellar_masses, stellar_angular_momenta, gas_masses, glx_star_formation_rates):
         """
         Plot the disc to total ratio as a function of mass, angular momentum.
         :param disc_fractions_IT20: where the disc consists of particles whose angular momentum angular separation is 30deg from the densest pixel.
-        :param stellar_masses: defined as all stellar particles within 30kpc from the most bound particle.
+        :param stellar_masses: defined as the mass of all stellar particles within 30kpc from the most bound particle.
         :param stellar_angular_momenta: defined as the sum of each particle's angular momentum.
+        :param gas_masses: defined as the mass of all gas particles within 30kpc from the most bound particle.
         :return: None
         """
         # Generate the figure and define its parameters #
@@ -71,74 +75,44 @@ class DiscToTotalVsGalacticProperties:
         
         ax10.set_ylabel(r'$\mathrm{D/T_{30\degree}}$', size=16)
         cmap = matplotlib.cm.get_cmap('copper')
+        ax12.set_xlim(1e-3, 1e0)
+        ax10.set_xlim(1e9, 5e11)
         for a in [ax10, ax11, ax12, ax13]:
             a.set_ylim(0, 1)
             a.set_xscale('log')
             a.set_facecolor(cmap(0))
-            a.grid(True, which='both', axis='both')
+            a.grid(True, which='major', axis='both')
             a.tick_params(direction='out', which='both', top='on', right='on', left='on', labelsize=16)
         for a in [ax11, ax12, ax13]:
             a.set_yticklabels([])
         
-        axes = [ax10, ax11]  # , ax12, ax13]
-        cbar_axes = [ax00, ax01]  # , ax02, ax03]
-        x_attributes = [stellar_masses, np.linalg.norm(stellar_angular_momenta, axis=1) / stellar_masses]
-        labels = [r'$\mathrm{M_{\bigstar} / M_{\odot}}$', r'$\mathrm{|\vec{J}_{glx}|/(M_{\odot}\; kpc\; km\; s^{-1})}$']
-        for axis, cbar_axis, x_attribute, label in zip(axes, cbar_axes, x_attributes, labels):
+        fgas = np.divide(gas_masses, gas_masses + stellar_masses)
+        spc_stellar_angular_momenta = np.linalg.norm(stellar_angular_momenta, axis=1) / stellar_masses
+        axes = [ax10, ax11, ax12, ax13]
+        cbar_axes = [ax00, ax01, ax02, ax03]
+        x_attributes = [stellar_masses, spc_stellar_angular_momenta, fgas[fgas > 0], glx_star_formation_rates[glx_star_formation_rates > 0]]
+        y_attributes = [disc_fractions_IT20, disc_fractions_IT20, disc_fractions_IT20[fgas > 0], disc_fractions_IT20[glx_star_formation_rates > 0]]
+        labels = [r'$\mathrm{M_{\bigstar}/M_{\odot}}$', r'$\mathrm{(|\vec{J}_{\bigstar}|/M_{\bigstar})/(kpc\;km\;s^{-1})}$', r'$\mathrm{f_{gas}}$',
+                  r'$\mathrm{SFR/(M_{\odot}\;yr^{-1})}$']
+        for axis, cbar_axis, x_attribute, y_attribute, label in zip(axes, cbar_axes, x_attributes, y_attributes, labels):
             # Plot attributes #
-            hb = axis.hexbin(x_attribute, disc_fractions_IT20, xscale='log', bins='log', gridsize=100, label=r'$D/T_{\vec{J}_{b} = 0}$', cmap=cmap)
-            
-            cbar = plt.colorbar(hb, cax=cbar_axis, orientation='horizontal')
-            cbar.set_label(r'$\mathrm{log_{10}(Counts\;per\;hexbin) }$', size=16)
-            cbar_axis.xaxis.tick_top()
-            cbar_axis.xaxis.set_label_position("top")
+            hb = axis.hexbin(x_attribute, y_attribute, xscale='log', bins='log', gridsize=100, label=r'$D/T_{\vec{J}_{b} = 0}$', cmap=cmap)
+            plot_tools.create_colorbar(cbar_axis, hb, r'$\mathrm{Counts\;per\;hexbin}$', 'horizontal')
             
             # Plot median and 1-sigma lines #
-            x_value, median, shigh, slow = self.median_1sigma(x_attribute, disc_fractions_IT20, 0.1)
+            x_value, median, shigh, slow = plot_tools.median_1sigma(x_attribute, disc_fractions_IT20, 0.17)
             axis.plot(x_value, median, color='silver', linewidth=5, zorder=5)
             axis.fill_between(x_value, shigh, slow, color='silver', alpha='0.5', zorder=5)
             
             axis.set_xlabel(label, size=16)
         # Save the plot #
-        plt.savefig(plots_path + 'DTTGP' + '-' + date + '.png', bbox_inches='tight')
+        plt.savefig(plots_path + 'DTT_GP' + '-' + date + '.png', bbox_inches='tight')
         return None
-    
-    
-    @staticmethod
-    def median_1sigma(x, y, delta):
-        """
-        Calculate the median and 1-sigma lines.
-        :param x:
-        :param y:
-        :param delta:
-        :return:
-        """
-        # Initialise arrays #
-        nbin = int((max(np.log10(x)) - min(np.log10(x))) / delta)
-        x_value = np.empty(nbin)
-        median = np.empty(nbin)
-        slow = np.empty(nbin)
-        shigh = np.empty(nbin)
-        x_low = min(np.log10(x))
-        
-        # Loop over all bins and calculate the median and 1-sigma lines #
-        for i in range(nbin):
-            index, = np.where((np.log10(x) >= x_low) & (np.log10(x) < x_low + delta))
-            x_value[i] = np.mean(x[index])
-            if len(index) > 0:
-                median[i] = np.nanmedian(y[index])
-            slow[i] = np.nanpercentile(y[index], 15.87)
-            shigh[i] = np.nanpercentile(y[index], 84.13)
-            x_low += delta
-        
-        return x_value, median, shigh, slow
 
 
 if __name__ == '__main__':
     tag = '027_z000p101'
     simulation_path = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
-    plots_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/DTTGP/'  # Path to save plots.
+    plots_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/'  # Path to save plots.
     data_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/'  # Path to save/load data.
-    if not os.path.exists(plots_path):
-        os.makedirs(plots_path)
     x = DiscToTotalVsGalacticProperties(simulation_path, tag)
