@@ -1,4 +1,3 @@
-import os
 import re
 import time
 import warnings
@@ -18,7 +17,7 @@ start_global_time = time.time()  # Start the global time.
 warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
 
 
-class DTTVsAngularMomentumAlignment:
+class DTTVsEnvironment:
     """
     For all galaxies create: angle between angular momentum of gaseous versus stellar discs.
     """
@@ -45,7 +44,7 @@ class DTTVsAngularMomentumAlignment:
         print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished DTT_AMA for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished DTT_E for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
@@ -59,27 +58,51 @@ class DTTVsAngularMomentumAlignment:
         """
         # Generate the figure and define its parameters #
         plt.close()
-        figure = plt.figure(figsize=(10, 7.5))
-        gs = gridspec.GridSpec(2, 1, wspace=0.0, hspace=0.0, height_ratios=[0.05, 1])
+        figure = plt.figure(figsize=(20, 7.5))
+        gs = gridspec.GridSpec(2, 4, wspace=0.0, hspace=0.0, height_ratios=[0.05, 1])
         ax00 = figure.add_subplot(gs[0, 0])
+        ax01 = figure.add_subplot(gs[0, 1])
+        ax02 = figure.add_subplot(gs[0, 2])
+        ax03 = figure.add_subplot(gs[0, 3])
         ax10 = figure.add_subplot(gs[1, 0])
+        ax11 = figure.add_subplot(gs[1, 1])
+        ax12 = figure.add_subplot(gs[1, 2])
+        ax13 = figure.add_subplot(gs[1, 3])
         
-        ax10.grid(True, which='both', axis='both')
-        # ax10.set_xscale('log')
-        # ax10.set_yscale('log')
-        # ax10.set_ylim(1e0, 1e5)
-        # ax10.set_xlim(1e9, 1e12)
         ax10.set_ylabel(r'$\mathrm{D/T_{30\degree}}$', size=16)
-        ax10.set_xlabel(r'$\mathrm{(\vec{J}_{\bigstar}\cdot\vec{J}_{gas})/(|\vec{J}_{\bigstar}||\vec{J}_{gas}|)}$', size=16)
-        ax10.tick_params(direction='out', which='both', top='on', right='on', left='on', labelsize=16)
+        cmap = matplotlib.cm.get_cmap('copper')
         
-        angle = np.divide(np.sum(stellar_angular_momenta * gaseous_angular_momenta, axis=1),
-                          np.linalg.norm(stellar_angular_momenta, axis=1) * np.linalg.norm(gaseous_angular_momenta, axis=1))
-        sc = ax10.scatter(angle, disc_fractions_IT20, s=8)  # , cmap='RdYlBu_r', marker='h')
-        # plot_tools.create_colorbar(ax00, sc, r'$\mathrm{B/T_{30\degree}}$', 'horizontal')
+        for a in [ax10, ax11, ax12, ax13]:
+            a.set_ylim(0, 1)
+            a.set_xscale('log')
+            a.set_facecolor(cmap(0))
+            a.grid(True, which='major', axis='both')
+            a.tick_params(direction='out', which='both', top='on', right='on', left='on', labelsize=16)
+        for a in [ax11, ax12, ax13]:
+            a.set_yticklabels([])
+        
+        angle = np.arccos(np.divide(np.sum(stellar_angular_momenta * gaseous_angular_momenta, axis=1),
+                                    np.linalg.norm(stellar_angular_momenta, axis=1) * np.linalg.norm(gaseous_angular_momenta, axis=1))) * np.divide(
+            180.0, np.pi)  # In degress.
+        
+        axes = [ax10, ax11, ax12, ax13]
+        cbar_axes = [ax00, ax01, ax02, ax03]
+        x_attributes = [angle]
+        y_attributes = [disc_fractions_IT20]
+        labels = [r'$\mathrm{arccos((\vec{J}_{\bigstar}\cdot\vec{J}_{gas})/(|\vec{J}_{\bigstar}||\vec{J}_{gas}|))}$']
+        for axis, cbar_axis, x_attribute, y_attribute, label in zip(axes, cbar_axes, x_attributes, y_attributes, labels):
+            hb = axis.hexbin(x_attribute, y_attribute, xscale='log', bins='log', gridsize=100, label=r'$D/T_{\vec{J}_{b} = 0}$', cmap=cmap)
+            plot_tools.create_colorbar(cbar_axis, hb, r'$\mathrm{Counts\;per\;hexbin}$', 'horizontal')
+            
+            # Plot median and 1-sigma lines #
+            x_value, median, shigh, slow = plot_tools.median_1sigma(x_attribute, disc_fractions_IT20, 0.17)
+            axis.plot(x_value, median, color='silver', linewidth=5, zorder=5)
+            axis.fill_between(x_value, shigh, slow, color='silver', alpha='0.5', zorder=5)
+            
+            axis.set_xlabel(label, size=16)
         
         # Save the plot #
-        plt.savefig(plots_path + 'DTT_AMA' + '-' + date + '.png', bbox_inches='tight')
+        plt.savefig(plots_path + 'DTT_E' + '-' + date + '.png', bbox_inches='tight')
         return None
 
 
@@ -88,4 +111,4 @@ if __name__ == '__main__':
     simulation_path = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
     plots_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/'  # Path to save plots.
     data_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/'  # Path to save/load data.
-    x = DTTVsAngularMomentumAlignment(simulation_path, tag)
+    x = DTTVsEnvironment(simulation_path, tag)
