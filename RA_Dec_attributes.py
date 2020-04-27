@@ -208,10 +208,10 @@ class RADecAttributes:
         ax01 = plt.subplot(gs[0, 1], projection="mollweide")
         ax11 = plt.subplot(gs[1, 1], projection="mollweide")
         
-        for a in [ax00, ax10, ax01, ax11]:
-            a.set_xlabel('RA ($\degree$)')
-            a.set_ylabel('Dec ($\degree$)')
-            a.set_xticklabels([])
+        for axis in [ax00, ax10, ax01, ax11]:
+            axis.set_xlabel('RA ($\degree$)')
+            axis.set_ylabel('Dec ($\degree$)')
+            axisset_xticklabels([])
         
         # Rotate coordinates and velocities of stellar particles wrt galactic angular momentum #
         stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_unit_vector, glx_unit_vector = RotateCoordinates.rotate_X(stellar_data_tmp,

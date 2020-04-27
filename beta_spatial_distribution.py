@@ -198,12 +198,12 @@ class BetaSpatialDistribution:
         ax11 = plt.subplot(gs[1, 1])
         ax21 = plt.subplot(gs[2, 1])
         
-        for a in [ax10, ax20, ax11, ax21]:
-            a.grid(True)
-            a.set_xlim(-30, 30)
-            a.set_ylim(-30, 30)
-            a.set_aspect('equal')
-            a.tick_params(direction='out', which='both', top='on', right='on', left='on', labelsize=16)
+        for axis in [ax10, ax20, ax11, ax21]:
+            axis.grid(True)
+            axis.set_xlim(-30, 30)
+            axis.set_ylim(-30, 30)
+            axis.set_aspect('equal')
+            axis.tick_params(direction='out', which='both', top='on', right='on', left='on', labelsize=16)
         
         ax10.set_xticklabels([])
         ax11.set_xticklabels([])

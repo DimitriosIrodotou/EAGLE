@@ -175,9 +175,9 @@ class DiscToTotalProbabilityDensityFunction:
         ax01 = plt.subplot(gs[0, 1])
         ax11 = plt.subplot(gs[1, 1])
         
-        for a in [ax00, ax10, ax01, ax11]:
-            a.grid(True)
-            a.set_ylim(0.0, 1.2)
+        for axis in [ax00, ax10, ax01, ax11]:
+            axis.grid(True)
+            axis.set_ylim(0.0, 1.2)
         
         ax10.set_xscale('log')
         ax00.set_xlabel(r'$\mathrm{(B/T)_{\bigstar}}$', size=16)

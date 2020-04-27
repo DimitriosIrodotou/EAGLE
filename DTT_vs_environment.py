@@ -72,14 +72,14 @@ class DTTVsEnvironment:
         ax10.set_ylabel(r'$\mathrm{D/T_{30\degree}}$', size=16)
         cmap = matplotlib.cm.get_cmap('copper')
         
-        for a in [ax10, ax11, ax12, ax13]:
-            a.set_ylim(0, 1)
-            a.set_xscale('log')
-            a.set_facecolor(cmap(0))
-            a.grid(True, which='major', axis='both')
-            a.tick_params(direction='out', which='both', top='on', right='on', left='on', labelsize=16)
-        for a in [ax11, ax12, ax13]:
-            a.set_yticklabels([])
+        for axis in [ax10, ax11, ax12, ax13]:
+            axis.set_ylim(0, 1)
+            axis.set_xscale('log')
+            axis.set_facecolor(cmap(0))
+            axis.grid(True, which='major', axis='both')
+            axis.tick_params(direction='out', which='both', top='on', right='on', left='on', labelsize=16)
+        for axis in [ax11, ax12, ax13]:
+            axis.set_yticklabels([])
         
         angle = np.arccos(np.divide(np.sum(stellar_angular_momenta * gaseous_angular_momenta, axis=1),
                                     np.linalg.norm(stellar_angular_momenta, axis=1) * np.linalg.norm(gaseous_angular_momenta, axis=1))) * np.divide(

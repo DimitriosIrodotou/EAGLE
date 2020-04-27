@@ -78,13 +78,13 @@ class DiscToTotalVsMorphologicalParameters:
         ax10.set_xlim(0, 9)
         ax10.set_ylabel(r'$\mathrm{D/T_{30\degree}}$', size=16)
         cmap = matplotlib.cm.get_cmap('copper')
-        for a in [ax10, ax11, ax12, ax13]:
-            a.set_ylim(0, 1)
-            a.set_facecolor(cmap(0))
-            a.grid(True, which='both', axis='both')
-            a.tick_params(direction='out', which='both', top='on', right='on', left='on', labelsize=16)
-        for a in [ax11, ax12, ax13]:
-            a.set_yticklabels([])
+        for axis in [ax10, ax11, ax12, ax13]:
+            axis.set_ylim(0, 1)
+            axis.set_facecolor(cmap(0))
+            axis.grid(True, which='both', axis='both')
+            axis.tick_params(direction='out', which='both', top='on', right='on', left='on', labelsize=16)
+        for axis in [ax11, ax12, ax13]:
+            axis.set_yticklabels([])
         
         axes = [ax10, ax11, ax12, ax13]
         cbar_axes = [ax00, ax01, ax02, ax03]
