@@ -6,32 +6,30 @@ import argparse
 import matplotlib
 
 matplotlib.use('Agg')
-
 import numpy as np
 import matplotlib.cbook
 import astropy.units as u
 import matplotlib.pyplot as plt
 import eagle_IO.eagle_IO.eagle_IO as E
 
-from matplotlib import gridspec
 from astropy_healpix import HEALPix
 from rotate_galaxies import RotateCoordinates
 
 # Create a parser and add argument to read data #
-parser = argparse.ArgumentParser(description='Create ra and dec plot.')
+parser = argparse.ArgumentParser(description='Fit profiles.')
 parser.add_argument('-r', action='store_true', help='Read data')
 parser.add_argument('-l', action='store_true', help='Load data')
 parser.add_argument('-rs', action='store_true', help='Read data and save to numpy arrays')
 args = parser.parse_args()
 
-date = time.strftime('%d_%m_%y_%H%M')  # Date
+date = time.strftime('%d_%m_%y_%H%M')  # Date.
 start_global_time = time.time()  # Start the global time.
 warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
 
 
-class BetaSpatialDistribution:
+class ThetaVsRadius:
     """
-    For each galaxy create spatial distribution maps colour-coded by beta.
+    Fit surface density profiles to the components produced by RA_Dec_surface_density.
     """
     
     
@@ -51,16 +49,17 @@ class BetaSpatialDistribution:
             print('Read data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
             print('–––––––––––––––––––––––––––––––––––––––––––––')
             
-            self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e9 Msun.
+            self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher that 1e9
         
         # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all masked haloes.
-        for group_number in range(1, 26):  # Loop over all masked haloes.
-            for subgroup_number in range(0, 1):  # Get centrals only.
+        for group_number in range(1, 26):
+            for subgroup_number in range(0, 1):
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
                     
-                    # Save data in numpy arrays #
                     stellar_data_tmp = self.mask_galaxies(group_number, subgroup_number)  # Mask galaxies and normalise data.
+                    
+                    # Save data in numpy arrays #
                     np.save(data_path + 'stellar_data_tmps/stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number), stellar_data_tmp)
                     print('Masked and saved data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (
                         time.time() - start_local_time) + ' (' + str(round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
@@ -79,7 +78,6 @@ class BetaSpatialDistribution:
                 elif args.l:  # Load data.
                     start_local_time = time.time()  # Start the local time.
                     
-                    # Load data from numpy arrays #
                     stellar_data_tmp = np.load(
                         data_path + 'stellar_data_tmps/stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy',
                         allow_pickle=True)
@@ -94,8 +92,8 @@ class BetaSpatialDistribution:
                 print('Plotted data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (time.time() - start_local_time))
                 print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print(
-            'Finished BetaSpatialDistribution for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished ThetaVsRadiusDistribution for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (
+            time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
@@ -108,18 +106,18 @@ class BetaSpatialDistribution:
         :return: stellar_data, subhalo_data
         """
         
+        # Load subhalo data in h-free physical CGS units #
+        subhalo_data = {}
+        file_type = 'SUBFIND'
+        for attribute in ['ApertureMeasurements/Mass/030kpc', 'CentreOfPotential', 'GroupNumber', 'SubGroupNumber']:
+            subhalo_data[attribute] = E.read_array(file_type, simulation_path, tag, '/Subhalo/' + attribute, numThreads=8)
+        
         # Load particle data in h-free physical CGS units #
         stellar_data = {}
         particle_type = '4'
         file_type = 'PARTDATA'
         for attribute in ['Coordinates', 'GroupNumber', 'Mass', 'SubGroupNumber', 'Velocity']:
             stellar_data[attribute] = E.read_array(file_type, simulation_path, tag, '/PartType' + particle_type + '/' + attribute, numThreads=8)
-        
-        # Load subhalo data in h-free physical CGS units #
-        subhalo_data = {}
-        file_type = 'SUBFIND'
-        for attribute in ['ApertureMeasurements/Mass/030kpc', 'CentreOfPotential', 'GroupNumber', 'SubGroupNumber']:
-            subhalo_data[attribute] = E.read_array(file_type, simulation_path, tag, '/Subhalo/' + attribute, numThreads=8)
         
         # Convert attributes to astronomical units #
         stellar_data['Mass'] *= u.g.to(u.Msun)
@@ -178,45 +176,30 @@ class BetaSpatialDistribution:
         return stellar_data_tmp
     
     
-    @staticmethod
-    def plot(stellar_data_tmp, group_number, subgroup_number):
+    def plot(self, stellar_data_tmp, group_number, subgroup_number):
         """
-        Plot spatial distribution maps.
+        Plot surface density profiles.
         :param stellar_data_tmp: from mask_galaxies
         :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber']))
         :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
         :return: None
         """
+        
         # Generate the figure and define its parameters #
         plt.close()
-        plt.figure(0, figsize=(20, 15))
+        figure, ax = plt.subplots(1, figsize=(10, 7.5))
+        plt.grid(True)
+        plt.xscale('log')
+        plt.yscale('log')
+        plt.axis([1e-2, 4e1, 1e-1, 2e2])
+        plt.xlabel(r'$\mathrm{R\;[kpc]}$', size=16)
+        plt.ylabel(r'$\mathrm{Angular\;distance\;from\;densest\;grid\;cell\;[\degree]}$', size=16)
+        plt.tick_params(direction='out', which='both', top='on', right='on', labelsize=16)
         
-        gs = gridspec.GridSpec(3, 2, hspace=0.07, wspace=0.0, height_ratios=[0.05, 1, 1])
-        axcbar = plt.subplot(gs[0, :])
-        ax10 = plt.subplot(gs[1, 0])
-        ax20 = plt.subplot(gs[2, 0])
-        ax11 = plt.subplot(gs[1, 1])
-        ax21 = plt.subplot(gs[2, 1])
+        ax.annotate(r'$\mathrm{Disc}$', xy=(1e-2, 2e1), xycoords='data', size=16)
+        ax.annotate(r'$\mathrm{Bulge}$', xy=(1e-2, 4e1), xycoords='data', size=16)
         
-        for axis in [ax10, ax20, ax11, ax21]:
-            axis.grid(True)
-            axis.set_xlim(-30, 30)
-            axis.set_ylim(-30, 30)
-            axis.set_aspect('equal')
-            axis.tick_params(direction='out', which='both', top='on', right='on', left='on', labelsize=16)
-        
-        ax10.set_xticklabels([])
-        ax11.set_xticklabels([])
-        ax10.set_ylabel(r'$\mathrm{y\,[kpc]}$', size=16)
-        ax20.set_xlabel(r'$\mathrm{x\,[kpc]}$', size=16)
-        ax20.set_ylabel(r'$\mathrm{z\,[kpc]}$', size=16)
-        ax11.set_ylabel(r'$\mathrm{y\,[kpc]}$', size=16)
-        ax21.set_xlabel(r'$\mathrm{x\,[kpc]}$', size=16)
-        ax21.set_ylabel(r'$\mathrm{z\,[kpc]}$', size=16)
-        ax10.annotate(r'$\mathrm{Disc}$', xy=(-25, 25), xycoords='data', size=16)
-        ax11.annotate(r'$\mathrm{Bulge}$', xy=(-25, 25), xycoords='data', size=16)
-        
-        # Rotate coordinates and velocities of stellar particles so the galactic angular momentum points along the x axis #
+        # Rotate coordinates and velocities of stellar particles wrt galactic angular momentum #
         stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_angular_momentum, glx_angular_momentum = RotateCoordinates.rotate_Jz(
             stellar_data_tmp)
         
@@ -231,55 +214,36 @@ class BetaSpatialDistribution:
         indices = hp.lonlat_to_healpix(ra * u.deg, dec * u.deg)  # Create list of HEALPix indices from particles' ra and dec.
         density = np.bincount(indices, minlength=hp.npix)  # Count number of data points in each HEALPix pixel.
         
-        # Find location of density maximum and plot its positions and the ra and dec of the galactic angular momentum #
+        # Find location of density maximum #
         index_densest = np.argmax(density)
         lon_densest = (hp.healpix_to_lonlat([index_densest])[0].value + np.pi) % (2 * np.pi) - np.pi
         lat_densest = (hp.healpix_to_lonlat([index_densest])[1].value + np.pi / 2) % (2 * np.pi) - np.pi / 2
         
-        # Calculate disc mass fraction as the mass within 30 degrees from the densest pixel #
+        # Calculate and plot the disc (bulge) mass surface density as the mass within (outside) 30 degrees from the densest pixel #
         angular_theta_from_densest = np.arccos(
             np.sin(lat_densest) * np.sin(np.arcsin(prc_unit_vector[:, 2])) + np.cos(lat_densest) * np.cos(np.arcsin(prc_unit_vector[:, 2])) * np.cos(
                 lon_densest - np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0])))  # In radians.
-        
-        # Calculate e^beta-1 #
-        velocity_r_sqred = np.divide(np.sum(stellar_data_tmp['Velocity'] * stellar_data_tmp['Coordinates'], axis=1) ** 2,
-                                     np.sum(stellar_data_tmp['Coordinates'] * stellar_data_tmp['Coordinates'], axis=1))
-        beta = np.subtract(1, np.divide(
-            np.subtract(np.sum(stellar_data_tmp['Velocity']* stellar_data_tmp['Velocity'], axis=1), velocity_r_sqred),
-            2 * velocity_r_sqred))
-        
-        # Plot the 2D surface density projection for the disc colour-coded by e^beta-1 #
         disc_mask, = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))
-        ax10.scatter(stellar_data_tmp['Coordinates'][disc_mask, 0], stellar_data_tmp['Coordinates'][disc_mask, 1], c=np.exp(beta[disc_mask] - 1),
-                     cmap='viridis', vmax=1, s=1)
-        ax20.scatter(stellar_data_tmp['Coordinates'][disc_mask, 0], stellar_data_tmp['Coordinates'][disc_mask, 2], c=np.exp(beta[disc_mask] - 1),
-                     cmap='viridis', vmax=1, s=1)
-        
-        # Plot the 2D surface density projection for the bulge #
         bulge_mask, = np.where(angular_theta_from_densest > np.divide(np.pi, 6.0))
-        ax11.scatter(stellar_data_tmp['Coordinates'][bulge_mask, 0], stellar_data_tmp['Coordinates'][bulge_mask, 1], c=np.exp(beta[bulge_mask] - 1),
-                     cmap='viridis', vmax=1, s=1)
         
-        scatter = ax21.scatter(stellar_data_tmp['Coordinates'][bulge_mask, 0], stellar_data_tmp['Coordinates'][bulge_mask, 2],
-                               c=np.exp(beta[bulge_mask] - 1), cmap='viridis', vmax=1, s=1)
-        
-        # Generate the color bar #
-        cbar = plt.colorbar(scatter, cax=axcbar, orientation='horizontal')
-        cbar.set_label(r'$\mathrm{exp(\beta-1)}$', size=16)
-        axcbar.xaxis.tick_top()
-        axcbar.xaxis.set_label_position("top")
-        axcbar.tick_params(direction='out', which='both', right='on', labelsize=16)
+        for mask in [disc_mask, bulge_mask]:
+            prc_spherical_radius = np.sqrt(np.sum(stellar_data_tmp['Coordinates'] ** 2, axis=1))  # Radius of each particle.
+            plot = plt.scatter(prc_spherical_radius[mask], angular_theta_from_densest[mask] * np.divide(180.0, np.pi),
+                               c=np.log10(np.linalg.norm(prc_angular_momentum[mask], axis=1)), vmin=5, vmax=12, cmap='nipy_spectral_r', s=3)
+        plt.axhline(y=30, c='black', lw=3, linestyle='dashed')  # Horizontal line at 30 degrees.
+        cbar = plt.colorbar(plot, ax=ax)
+        cbar.set_label(r'$\mathrm{log_{10}(|\vec{J}_{prc,d}|/(M_{\odot}\; kpc\; km\; s^{-1}))}$', size=16)
         
         # Save the plot #
-        plt.savefig(plots_path + str(group_number) + '_' + str(subgroup_number) + '-' + 'BSP' + '-' + date + '.png', bbox_inches='tight')
+        plt.savefig(plots_path + str(group_number) + '_' + str(subgroup_number) + '-' + 'T_R' + '-' + date + '.png', bbox_inches='tight')
         return None
 
 
 if __name__ == '__main__':
     tag = '027_z000p101'
     simulation_path = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
-    plots_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/BSP/'  # Path to save plots.
+    plots_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/TR/'  # Path to save plots.
     data_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/'  # Path to save/load data.
     if not os.path.exists(plots_path):
         os.makedirs(plots_path)
-    x = BetaSpatialDistribution(simulation_path, tag)
+    x = ThetaVsRadius(simulation_path, tag)

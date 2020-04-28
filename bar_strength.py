@@ -28,8 +28,8 @@ class BarStrength:
     def __init__(self, simulation_path, tag):
         """
         A constructor method for the class.
-        :param simulation_path: simulation directory
-        :param tag: redshift directory
+        :param simulation_path: simulation directory.
+        :param tag: redshift directory.
         """
         
         # Extract particle and subhalo attributes and convert them to astronomical units #
@@ -66,8 +66,8 @@ class BarStrength:
     def read_attributes(simulation_path, tag):
         """
         Extract subhalo attributes and convert them to astronomical units.
-        :param simulation_path: simulation directory
-        :param tag: redshift folder
+        :param simulation_path: simulation directory.
+        :param tag: redshift directory.
         :return: subhalo_data
         """
         
@@ -104,9 +104,9 @@ class BarStrength:
     def plot(stellar_data_tmp, group_number, subgroup_number):
         """
         Create a bar strength plot.
-        :param stellar_data_tmp: from mask_galaxies
-        :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber']))
-        :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
+        :param stellar_data_tmp: from mask_galaxies.
+        :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber'])).
+        :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber'])).
         :return: None
         """
         

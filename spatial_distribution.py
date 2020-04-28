@@ -38,8 +38,8 @@ class SpatialDistribution:
     def __init__(self, simulation_path, tag):
         """
         A constructor method for the class.
-        :param simulation_path: simulation directory
-        :param tag: redshift directory
+        :param simulation_path: simulation directory.
+        :param tag: redshift directory.
         """
         
         p = 1  # Counter.
@@ -103,8 +103,8 @@ class SpatialDistribution:
     def read_attributes(simulation_path, tag):
         """
         Extract particle and subhalo attributes and convert them to astronomical units.
-        :param simulation_path: simulation directory
-        :param tag: redshift folder
+        :param simulation_path: simulation directory.
+        :param tag: redshift directory.
         :return: stellar_data, subhalo_data
         """
         

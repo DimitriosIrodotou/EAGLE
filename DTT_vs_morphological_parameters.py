@@ -28,8 +28,8 @@ class DiscToTotalVsMorphologicalParameters:
     def __init__(self, simulation_path, tag):
         """
         A constructor method for the class.
-        :param simulation_path: simulation directory
-        :param tag: redshift folder
+        :param simulation_path: simulation directory.
+        :param tag: redshift directory.
         """
         start_local_time = time.time()  # Start the local time.
         
@@ -97,7 +97,7 @@ class DiscToTotalVsMorphologicalParameters:
             plot_tools.create_colorbar(cbar_axis, hb, r'$\mathrm{Counts\;per\;hexbin}$', 'horizontal')
             
             # Plot median and 1-sigma lines #
-            x_value, median, shigh, slow = plot_tools.median_1sigma(x_attribute, disc_fractions_IT20, 0.03)
+            x_value, median, shigh, slow = plot_tools.median_1sigma(x_attribute, disc_fractions_IT20, 0.09, log=False)
             axis.plot(x_value, median, color='silver', linewidth=5, zorder=5)
             axis.fill_between(x_value, shigh, slow, color='silver', alpha='0.5', zorder=5)
             

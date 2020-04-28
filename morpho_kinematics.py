@@ -33,8 +33,8 @@ class MorphoKinematic:
         """
         Calculate various kinematics parameters
         :param coordinates: Coordinates of particles.
-        :param masses: Masses of particles
-        :param velocities: Velocities of particles
+        :param masses: Masses of particles.
+        :param velocities: Velocities of particles.
         :param particlebindingenergy: Specific binding energies of particles.
         :return: kappa, discfrac, orbi, vrotsig, vrots, delta, zaxis, glx_angular_momentum_magnitude
         """
@@ -120,8 +120,8 @@ class MorphoKinematic:
             coordinates, Transform[0] = major, Transform[1] = inter, Transform[2] = minor.
         abc : array of dtype float, shape (3, )
             The corresponding (a,b,c) lengths (in unit of length L).
-        :param coordinates: Coordinates of the particles
-        :param masses: Masses of particles
+        :param coordinates: Coordinates of the particles.
+        :param masses: Masses of particles.
         :param velocities:
         :param aperture:
         :param CoMvelocity:

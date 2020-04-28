@@ -38,8 +38,8 @@ class RADecAttributes:
     def __init__(self, simulation_path, tag):
         """
         A constructor method for the class.
-        :param simulation_path: simulation directory
-        :param tag: redshift folder
+        :param simulation_path: simulation directory.
+        :param tag: redshift directory.
         """
         
         p = 1  # Counter.
@@ -106,8 +106,8 @@ class RADecAttributes:
     def read_attributes(simulation_path, tag):
         """
         Extract particle and subhalo attributes and convert them to astronomical units.
-        :param simulation_path: simulation directory
-        :param tag: redshift folder
+        :param simulation_path: simulation directory.
+        :param tag: redshift directory.
         :return: stellar_data, subhalo_data
         """
         
@@ -155,8 +155,8 @@ class RADecAttributes:
     def mask_galaxies(self, group_number, subgroup_number):
         """
         Mask galaxies and normalise data.
-        :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber']))
-        :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
+        :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber'])).
+        :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber'])).
         :return: stellar_data_tmp
         """
         
@@ -192,10 +192,10 @@ class RADecAttributes:
     def plot(stellar_data_tmp, glx_unit_vector, group_number, subgroup_number):
         """
         Plot RA and Dec from the angular momentum of particles colour-coded by different attributes.
-        :param stellar_data_tmp: from mask_galaxies
-        :param glx_unit_vector: from mask_galaxies
-        :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber']))
-        :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
+        :param stellar_data_tmp: from mask_galaxies.
+        :param glx_unit_vector: from mask_galaxies.
+        :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber'])).
+        :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber'])).
         :return: None
         """
         # Generate the figure and define its parameters #

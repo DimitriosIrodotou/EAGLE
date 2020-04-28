@@ -36,8 +36,8 @@ class RADecDistribution:
     def __init__(self, simulation_path, tag):
         """
         A constructor method for the class.
-        :param simulation_path: simulation directory
-        :param tag: redshift folder
+        :param simulation_path: simulation directory.
+        :param tag: redshift directory.
         """
         
         glx_angular_momenta = []  # Initialise an array to store the data.
@@ -79,8 +79,8 @@ class RADecDistribution:
     def read_attributes(simulation_path, tag):
         """
         Extract particle and subhalo attributes and convert them to astronomical units.
-        :param simulation_path: simulation directory
-        :param tag: redshift folder
+        :param simulation_path: simulation directory.
+        :param tag: redshift directory.
         :return: stellar_data, subhalo_data
         """
         

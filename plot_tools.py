@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def median_1sigma(x, y, delta):
+def median_1sigma(x, y, delta, log):
     """
     Calculate the median and 1-sigma lines.
     :param x: x-axis data.
@@ -11,16 +11,18 @@ def median_1sigma(x, y, delta):
     :return: x_value, median, shigh, slow
     """
     # Initialise arrays #
-    nbin = int((max(np.log10(x)) - min(np.log10(x))) / delta)
+    if log is True:
+        x = np.log10(x)
+    nbin = int((max(x) - min(x)) / delta)
     x_value = np.empty(nbin)
     median = np.empty(nbin)
     slow = np.empty(nbin)
     shigh = np.empty(nbin)
-    x_low = min(np.log10(x))
+    x_low = min(x)
     
     # Loop over all bins and calculate the median and 1-sigma lines #
     for i in range(nbin):
-        index, = np.where((np.log10(x) >= x_low) & (np.log10(x) < x_low + delta))
+        index, = np.where((x >= x_low) & (x < x_low + delta))
         x_value[i] = np.mean(x[index])
         if len(index) > 0:
             median[i] = np.nanmedian(y[index])

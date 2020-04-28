@@ -28,8 +28,8 @@ class DiscToTotalProbabilityDensityFunction:
     def __init__(self, simulation_path, tag):
         """
         A constructor method for the class.
-        :param simulation_path: simulation directory
-        :param tag: redshift folder
+        :param simulation_path: simulation directory.
+        :param tag: redshift directory.
         """
         start_local_time = time.time()  # Start the local time.
         
@@ -54,9 +54,9 @@ class DiscToTotalProbabilityDensityFunction:
     def read_attributes(simulation_path, tag):
         """
         Extract particle and subhalo attributes and convert them to astronomical units.
-        :param simulation_path: simulation directory
-        :param tag: redshift folder
-        :return: stellar_data, subhalo_data
+        :param simulation_path: simulation directory.
+        :param tag: redshift directory.
+        :return: stellar_data, subhalo_data.
         """
         
         # Load subhalo data in h-free physical CGS units #
@@ -102,8 +102,8 @@ class DiscToTotalProbabilityDensityFunction:
     def mask_galaxies(self, group_number, subgroup_number):
         """
         Mask galaxies and normalise data.
-        :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber']))
-        :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
+        :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber'])).
+        :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber'])).
         :return: stellar_data_tmp, prc_unit_vector
         """
         
@@ -161,7 +161,7 @@ class DiscToTotalProbabilityDensityFunction:
     def plot(glx_masses, subgroup_numbers, disc_fractions_IT20):
         """
         A method to plot a HEALPix histogram.
-        :param disc_fractions_IT20: from mask_galaxies
+        :param disc_fractions_IT20: from mask_galaxies.
         :return: None
         """
         

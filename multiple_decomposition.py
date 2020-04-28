@@ -34,8 +34,8 @@ class MultipleDecomposition:
     def __init__(self, simulation_path, tag):
         """
         A constructor method for the class.
-        :param simulation_path: simulation directory
-        :param tag: redshift directory
+        :param simulation_path: simulation directory.
+        :param tag: redshift directory.
         """
         
         for group_number in range(25, 26):  # Loop over all masked haloes.

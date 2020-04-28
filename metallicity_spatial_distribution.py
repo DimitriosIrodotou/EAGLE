@@ -31,15 +31,15 @@ warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # I
 
 class MetallicitySpatialDistribution:
     """
-    For each galaxy create spatial distribution maps color-coded by metallicity.
+    For each galaxy create spatial distribution maps colour-coded by metallicity.
     """
     
     
     def __init__(self, simulation_path, tag):
         """
         A constructor method for the class.
-        :param simulation_path: simulation directory
-        :param tag: redshift directory
+        :param simulation_path: simulation directory.
+        :param tag: redshift directory.
         """
         
         p = 1  # Counter.
@@ -103,8 +103,8 @@ class MetallicitySpatialDistribution:
     def read_attributes(simulation_path, tag):
         """
         Extract particle and subhalo attributes and convert them to astronomical units.
-        :param simulation_path: simulation directory
-        :param tag: redshift folder
+        :param simulation_path: simulation directory.
+        :param tag: redshift directory.
         :return: stellar_data, subhalo_data
         """
         
@@ -151,8 +151,8 @@ class MetallicitySpatialDistribution:
     def mask_galaxies(self, group_number, subgroup_number):
         """
         Mask galaxies and normalise data.
-        :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber']))
-        :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
+        :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber'])).
+        :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber'])).
         :return: stellar_data_tmp
         """
         
@@ -182,9 +182,9 @@ class MetallicitySpatialDistribution:
     def plot(stellar_data_tmp, group_number, subgroup_number):
         """
         Plot spatial distribution maps.
-        :param stellar_data_tmp: from mask_galaxies
-        :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber']))
-        :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
+        :param stellar_data_tmp: from mask_galaxies.
+        :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber'])).
+        :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber'])).
         :return: None
         """
         # Generate the figure and define its parameters #
@@ -244,7 +244,7 @@ class MetallicitySpatialDistribution:
             np.sin(lat_densest) * np.sin(np.arcsin(prc_unit_vector[:, 2])) + np.cos(lat_densest) * np.cos(np.arcsin(prc_unit_vector[:, 2])) * np.cos(
                 lon_densest - np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0])))  # In radians.
         
-        # Plot the 2D surface density projection for the disc color-coded by metallicity #
+        # Plot the 2D surface density projection for the disc colour-coded by metallicity #
         disc_mask, = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))
         bulge_mask, = np.where(angular_theta_from_densest > np.divide(np.pi, 6.0))
         
