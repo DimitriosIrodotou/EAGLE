@@ -32,8 +32,8 @@ class SFRVsMass:
         start_local_time = time.time()  # Start the local time.
         
         stellar_masses = np.load(data_path + 'glx_stellar_masses.npy')
-        glx_star_formation_rates = np.load(data_path + 'glx_star_formation_rate.npy')
         disc_fractions_IT20 = np.load(data_path + 'glx_disc_fractions_IT20.npy')
+        glx_star_formation_rates = np.load(data_path + 'glx_star_formation_rate.npy')
         print('Loaded data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
@@ -44,16 +44,16 @@ class SFRVsMass:
         print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished SFR_M for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished SFR_M for ' + re.split('Planck1/|/PE', simulation_path)[1] + str(tag) + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
-    def plot(self, disc_fractions_IT20, stellar_masses, glx_star_formation_rates):
+    def plot(self, stellar_masses, disc_fractions_IT20, glx_star_formation_rates):
         """
         Plot star formation rate versus stellar mass colour-coded by disc to total ratio
-        :param disc_fractions_IT20: where the disc consists of particles whose angular momentum angular separation is 30deg from the densest pixel.
         :param stellar_masses: defined as the mass of all stellar particles within 30kpc from the most bound particle.
-        :param glx_star_formation_rates: defined as the star formation rate of all gas particles within 30kpc from the most bound particle.
+        :param disc_fractions_IT20: where the disc consists of particles whose angular momentum angular separation is 30deg from the densest pixel.
+        :param glx_star_formation_rates: defined as the star formation rate of all gaseous particles within 30kpc from the most bound particle.
         :return: None
         """
         # Generate the figure and define its parameters #

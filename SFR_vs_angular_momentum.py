@@ -41,20 +41,21 @@ class SFRVsAngularMomentum:
         # Plot the data #
         start_local_time = time.time()  # Start the local time.
         
-        self.plot(disc_fractions_IT20, stellar_angular_momenta, star_formation_rates, stellar_masses)
+        self.plot(stellar_masses, disc_fractions_IT20, star_formation_rates, stellar_angular_momenta)
         print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished SFR_AM for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished SFR_AM for ' + re.split('Planck1/|/PE', simulation_path)[1] + str(tag) + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
-    def plot(self, disc_fractions_IT20, stellar_angular_momenta, star_formation_rates, stellar_masses):
+    def plot(self, stellar_masses, disc_fractions_IT20, star_formation_rates, stellar_angular_momenta):
         """
         Plot star formation rate versus stellar angular momentum colour-coded by disc to total ratio
+        :param stellar_masses: defined as the mass of all stellar particles within 30kpc from the most bound particle.
         :param disc_fractions_IT20: where the disc consists of particles whose angular momentum angular separation is 30deg from the densest pixel.
-        :param stellar_angular_momenta: defined as the sum of each particle's angular momentum.
-        :param glx_star_formation_rates: defined as the star formation rate of all gas particles within 30kpc from the most bound particle.
+        :param star_formation_rates: defined as the star formation rate of all gaseous particles within 30kpc from the most bound particle.
+        :param stellar_angular_momenta: defined as the sum of each stellar particle's angular momentum.
         :return: None
         """
         # Generate the figure and define its parameters #

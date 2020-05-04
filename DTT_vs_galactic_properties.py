@@ -32,8 +32,8 @@ class DiscToTotalVsGalacticProperties:
         start_local_time = time.time()  # Start the local time.
         
         gas_masses = np.load(data_path + 'glx_gaseous_masses.npy')
-        glx_star_formation_rates = np.load(data_path + 'glx_star_formation_rate.npy')
         stellar_masses = np.load(data_path + 'glx_stellar_masses.npy')
+        glx_star_formation_rates = np.load(data_path + 'glx_star_formation_rate.npy')
         stellar_angular_momenta = np.load(data_path + 'glx_stellar_angular_momenta.npy')
         disc_fractions_IT20 = np.load(data_path + 'glx_disc_fractions_IT20.npy')
         print('Loaded data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
@@ -42,21 +42,22 @@ class DiscToTotalVsGalacticProperties:
         # Plot the data #
         start_local_time = time.time()  # Start the local time.
         
-        self.plot(disc_fractions_IT20, stellar_masses, stellar_angular_momenta, gas_masses, glx_star_formation_rates)
+        self.plot(gas_masses, stellar_masses, glx_star_formation_rates, stellar_angular_momenta, disc_fractions_IT20)
         print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished DTT_GP for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished DTT_GP for ' + re.split('Planck1/|/PE', simulation_path)[1] + str(tag) + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
-    def plot(self, disc_fractions_IT20, stellar_masses, stellar_angular_momenta, gas_masses, glx_star_formation_rates):
+    def plot(self, gas_masses, stellar_masses, glx_star_formation_rates, stellar_angular_momenta, disc_fractions_IT20):
         """
         Plot the disc to total ratio as a function of mass, angular momentum.
-        :param disc_fractions_IT20: where the disc consists of particles whose angular momentum angular separation is 30deg from the densest pixel.
+        :param gas_masses: defined as the mass of all gaseous particles within 30kpc from the most bound particle.
         :param stellar_masses: defined as the mass of all stellar particles within 30kpc from the most bound particle.
-        :param stellar_angular_momenta: defined as the sum of each particle's angular momentum.
-        :param gas_masses: defined as the mass of all gas particles within 30kpc from the most bound particle.
+        :param glx_star_formation_rates: defined as the star formation rate of all gaseous particles within 30kpc from the most bound particle.
+        :param stellar_angular_momenta: defined as the sum of each stellar particle's angular momentum.
+        :param disc_fractions_IT20: where the disc consists of particles whose angular momentum angular separation is 30deg from the densest pixel.
         :return: None
         """
         # Generate the figure and define its parameters #

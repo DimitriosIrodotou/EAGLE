@@ -44,7 +44,7 @@ class DTTVsEnvironment:
         print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished DTT_E for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished DTT_E for ' + re.split('Planck1/|/PE', simulation_path)[1] + str(tag) + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
@@ -52,8 +52,8 @@ class DTTVsEnvironment:
         """
         Plot the angle between angular momentum of gaseous versus stellar discs.
         :param disc_fractions_IT20: where the disc consists of particles whose angular momentum angular separation is 30deg from the densest pixel.
-        :param stellar_masses: defined as the mass of all stellar particles within 30kpc from the most bound particle.
-        :param stellar_angular_momenta: defined as the sum of each particle's angular momentum.
+        :param stellar_angular_momenta: defined as the sum of each stellar particle's angular momentum.
+        :param gaseous_angular_momenta: defined as the sum of each gaseous particle's angular momentum.
         :return: None
         """
         # Generate the figure and define its parameters #

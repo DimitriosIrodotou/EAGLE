@@ -1,4 +1,3 @@
-import os
 import re
 import time
 import warnings
@@ -44,21 +43,21 @@ class DiscToTotalVsMorphologicalParameters:
         # Plot the data #
         start_local_time = time.time()  # Start the local time.
         
-        self.plot(disc_fractions_IT20, concentration_indices, kappas_corotation, disc_fractions, rotationals_over_dispersions)
+        self.plot(disc_fractions, kappas_corotation, disc_fractions_IT20, concentration_indices, rotationals_over_dispersions)
         print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished DTT_MP for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished DTT_MP for ' + re.split('Planck1/|/PE', simulation_path)[1] + str(tag) + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
-    def plot(self, disc_fractions_IT20, concentration_indices, kappas_corotation, disc_fractions, rotationals_over_dispersions):
+    def plot(self, disc_fractions, kappas_corotation, disc_fractions_IT20, concentration_indices, rotationals_over_dispersions):
         """
         Plot the disc to total ratio as a function of concentration index, kappa corotation, disc fraction and rotational over dispersion.
+        :param disc_fractions: where the bulge is assumed to have zero net angualr momentum.
+        :param kappas_corotation: defined as angular kinetic energy over kinetic energy.
         :param disc_fractions_IT20: where the disc consists of particles whose angular momentum angular separation is 30deg from the densest pixel.
         :param concentration_indices: defined as R90/R50
-        :param kappas_corotation: defined as angular kinetic energy over kinetic energy.
-        :param disc_fractions: where the bulge is assumed to have zero net angualr momentum.
         :param rotationals_over_dispersions: defined as vrot/sigam
         :return: None
         """

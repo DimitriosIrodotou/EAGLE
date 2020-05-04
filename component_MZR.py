@@ -41,21 +41,21 @@ class ComponentMZR:
         # Plot the data #
         start_local_time = time.time()  # Start the local time.
         
-        self.plot(disc_fractions_IT20, stellar_masses, disc_metallicities, bulge_metallicities)
+        self.plot(stellar_masses, disc_metallicities, bulge_metallicities, disc_fractions_IT20)
         print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished CMZR for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished CMZR for ' + re.split('Planck1/|/PE', simulation_path)[1] + str(tag) + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
-    def plot(self, disc_fractions_IT20, stellar_masses, disc_metallicities, bulge_metallicities):
+    def plot(self, stellar_masses, disc_metallicities, bulge_metallicities, disc_fractions_IT20):
         """
         Plot the disc and bulge metallicity-mass relation colour-coded by DTT.
-        :param disc_fractions_IT20: where the disc consists of particles whose angular momentum angular separation is 30deg from the densest pixel.
         :param stellar_masses: defined as the mass of all stellar particles within 30kpc from the most bound particle.
         :param disc_metallicities: defined as the mass-weighted sum of each disc particle's metallicity.
         :param bulge_metallicities: defined as the mass-weighted sum of each bulge particle's metallicity.
+        :param disc_fractions_IT20: where the disc consists of particles whose angular momentum angular separation is 30deg from the densest pixel.
         :return: None
         """
         # Generate the figure and define its parameters #

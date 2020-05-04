@@ -32,7 +32,8 @@ class ComponentBeta:
         """
         start_local_time = time.time()  # Start the local time.
         
-        glx_betas = np.load(data_path + 'glx_betas.npy')
+        disc_betas = np.load(data_path + 'disc_betas.npy')
+        bulge_betas = np.load(data_path + 'bulge_betas.npy')
         stellar_masses = np.load(data_path + 'glx_stellar_masses.npy')
         disc_fractions_IT20 = np.load(data_path + 'glx_disc_fractions_IT20.npy')
         print('Loaded data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
@@ -41,21 +42,21 @@ class ComponentBeta:
         # Plot the data #
         start_local_time = time.time()  # Start the local time.
         
-        self.plot(disc_fractions_IT20, stellar_masses, glx_betas)
+        self.plot(disc_betas, bulge_betas, stellar_masses, disc_fractions_IT20)
         print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished CB for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished CB for ' + re.split('Planck1/|/PE', simulation_path)[1] + str(tag) + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
-    def plot(self, disc_fractions_IT20, stellar_masses, glx_betas):
+    def plot(self, disc_betas, bulge_betas, stellar_masses, disc_fractions_IT20):
         """
         Plot the disc and bulge beta-mass relation colour-coded by DTT plot.
-        :param disc_fractions_IT20: where the disc consists of particles whose angular momentum angular separation is 30deg from the densest pixel.
+        :param disc_betas: defined as the disc anisotropy parameter.
+        :param bulge_betas: defined as the bulge anisotropy parameter.
         :param stellar_masses: defined as the mass of all stellar particles within 30kpc from the most bound particle.
-        :param disc_metallicities: defined as the mass-weighted sum of each disc particle's metallicity.
-        :param bulge_metallicities: defined as the mass-weighted sum of each bulge particle's metallicity.
+        :param disc_fractions_IT20: where the disc consists of particles whose angular momentum angular separation is 30deg from the densest pixel.
         :return: None
         """
         # Generate the figure and define its parameters #
@@ -70,16 +71,17 @@ class ComponentBeta:
             axis.grid(True, which='both', axis='both')
             # axis.set_xscale('log')
             # axis.set_yscale('log')
-            # axis.set_ylim(1e-1, 1e1)
+            axis.set_ylim(0, 1)
             # axis.set_xlim(1e9, 6e11)
             axis.set_xlabel(r'$\mathrm{M_{\bigstar}/M_{\odot}}$', size=16)
             axis.tick_params(direction='out', which='both', top='on', right='on', left='on', labelsize=16)
         ax11.yaxis.tick_right()
         ax11.yaxis.set_label_position("right")
-        ax10.set_ylabel(r'$\mathrm{Z_{bulge}/Z_{\odot}}$', size=16)
-        ax11.set_ylabel(r'$\mathrm{Z_{disc}/Z_{\odot}}$', size=16)
+        ax10.set_ylabel(r'$\mathrm{exp(\beta_{bulge}-1)}$', size=16)
+        ax11.set_ylabel(r'$\mathrm{exp(\beta_{disc}-1)}$', size=16)
         
-        sc = ax11.scatter(stellar_masses, glx_betas, c=disc_fractions_IT20, s=8, cmap='seismic_r', vmin=0, vmax=1, marker='h')
+        ax10.scatter(disc_fractions_IT20, np.exp(bulge_betas - 1), c=disc_fractions_IT20, s=8, cmap='seismic_r', vmin=0, vmax=1, marker='h')
+        sc = ax11.scatter(disc_fractions_IT20, np.exp(disc_betas - 1), c=disc_fractions_IT20, s=8, cmap='seismic_r', vmin=0, vmax=1, marker='h')
         plot_tools.create_colorbar(ax00, sc, r'$\mathrm{D/T_{30\degree}}$', 'horizontal')
         
         # Save the plot #

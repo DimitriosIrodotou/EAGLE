@@ -61,7 +61,8 @@ class ReadAttributes:
             print('–––––––––––––––––––––––––––––––––––––––––––––')
             p += 1
         
-        print('Finished ReadAttributes for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished ReadAttributes for ' + re.split('Planck1/|/PE', simulation_path)[1] + str(tag) + ' in %.4s s' % (
+            time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
@@ -112,6 +113,7 @@ class ReadAttributes:
         gaseous_data['Coordinates'] *= u.cm.to(u.kpc)
         gaseous_data['StarFormationRate'] *= np.divide(u.g.to(u.Msun), u.second.to(u.year))
         
+        dark_matter_data['Coordinates'] *= u.cm.to(u.kpc)
         dark_matter_data['Velocity'] *= u.cm.to(u.km)  # per second.
         dark_matter_data['Mass'] = self.dark_matter_mass(simulation_path, tag) * u.g.to(u.Msun)
         
@@ -195,7 +197,7 @@ class ReadAttributes:
         :return: particle_mass
         """
         
-        # Read the required properties from the header and get conversion factors from gas particles #
+        # Read the required properties from the header and get conversion factors from gaseous particles #
         f = h5py.File(simulation_path + 'snapshot_' + tag + '/snap_027_z000p101.0.hdf5', 'r')
         a = f['Header'].attrs.get('Time')
         h = f['Header'].attrs.get('HubbleParam')
@@ -251,13 +253,13 @@ class AddAttributes:
                                        allow_pickle=True)
             stellar_data_tmp = stellar_data_tmp.item()
             
-            stellar_data_tmp['beta'] = self.beta(stellar_data_tmp)
-            stellar_data_tmp['c'] = self.concentration_index(stellar_data_tmp)
-            stellar_data_tmp['kappa_corotation'] = self.kappa_corotation(stellar_data_tmp)
-            stellar_data_tmp['disc_mask_IT20'], stellar_data_tmp['bulge_mask_IT20'] = self.decomposition_IT20(stellar_data_tmp)
-            stellar_data_tmp['disc_fraction'], stellar_data_tmp['rotational_over_dispersion'] = self.kinematic_diagnostics(stellar_data_tmp)
-            stellar_data_tmp['n'], stellar_data_tmp['R_d'], stellar_data_tmp['R_eff'], stellar_data_tmp[
-                'disk_fraction_profile'] = self.profile_fitting(stellar_data_tmp)
+            # stellar_data_tmp['c'] = self.concentration_index(stellar_data_tmp)
+            # stellar_data_tmp['kappa_corotation'] = self.kappa_corotation(stellar_data_tmp)
+            stellar_data_tmp['velocity_sqred'], stellar_data_tmp['velocity_r_sqred'] = self.beta_components(stellar_data_tmp)
+            # stellar_data_tmp['disc_mask_IT20'], stellar_data_tmp['bulge_mask_IT20'] = self.decomposition_IT20(stellar_data_tmp)
+            # stellar_data_tmp['disc_fraction'], stellar_data_tmp['rotational_over_dispersion'] = self.kinematic_diagnostics(stellar_data_tmp)
+            # stellar_data_tmp['n'], stellar_data_tmp['R_d'], stellar_data_tmp['R_eff'], stellar_data_tmp[
+            #     'disk_fraction_profile'] = self.profile_fitting(stellar_data_tmp)
             
             # Save data in numpy array #
             np.save(data_path + 'stellar_data_tmps/stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number), stellar_data_tmp)
@@ -266,7 +268,8 @@ class AddAttributes:
                 'Masked and saved data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (time.time() - start_local_time))
             print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished AddAttributes for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished AddAttributes for ' + re.split('Planck1/|/PE', simulation_path)[1] + str(tag) + ' in %.4s s' % (
+            time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
@@ -357,7 +360,7 @@ class AddAttributes:
         :return: c
         """
         
-        c = np.divide(MorphoKinematic.r_ninety(stellar_data_tmp), MorphoKinematic.r_fifty(stellar_data_tmp))
+        c = np.divide(MorphoKinematic.r_mass(stellar_data_tmp, 0.9), MorphoKinematic.r_mass(stellar_data_tmp, 0.5))
         return c
     
     
@@ -400,20 +403,19 @@ class AddAttributes:
     
     
     @staticmethod
-    def beta(stellar_data_tmp):
+    def beta_components(stellar_data_tmp):
         """
-        Calculate the anisotropy parameter beta.
+        Calculate the components of the anisotropy parameter beta.
         :param stellar_data_tmp:
-        :return: beta
+        :return: velocity_sqred, velocity_r_sqred
         """
         
-        # Calculate e^beta-1 #
+        # Calculate u^2 and u_r^2 #
+        velocity_sqred = np.sum(stellar_data_tmp['Velocity'] * stellar_data_tmp['Velocity'], axis=1)
         velocity_r_sqred = np.divide(np.sum(stellar_data_tmp['Velocity'] * stellar_data_tmp['Coordinates'], axis=1) ** 2,
                                      np.sum(stellar_data_tmp['Coordinates'] * stellar_data_tmp['Coordinates'], axis=1))
-        beta = np.subtract(1, np.divide(np.subtract(np.sum(stellar_data_tmp['Velocity'] * stellar_data_tmp['Velocity'], axis=1), velocity_r_sqred),
-                                        2 * velocity_r_sqred))
         
-        return beta
+        return velocity_sqred, velocity_r_sqred
     
     
     @staticmethod
@@ -522,8 +524,9 @@ class AppendAttributes:
         # Initialise arrays to store the data #
         glx_stellar_angular_momenta, glx_gaseous_angular_momenta, glx_stellar_masses, glx_gaseous_masses, glx_concentration_indices, \
         glx_kappas_corotation, glx_disc_fractions_IT20, glx_disc_fractions, disc_metallicities, bulge_metallicities, \
-        glx_rotational_over_dispersion, group_numbers, subgroup_numbers, glx_star_formation_rate, glx_betas, glx_Sersic_indices, glx_scale_lengths,\
-        glx_effective_radii, glx_disk_fraction_profiles = [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []
+        glx_rotational_over_dispersion, group_numbers, subgroup_numbers, glx_star_formation_rate, glx_Sersic_indices, glx_scale_lengths, \
+        glx_effective_radii, glx_disk_fraction_profiles, disc_betas, bulge_betas, glx_particle_numbers = [], [], [], [], [], [], [], [], [], [], \
+                                                                                                         [], [], [], [], [], [], [], [], [], [], []
         
         # Extract particle and subhalo attributes and convert them to astronomical units #
         self.subhalo_data = self.read_attributes(simulation_path, tag)
@@ -551,15 +554,19 @@ class AppendAttributes:
             # prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
             #                                                                           stellar_data_tmp['Velocity'])  # In Msun kpc km s-1.
             # glx_stellar_angular_momentum = np.sum(prc_angular_momentum, axis=0)
-            #
-            # for i, mask in enumerate([stellar_data_tmp['disc_mask_IT20'], stellar_data_tmp['bulge_mask_IT20']]):
-            #     component_mass = np.sum(stellar_data_tmp['Mass'][mask])
-            #     metals = np.divide(stellar_data_tmp['Metallicity'][mask] * stellar_data_tmp['Mass'][mask], component_mass)
-            #     if i == 0:
-            #         stellar_data_tmp['disc_metallicity'] = np.divide(np.sum(metals), 0.0134)  # In solar metallicity.
-            #     else:
-            #         stellar_data_tmp['bulge_metallicity'] = np.divide(np.sum(metals), 0.0134)  # In solar metallicity.
-            #
+            
+            for i, mask in enumerate([stellar_data_tmp['disc_mask_IT20'], stellar_data_tmp['bulge_mask_IT20']]):
+                # component_mass = np.sum(stellar_data_tmp['Mass'][mask])
+                # metals = np.divide(stellar_data_tmp['Metallicity'][mask] * stellar_data_tmp['Mass'][mask], component_mass)
+                velocity_sqred = stellar_data_tmp['velocity_sqred'][mask]
+                velocity_r_sqred = stellar_data_tmp['velocity_r_sqred'][mask]
+                if i == 0:
+                    stellar_data_tmp['disc_beta'] = 1 - np.divide(np.mean(velocity_sqred) - np.mean(velocity_r_sqred), 2 * np.mean(
+                        velocity_r_sqred))  # stellar_data_tmp['disc_metallicity'] = np.sum(metals) / 0.0134  # In solar metallicity.
+                else:
+                    stellar_data_tmp['bulge_beta'] = 1 - np.divide(np.mean(velocity_sqred) - np.mean(velocity_r_sqred), 2 * np.mean(
+                        velocity_r_sqred))  # stellar_data_tmp['bulge_metallicity'] = np.sum(metals)/ 0.0134  # In solar metallicity.
+            
             # prc_angular_momentum = gaseous_data_tmp['Mass'][:, np.newaxis] * np.cross(gaseous_data_tmp['Coordinates'],
             #                                                                           gaseous_data_tmp['Velocity'])  # In Msun kpc km s-1.
             # glx_gaseous_angular_momentum = np.sum(prc_angular_momentum, axis=0)
@@ -567,11 +574,12 @@ class AppendAttributes:
             # Append attributes into single arrays #
             # group_numbers.append(group_number)
             # subgroup_numbers.append(subgroup_number)
-            glx_betas.append(stellar_data_tmp['beta'])
-            glx_Sersic_indices.append(stellar_data_tmp['n'])
-            glx_scale_lengths.append(stellar_data_tmp['R_d'])
-            glx_effective_radii.append(stellar_data_tmp['R_eff'])
-            glx_disk_fraction_profiles.append(stellar_data_tmp['disk_fraction_profile'])
+            # glx_Sersic_indices.append(stellar_data_tmp['n'])
+            disc_betas.append(stellar_data_tmp['disc_beta'])
+            # glx_scale_lengths.append(stellar_data_tmp['R_d'])
+            bulge_betas.append(stellar_data_tmp['bulge_beta'])
+            # glx_effective_radii.append(stellar_data_tmp['R_eff'])
+            glx_particle_numbers.append(len(stellar_data_tmp['Mass']))
             # glx_concentration_indices.append(stellar_data_tmp['c'])
             # glx_stellar_masses.append(np.sum(stellar_data_tmp['Mass']))
             # glx_disc_fractions.append(stellar_data_tmp['disc_fraction'])
@@ -579,10 +587,11 @@ class AppendAttributes:
             # glx_stellar_angular_momenta.append(glx_stellar_angular_momentum)
             # bulge_metallicities.append(stellar_data_tmp['bulge_metallicity'])
             # glx_kappas_corotation.append(stellar_data_tmp['kappa_corotation'])
+            # glx_disk_fraction_profiles.append(stellar_data_tmp['disk_fraction_profile'])
             # glx_rotational_over_dispersion.append(stellar_data_tmp['rotational_over_dispersion'])
             # disc_fraction_IT20 = np.divide(np.sum(stellar_data_tmp['Mass'][stellar_data_tmp['disc_mask_IT20']]), np.sum(stellar_data_tmp['Mass']))
             # glx_disc_fractions_IT20.append(disc_fraction_IT20)
-            #
+            
             # glx_gaseous_masses.append(np.sum(gaseous_data_tmp['Mass']))
             # glx_gaseous_angular_momenta.append(glx_gaseous_angular_momentum)
             # glx_star_formation_rate.append(np.sum(gaseous_data_tmp['StarFormationRate']))
@@ -591,28 +600,31 @@ class AppendAttributes:
             print('–––––––––––––––––––––––––––––––––––––––––––––')
         
         # Save data in numpy array #
+        np.save(data_path + 'disc_betas', disc_betas)
+        np.save(data_path + 'bulge_betas', bulge_betas)
         # np.save(data_path + 'group_numbers', group_numbers)
+        np.save(data_path + 'glx_particle_numbers', glx_particle_numbers)
         # np.save(data_path + 'subgroup_numbers', subgroup_numbers)
+        # np.save(data_path + 'glx_scale_lengths', glx_scale_lengths)
         # np.save(data_path + 'glx_stellar_masses', glx_stellar_masses)
-        np.save(data_path + 'glx_betas', glx_betas)
-        np.save(data_path + 'glx_Sersic_indices', glx_Sersic_indices)
-        np.save(data_path + 'glx_scale_lengths', glx_scale_lengths)
-        np.save(data_path + 'glx_effective_radii', glx_effective_radii)
-        np.save(data_path + 'glx_disk_fraction_profiles', glx_disk_fraction_profiles)
         # np.save(data_path + 'glx_disc_fractions', glx_disc_fractions)
+        # np.save(data_path + 'glx_Sersic_indices', glx_Sersic_indices)
         # np.save(data_path + 'disc_metallicities', disc_metallicities)
         # np.save(data_path + 'bulge_metallicities', bulge_metallicities)
+        # np.save(data_path + 'glx_effective_radii', glx_effective_radii)
         # np.save(data_path + 'glx_kappas_corotation', glx_kappas_corotation)
         # np.save(data_path + 'glx_disc_fractions_IT20', glx_disc_fractions_IT20)
         # np.save(data_path + 'glx_concentration_indices', glx_concentration_indices)
+        # np.save(data_path + 'glx_disk_fraction_profiles', glx_disk_fraction_profiles)
         # np.save(data_path + 'glx_stellar_angular_momenta', glx_stellar_angular_momenta)
         # np.save(data_path + 'glx_rotational_over_dispersion', glx_rotational_over_dispersion)
-        #
+        
         # np.save(data_path + 'glx_gaseous_masses', glx_gaseous_masses)
         # np.save(data_path + 'glx_star_formation_rate', glx_star_formation_rate)
         # np.save(data_path + 'glx_gaseous_angular_momenta', glx_gaseous_angular_momenta)
         
-        print('Finished AppendAttributes for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished AppendAttributes for ' + re.split('Planck1/|/PE', simulation_path)[1] + str(tag) + ' in %.4s s' % (
+            time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
@@ -658,7 +670,7 @@ if __name__ == '__main__':
     tag = '027_z000p101'
     simulation_path = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
     data_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/'  # Path to save/load data.
-    if str(sys.argv[1]) == '-r':
+    if str(sys.argv[1]) == '-rd':
         print('Reading attributes')
         x = ReadAttributes(simulation_path, tag)
     elif str(sys.argv[1]) == '-ad':
