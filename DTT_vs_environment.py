@@ -44,7 +44,7 @@ class DTTVsEnvironment:
         print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished DTT_E for ' + re.split('Planck1/|/PE', simulation_path)[1] + str(tag) + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished DTT_E for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
@@ -74,7 +74,6 @@ class DTTVsEnvironment:
         
         for axis in [ax10, ax11, ax12, ax13]:
             axis.set_ylim(0, 1)
-            # axis.set_xscale('log')
             axis.set_facecolor(cmap(0))
             axis.grid(True, which='major', axis='both')
             axis.tick_params(direction='out', which='both', top='on', right='on', left='on', labelsize=16)
@@ -90,13 +89,13 @@ class DTTVsEnvironment:
         y_attributes = [disc_fractions_IT20]
         labels = [r'$\mathrm{(\vec{J}_{\bigstar}\cdot\vec{J}_{gas})/(|\vec{J}_{\bigstar}||\vec{J}_{gas}|)}$']
         for axis, cbar_axis, x_attribute, y_attribute, label in zip(axes, cbar_axes, x_attributes, y_attributes, labels):
-            hb = axis.hexbin(x_attribute, y_attribute, bins='log', gridsize=100, label=r'$D/T_{\vec{J}_{b} = 0}$', cmap=cmap)
+            hb = axis.hexbin(x_attribute, y_attribute, gridsize=100, label=r'$D/T_{\vec{J}_{b} = 0}$', cmap=cmap)
             plot_tools.create_colorbar(cbar_axis, hb, r'$\mathrm{Counts\;per\;hexbin}$', 'horizontal')
             
             # Plot median and 1-sigma lines #
             x_value, median, shigh, slow = plot_tools.median_1sigma(x_attribute, disc_fractions_IT20, 0.05, log=False)
-            axis.plot(x_value, median, color='silver', linewidth=5, zorder=5)
-            axis.fill_between(x_value, shigh, slow, color='silver', alpha='0.5', zorder=5)
+            axis.plot(x_value, median, color='silver', linewidth=3, zorder=5)
+            axis.fill_between(x_value, shigh, slow, color='silver', alpha='0.3', zorder=5)
             
             axis.set_xlabel(label, size=16)
         

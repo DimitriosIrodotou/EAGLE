@@ -33,7 +33,7 @@ class SFRVsAngularMomentum:
         
         stellar_masses = np.load(data_path + 'glx_stellar_masses.npy')
         disc_fractions_IT20 = np.load(data_path + 'glx_disc_fractions_IT20.npy')
-        star_formation_rates = np.load(data_path + 'glx_star_formation_rate.npy')
+        star_formation_rates = np.load(data_path + 'glx_star_formation_rates.npy')
         stellar_angular_momenta = np.load(data_path + 'glx_stellar_angular_momenta.npy')
         print('Loaded data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
@@ -45,7 +45,7 @@ class SFRVsAngularMomentum:
         print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished SFR_AM for ' + re.split('Planck1/|/PE', simulation_path)[1] + str(tag) + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished SFR_AM for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     

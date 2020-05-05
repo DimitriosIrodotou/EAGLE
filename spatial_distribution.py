@@ -2,7 +2,6 @@ import os
 import re
 import time
 import warnings
-import argparse
 import matplotlib
 
 matplotlib.use('Agg')
@@ -11,18 +10,10 @@ import numpy as np
 import matplotlib.cbook
 import astropy.units as u
 import matplotlib.pyplot as plt
-import eagle_IO.eagle_IO.eagle_IO as E
 
 from matplotlib import gridspec
 from astropy_healpix import HEALPix
 from rotate_galaxies import RotateCoordinates
-
-# Create a parser and add argument to read data #
-parser = argparse.ArgumentParser(description='Create ra and dec plot.')
-parser.add_argument('-r', action='store_true', help='Read data')
-parser.add_argument('-l', action='store_true', help='Load data')
-parser.add_argument('-rs', action='store_true', help='Read data and save to numpy arrays')
-args = parser.parse_args()
 
 date = time.strftime('%d_%m_%y_%H%M')  # Date
 start_global_time = time.time()  # Start the global time.
@@ -42,51 +33,16 @@ class SpatialDistribution:
         :param tag: redshift directory.
         """
         
-        p = 1  # Counter.
-        stellar_data_tmp = {}  # Initialise an array to store the data.
-        
-        if not args.l:
-            # Extract particle and subhalo attributes and convert them to astronomical units #
-            self.stellar_data, self.subhalo_data = self.read_attributes(simulation_path, tag)
-            print('Read data for ' + re.split('EAGLE/|/data', simulation_path)[2] + ' in %.4s s' % (time.time() - start_global_time))
-            print('–––––––––––––––––––––––––––––––––––––––––––––')
-            
-            self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e9 Msun.
-        
-        # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all masked haloes.
         for group_number in range(1, 26):  # Loop over all masked haloes.
             for subgroup_number in range(0, 1):  # Get centrals only.
-                if args.rs:  # Read and save data.
-                    start_local_time = time.time()  # Start the local time.
-                    
-                    stellar_data_tmp = self.mask_galaxies(group_number, subgroup_number)  # Mask galaxies and normalise data.
-                    
-                    # Save data in numpy arrays #
-                    np.save(data_path + 'stellar_data_tmps/stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number), stellar_data_tmp)
-                    print('Masked and saved data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (
-                        time.time() - start_local_time) + ' (' + str(round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
-                    print('–––––––––––––––––––––––––––––––––––––––––––––')
-                    p += 1
+                start_local_time = time.time()  # Start the local time.
                 
-                elif args.r:  # Read data.
-                    start_local_time = time.time()  # Start the local time.
-                    
-                    stellar_data_tmp = self.mask_galaxies(group_number, subgroup_number)  # Mask galaxies and normalise data.
-                    print('Masked data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (
-                        time.time() - start_local_time) + ' (' + str(round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
-                    print('–––––––––––––––––––––––––––––––––––––––––––––')
-                    p += 1
-                
-                elif args.l:  # Load data.
-                    start_local_time = time.time()  # Start the local time.
-                    
-                    # Load data from numpy arrays #
-                    stellar_data_tmp = np.load(
-                        data_path + 'stellar_data_tmps/stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy',
-                        allow_pickle=True)
-                    stellar_data_tmp = stellar_data_tmp.item()
-                    print('Loaded data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (time.time() - start_local_time))
-                    print('–––––––––––––––––––––––––––––––––––––––––––––')
+                # Load data from numpy arrays #
+                stellar_data_tmp = np.load(
+                    data_path + 'stellar_data_tmps/stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy', allow_pickle=True)
+                stellar_data_tmp = stellar_data_tmp.item()
+                print('Loaded data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (time.time() - start_local_time))
+                print('–––––––––––––––––––––––––––––––––––––––––––––')
                 
                 # Plot the data #
                 start_local_time = time.time()  # Start the local time.
@@ -95,94 +51,16 @@ class SpatialDistribution:
                 print('Plotted data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (time.time() - start_local_time))
                 print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished SpatialDistribution for ' + re.split('EAGLE/|/data', simulation_path)[2] + str(tag) + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished SpatialDistribution for ' + re.split('EAGLE/|/data', simulation_path)[2] + str(tag) + ' in %.4s s' % (
+                time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
-    
-    
-    @staticmethod
-    def read_attributes(simulation_path, tag):
-        """
-        Extract particle and subhalo attributes and convert them to astronomical units.
-        :param simulation_path: simulation directory.
-        :param tag: redshift directory.
-        :return: stellar_data, subhalo_data
-        """
-        
-        # Load subhalo data in h-free physical CGS units #
-        subhalo_data = {}
-        file_type = 'SUBFIND'
-        for attribute in ['ApertureMeasurements/Mass/030kpc', 'CentreOfPotential', 'GroupNumber', 'SubGroupNumber']:
-            subhalo_data[attribute] = E.read_array(file_type, simulation_path, tag, '/Subhalo/' + attribute, numThreads=8)
-        
-        # Load particle data in h-free physical CGS units #
-        stellar_data = {}
-        particle_type = '4'
-        file_type = 'PARTDATA'
-        for attribute in ['Coordinates', 'GroupNumber', 'Mass', 'SubGroupNumber', 'Velocity']:
-            stellar_data[attribute] = E.read_array(file_type, simulation_path, tag, '/PartType' + particle_type + '/' + attribute, numThreads=8)
-        
-        # Convert attributes to astronomical units #
-        stellar_data['Mass'] *= u.g.to(u.Msun)
-        stellar_data['Velocity'] *= u.cm.to(u.km)  # per second.
-        stellar_data['Coordinates'] *= u.cm.to(u.kpc)
-        subhalo_data['CentreOfPotential'] *= u.cm.to(u.kpc)
-        subhalo_data['ApertureMeasurements/Mass/030kpc'] *= u.g.to(u.Msun)
-        
-        return stellar_data, subhalo_data
-    
-    
-    def mask_haloes(self):
-        """
-        Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e9 Msun.
-        :return: subhalo_data_tmp
-        """
-        
-        # Mask the halo data #
-        halo_mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 1e9)
-        
-        # Mask the temporary dictionary for each galaxy #
-        subhalo_data_tmp = {}
-        for attribute in self.subhalo_data.keys():
-            subhalo_data_tmp[attribute] = np.copy(self.subhalo_data[attribute])[halo_mask]
-        
-        return subhalo_data_tmp
-    
-    
-    def mask_galaxies(self, group_number, subgroup_number):
-        """
-        Mask galaxies and normalise data.
-        :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber']))
-        :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
-        :return: stellar_data_tmp
-        """
-        
-        # Select the corresponding halo in order to get its centre of potential #
-        halo_mask, = np.where((self.subhalo_data_tmp['GroupNumber'] == group_number) & (self.subhalo_data_tmp['SubGroupNumber'] == subgroup_number))
-        
-        # Mask the data to select galaxies with a given GroupNumber and SubGroupNumber and particles inside a 30kpc sphere #
-        galaxy_mask = np.where((self.stellar_data['GroupNumber'] == group_number) & (self.stellar_data['SubGroupNumber'] == subgroup_number) & (
-            np.linalg.norm(np.subtract(self.stellar_data['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][halo_mask]),
-                           axis=1) <= 30.0))  # In kpc.
-        
-        # Mask the temporary dictionary for each galaxy #
-        stellar_data_tmp = {}
-        for attribute in self.stellar_data.keys():
-            stellar_data_tmp[attribute] = np.copy(self.stellar_data[attribute])[galaxy_mask]
-        
-        # Normalise the coordinates and velocities wrt the centre of potential of the subhalo #
-        stellar_data_tmp['Coordinates'] = np.subtract(stellar_data_tmp['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][halo_mask])
-        CoM_velocity = np.divide(np.sum(stellar_data_tmp['Mass'][:, np.newaxis] * stellar_data_tmp['Velocity'], axis=0),
-                                 np.sum(stellar_data_tmp['Mass'], axis=0))  # In km s-1.
-        stellar_data_tmp['Velocity'] = np.subtract(stellar_data_tmp['Velocity'], CoM_velocity)
-        
-        return stellar_data_tmp
     
     
     @staticmethod
     def plot(stellar_data_tmp, group_number, subgroup_number):
         """
         Plot spatial distribution maps.
-        :param stellar_data_tmp: from mask_galaxies
+        :param stellar_data_tmp: from read_add_attributes.py.
         :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber']))
         :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
         :return: None

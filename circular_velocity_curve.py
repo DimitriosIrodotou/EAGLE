@@ -93,7 +93,7 @@ class CircularVelocityCurve:
                 print('Plotted data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (time.time() - start_local_time))
                 print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished CircularVelocityCurve for' + re.split('Planck1/|/PE', simulation_path)[1] + str(tag) + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished CircularVelocityCurve for' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
@@ -179,7 +179,7 @@ class CircularVelocityCurve:
     def plot(self, stellar_data_tmp, group_number, subgroup_number):
         """
         Plot surface density profiles.
-        :param stellar_data_tmp: from mask_galaxies.
+        :param stellar_data_tmp: from read_add_attributes.py.
         :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber'])).
         :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber'])).
         :return: None

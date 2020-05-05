@@ -1,4 +1,3 @@
-import os
 import re
 import time
 import warnings
@@ -46,7 +45,7 @@ class ComponentBeta:
         print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished CB for ' + re.split('Planck1/|/PE', simulation_path)[1] + str(tag) + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished CB for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
@@ -70,8 +69,8 @@ class ComponentBeta:
         for axis in [ax10, ax11]:
             axis.grid(True, which='both', axis='both')
             # axis.set_xscale('log')
-            # axis.set_yscale('log')
-            axis.set_ylim(0, 1)
+            axis.set_yscale('log')
+            axis.set_ylim(3e-3, 1)
             # axis.set_xlim(1e9, 6e11)
             axis.set_xlabel(r'$\mathrm{M_{\bigstar}/M_{\odot}}$', size=16)
             axis.tick_params(direction='out', which='both', top='on', right='on', left='on', labelsize=16)

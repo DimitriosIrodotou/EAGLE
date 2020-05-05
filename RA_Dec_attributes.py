@@ -98,7 +98,7 @@ class RADecAttributes:
                 print('Plotted data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (time.time() - start_local_time))
                 print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished RADecAttributes for ' + re.split('Planck1/|/PE', simulation_path)[1] + str(tag) + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished RADecAttributes for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
@@ -192,7 +192,7 @@ class RADecAttributes:
     def plot(stellar_data_tmp, glx_unit_vector, group_number, subgroup_number):
         """
         Plot RA and Dec from the angular momentum of particles colour-coded by different attributes.
-        :param stellar_data_tmp: from mask_galaxies.
+        :param stellar_data_tmp: from read_add_attributes.py.
         :param glx_unit_vector: from mask_galaxies.
         :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber'])).
         :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber'])).

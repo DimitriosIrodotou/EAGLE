@@ -58,7 +58,7 @@ class BarStrength:
                 print('Plotted data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (time.time() - start_local_time))
                 print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished BarStrength for ' + re.split('Planck1/|/PE', simulation_path)[1] + str(tag) + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished BarStrength for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
@@ -104,7 +104,7 @@ class BarStrength:
     def plot(stellar_data_tmp, group_number, subgroup_number):
         """
         Create a bar strength plot.
-        :param stellar_data_tmp: from mask_galaxies.
+        :param stellar_data_tmp: from read_add_attributes.py.
         :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber'])).
         :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber'])).
         :return: None

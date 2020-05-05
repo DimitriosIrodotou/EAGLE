@@ -17,9 +17,9 @@ start_global_time = time.time()  # Start the global time.
 warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
 
 
-class SFRVsMass:
+class TestParticleNumber:
     """
-    For all galaxies create: star formation rate versus stellar mass colour-coded by disc to total ratio.
+    For all galaxies create: a disc to total ratio as a function of mass, angular momentum.
     """
     
     
@@ -31,57 +31,55 @@ class SFRVsMass:
         """
         start_local_time = time.time()  # Start the local time.
         
-        stellar_masses = np.load(data_path + 'glx_stellar_masses.npy')
+        particle_numbers = np.load(data_path + 'glx_particle_numbers.npy')
         disc_fractions_IT20 = np.load(data_path + 'glx_disc_fractions_IT20.npy')
-        star_formation_rates = np.load(data_path + 'glx_star_formation_rates.npy')
         print('Loaded data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
         # Plot the data #
         start_local_time = time.time()  # Start the local time.
         
-        self.plot(stellar_masses, disc_fractions_IT20, star_formation_rates)
+        self.plot(particle_numbers, disc_fractions_IT20)
         print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished SFR_M for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished TPN for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
-    def plot(self, stellar_masses, disc_fractions_IT20, glx_star_formation_rates):
+    def plot(self, particle_numbers, disc_fractions_IT20):
         """
-        Plot star formation rate versus stellar mass colour-coded by disc to total ratio
-        :param stellar_masses: defined as the mass of all stellar particles within 30kpc from the most bound particle.
+        Plot the disc to total ratio as a function of mass, angular momentum.
+        :param particle_numbers: defined as the number of all stellar particles within 30kpc from the most bound particle.
         :param disc_fractions_IT20: where the disc consists of particles whose angular momentum angular separation is 30deg from the densest pixel.
-        :param glx_star_formation_rates: defined as the star formation rate of all gaseous particles within 30kpc from the most bound particle.
         :return: None
         """
         # Generate the figure and define its parameters #
         plt.close()
         figure = plt.figure(figsize=(10, 7.5))
         gs = gridspec.GridSpec(2, 1, wspace=0.0, hspace=0.0, height_ratios=[0.05, 1])
-        ax00 = figure.add_subplot(gs[0, 0])
+        axcbar = figure.add_subplot(gs[0, 0])
         ax10 = figure.add_subplot(gs[1, 0])
         
-        ax10.grid(True, which='both', axis='both')
-        ax10.set_xlim(9, 12)
-        ax10.set_ylim(-3.5, 1.5)
-        ax10.set_xlabel(r'$\mathrm{log_{10}(M_{\bigstar}/M_{\odot})}$', size=16)
-        ax10.set_ylabel(r'$\mathrm{log_{10}(SFR/(M_{\odot}\;yr^{-1}))}$', size=16)
-        ax10.tick_params(direction='out', which='both', top='on', right='on', left='on', labelsize=16)
+        plt.ylim(0, 1)
+        plt.xscale('log')
+        plt.xlim(1e2, 1e6)
+        cmap = matplotlib.cm.get_cmap('copper')
+        ax10.set_facecolor(cmap(0))
+        plt.grid(True, which='major', axis='both')
+        plt.ylabel(r'$\mathrm{D/T_{30\degree}}$', size=16)
+        plt.xlabel(r'$\mathrm{N_{prc, \bigstar}}$', size=16)
+        plt.tick_params(direction='out', which='both', top='on', right='on', left='on', labelsize=16)
         
-        sc = ax10.scatter(np.log10(stellar_masses[glx_star_formation_rates > 0]), np.log10(glx_star_formation_rates[glx_star_formation_rates > 0]),
-                          c=disc_fractions_IT20[glx_star_formation_rates > 0], s=8, cmap='seismic_r', vmin=0, vmax=1, marker='h')
-        plot_tools.create_colorbar(ax00, sc, r'$\mathrm{D/T_{30\degree}}$', 'horizontal')
+        hb = plt.hexbin(particle_numbers, disc_fractions_IT20, xscale='log', bins='log', gridsize=100, label=r'$D/T_{\vec{J}_{b} = 0}$', cmap=cmap)
+        plot_tools.create_colorbar(axcbar, hb, r'$\mathrm{Counts\;per\;hexbin}$', 'horizontal')
         
-        # Plot median and 1-sigma lines #
-        x_value, median, shigh, slow = plot_tools.median_1sigma(np.log10(stellar_masses[glx_star_formation_rates > 0]),
-                                                                np.log10(glx_star_formation_rates[glx_star_formation_rates > 0]), 0.1, log=False)
-        ax10.plot(x_value, median, color='black', linewidth=5, zorder=5)
-        ax10.fill_between(x_value, shigh, slow, color='black', alpha='0.5', zorder=5)
+        x_value, median, shigh, slow = plot_tools.median_1sigma(particle_numbers, disc_fractions_IT20, 0.17, log=True)
+        plt.plot(x_value, median, color='silver', linewidth=5, zorder=5)
+        plt.fill_between(x_value, shigh, slow, color='silver', alpha='0.5', zorder=5)
         
         # Save the plot #
-        plt.savefig(plots_path + 'SFR_M' + '-' + date + '.png', bbox_inches='tight')
+        plt.savefig(plots_path + 'TPN' + '-' + date + '.png', bbox_inches='tight')
         return None
 
 
@@ -90,4 +88,4 @@ if __name__ == '__main__':
     simulation_path = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
     plots_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/'  # Path to save plots.
     data_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/'  # Path to save/load data.
-    x = SFRVsMass(simulation_path, tag)
+    x = TestParticleNumber(simulation_path, tag)

@@ -33,7 +33,7 @@ class DiscToTotalProbabilityDensityFunction:
         """
         start_local_time = time.time()  # Start the local time.
         
-        glx_masses = np.load(data_path + 'glx_masses.npy')
+        masses = np.load(data_path + 'glx_masses.npy')
         subgroup_numbers = np.load(data_path + 'subgroup_numbers.npy')
         disc_fractions_IT20 = np.load(data_path + 'disc_fractions_IT20.npy')
         print('Loaded data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
@@ -42,11 +42,11 @@ class DiscToTotalProbabilityDensityFunction:
         # Plot the data #
         start_local_time = time.time()  # Start the local time.
         
-        self.plot(glx_masses, subgroup_numbers, disc_fractions_IT20)
+        self.plot(masses, subgroup_numbers, disc_fractions_IT20)
         print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished BTTPDF for ' + re.split('Planck1/|/PE', simulation_path)[1] + str(tag) + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished BTTPDF for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
@@ -158,7 +158,7 @@ class DiscToTotalProbabilityDensityFunction:
     
     
     @staticmethod
-    def plot(glx_masses, subgroup_numbers, disc_fractions_IT20):
+    def plot(masses, subgroup_numbers, disc_fractions_IT20):
         """
         A method to plot a HEALPix histogram.
         :param disc_fractions_IT20: from mask_galaxies.
@@ -185,7 +185,7 @@ class DiscToTotalProbabilityDensityFunction:
         ax10.set_ylabel(r'$\mathrm{f(B/T>0.5)}$', size=16)
         ax10.set_xlabel(r'$\mathrm{M_{\bigstar} / M_{\odot}}$', size=16)
         
-        mass_mask = np.where(glx_masses > 1e10)
+        mass_mask = np.where(masses > 1e10)
         bulge_fraction = 1 - disc_fractions_IT20
         
         # Plots BBT19 bar's midpoints #
@@ -199,7 +199,7 @@ class DiscToTotalProbabilityDensityFunction:
         
         # Put galaxies into bins #
         bins = np.logspace(9, 11.5 + 0.1, 20)
-        bin_index = np.digitize(glx_masses, bins)
+        bin_index = np.digitize(masses, bins)
         yBulge = np.empty(len(bins) - 1)
         glx_mass_bins = np.empty(len(bins) - 1)
         
@@ -216,7 +216,7 @@ class DiscToTotalProbabilityDensityFunction:
         satellites, = np.where(subgroup_numbers != 0)
         # Put galaxies into bins #
         bins = np.logspace(9, 11.5 + 0.1, 20)
-        bin_index = np.digitize(glx_masses[satellites], bins)
+        bin_index = np.digitize(masses[satellites], bins)
         yBulge = np.empty(len(bins) - 1)
         glx_mass_bins = np.empty(len(bins) - 1)
         
@@ -232,7 +232,7 @@ class DiscToTotalProbabilityDensityFunction:
         centrals, = np.where(subgroup_numbers == 0)
         # Put galaxies into bins #
         bins = np.logspace(9, 11.5 + 0.1, 20)
-        bin_index = np.digitize(glx_masses[centrals], bins)
+        bin_index = np.digitize(masses[centrals], bins)
         yBulge = np.empty(len(bins) - 1)
         glx_mass_bins = np.empty(len(bins) - 1)
         

@@ -182,7 +182,7 @@ class BetaSpatialDistribution:
     def plot(stellar_data_tmp, group_number, subgroup_number):
         """
         Plot spatial distribution maps.
-        :param stellar_data_tmp: from mask_galaxies
+        :param stellar_data_tmp: from read_add_attributes.py.
         :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber']))
         :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
         :return: None

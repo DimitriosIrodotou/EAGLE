@@ -47,7 +47,7 @@ class DiscToTotalVsMorphologicalParameters:
         print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished DTT_MP for ' + re.split('Planck1/|/PE', simulation_path)[1] + str(tag) + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished DTT_MP for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
@@ -92,13 +92,13 @@ class DiscToTotalVsMorphologicalParameters:
         labels = [r'$\mathrm{Concentration\;index}$', r'$\mathrm{\kappa_{co}}$', r'$\mathrm{D/T_{\vec{J}_{b}=0}}$', r'$\mathrm{V_{rot}/\sigma}$']
         for axis, cbar_axis, x_attribute, label, threshold in zip(axes, cbar_axes, x_attributes, labels, thresholds):
             # Plot attributes #
-            hb = axis.hexbin(x_attribute, disc_fractions_IT20, bins='log', gridsize=100, label=r'$D/T_{\vec{J}_{b} = 0}$', cmap=cmap)
+            hb = axis.hexbin(x_attribute, disc_fractions_IT20, gridsize=100, label=r'$D/T_{\vec{J}_{b} = 0}$', cmap=cmap)
             plot_tools.create_colorbar(cbar_axis, hb, r'$\mathrm{Counts\;per\;hexbin}$', 'horizontal')
             
             # Plot median and 1-sigma lines #
             x_value, median, shigh, slow = plot_tools.median_1sigma(x_attribute, disc_fractions_IT20, 0.09, log=False)
-            axis.plot(x_value, median, color='silver', linewidth=5, zorder=5)
-            axis.fill_between(x_value, shigh, slow, color='silver', alpha='0.5', zorder=5)
+            axis.plot(x_value, median, color='silver', linewidth=3, zorder=5)
+            axis.fill_between(x_value, shigh, slow, color='silver', alpha='0.3', zorder=5)
             
             axis.axvline(x=threshold, c='tab:red')  # Plot threshold lines.
             

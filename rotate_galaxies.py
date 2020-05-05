@@ -14,7 +14,7 @@ class RotateCoordinates:
     def rotate_X(stellar_data_tmp, glx_unit_vector):
         """
         Rotate first about z-axis to set y=0 and then about the y-axis to set z=0
-        :param stellar_data_tmp: from mask_galaxies
+        :param stellar_data_tmp: from read_add_attributes.py.
         :param glx_unit_vector: from mask_galaxies
         :return: stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_unit_vector, glx_unit_vector
         """
@@ -82,7 +82,7 @@ class RotateCoordinates:
     @staticmethod
     def rotate_Jz(stellar_data_tmp):
         """
-        Rotate a galaxy such that its angular momentum is along the z axis/
+        Rotate a galaxy such that its angular momentum is along the z axis.
         :param stellar_data_tmp:
         :return: stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_angular_momentum, glx_angular_momentum
         """
