@@ -106,7 +106,7 @@ class DiscToTotalVsGalacticProperties:
             axis.fill_between(x_value, shigh, slow, color='silver', alpha='0.3', zorder=5)
             
             axis.set_xlabel(label, size=16)
-        # Save the plot #
+        # Save the figure. #
         plt.savefig(plots_path + 'DTT_GP' + '-' + date + '.png', bbox_inches='tight')
         return None
 

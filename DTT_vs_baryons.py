@@ -60,29 +60,30 @@ class DiscToTotalVsBaryons:
         # Generate the figure and define its parameters #
         plt.close()
         figure = plt.figure(figsize=(10, 7.5))
-        gs = gridspec.GridSpec(2, 1, wspace=0.0, hspace=0.0, height_ratios=[0.05, 1])
-        axcbar = figure.add_subplot(gs[0, 0])
-        ax10 = figure.add_subplot(gs[1, 0])
+        # gs = gridspec.GridSpec(2, 1, wspace=0.0, hspace=0.0, height_ratios=[0.05, 1])
+        # axcbar = figure.add_subplot(gs[0, 0])
+        # ax10 = figure.add_subplot(gs[1, 0])
         
         plt.ylim(0, 1)
         plt.xscale('log')
         # plt.xlim(1e2, 1e6)
         plt.grid(True, which='major', axis='both')
         plt.ylabel(r'$\mathrm{D/T_{30\degree}}$', size=16)
-        plt.xlabel(r'$\mathrm{N_{prc, \bigstar}}$', size=16)
+        plt.xlabel(r'$\mathrm{M_{\bigstar}}$', size=16)
         plt.tick_params(direction='out', which='both', top='on', right='on', left='on', labelsize=16)
 
-        cmap = matplotlib.cm.get_cmap('copper')
-        norm = matplotlib.colors.Normalize(vmin=0, vmax=1)
-        s_m = matplotlib.cm.ScalarMappable(cmap='copper', norm=norm)
+        # cmap = matplotlib.cm.get_cmap('copper')
+        colors = iter(matplotlib.cm.rainbow(np.linspace(0, 1, 10)))
+        # norm = matplotlib.colors.Normalize(vmin=0, vmax=1)
+        # s_m = matplotlib.cm.ScalarMappable(cmap='copper', norm=norm)
         for i in np.arange(0, 1, 0.1):
             mask, = np.where(disc_fractions_IT20 < i)
             x_value, median, shigh, slow = plot_tools.median_1sigma(stellar_masses[mask], disc_fractions_IT20[mask], 0.17, log=True)
-            pl = plt.plot(x_value, median, color=cmap(i), linewidth=5, zorder=5)
+            pl = plt.plot(x_value, median, color=next(colors), linewidth=5, zorder=5)
             # plt.fill_between(x_value, shigh, slow, color=s_m.to_rgba(i), alpha='0.5', zorder=5)
-        # plot_tools.create_colorbar(axcbar, cmap, r'$\mathrm{Counts\;per\;hexbin}$', 'horizontal')
+            # plot_tools.create_colorbar(axcbar, pl, r'$\mathrm{Counts\;per\;hexbin}$', 'horizontal')
         
-        # Save the plot #
+        # Save the figure. #
         plt.savefig(plots_path + 'DTT_B' + '-' + date + '.png', bbox_inches='tight')
         return None
 

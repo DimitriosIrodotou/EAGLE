@@ -144,7 +144,7 @@ class RADecDistribution:
         
         # Create HEALPix map #
         nside = 2 ** 5  # Define the resolution of the grid (number of divisions along the side of a base-resolution pixel).
-        hp = HEALPix(nside=nside)  # Initialise the HEALPix pixellisation class.
+        hp = HEALPix(nside=nside)  # Initialise the HEALPix pixelisation class.
         indices = hp.lonlat_to_healpix(ra * u.deg, dec * u.deg)  # Create list of HEALPix indices from particles' ra and dec.
         density = np.bincount(indices, minlength=hp.npix)  # Count number of data points in each HEALPix pixel.
         
@@ -163,7 +163,7 @@ class RADecDistribution:
         cbar.set_label('$\mathrm{Number\;of\;galaxies\;per\;grid\;cell}$', size=16)
         plt.pcolormesh(np.radians(ra), np.radians(dec), density_map, cmap='magma_r')
         
-        # Save the plot #
+        # Save the figure. #
         plt.savefig(plots_path + 'RDD' + '-' + date + '.png', bbox_inches='tight')
         return None
 

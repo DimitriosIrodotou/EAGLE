@@ -223,7 +223,7 @@ class RADecAttributes:
         
         # Create HEALPix map #
         nside = 2 ** 5  # Define the resolution of the grid (number of divisions along the side of a base-resolution pixel).
-        hp = HEALPix(nside=nside)  # Initialise the HEALPix pixellisation class.
+        hp = HEALPix(nside=nside)  # Initialise the HEALPix pixelisation class.
         indices = hp.lonlat_to_healpix(ra * u.deg, dec * u.deg)  # Create list of HEALPix indices from particles' ra and dec.
         density = np.bincount(indices, minlength=hp.npix)  # Count number of data points in each HEALPix pixel.
         
@@ -280,7 +280,7 @@ class RADecAttributes:
         cbar = plt.colorbar(scatter, ax=ax11, orientation='horizontal')
         cbar.set_label('$\mathrm{log_{10}(Birth\;density)}$', size=16)
         
-        # Save the plot #
+        # Save the figure. #
         # plt.title('z ~ ' + re.split('_z0|p000', tag)[1])
         plt.savefig(plots_path + str(group_number) + '_' + str(subgroup_number) + '-' + 'RDP' + '-' + date + '.png', bbox_inches='tight')
         

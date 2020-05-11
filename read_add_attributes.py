@@ -341,7 +341,7 @@ class AddAttributes:
         
         # Plot a HEALPix histogram #
         nside = 2 ** 5  # Define the resolution of the grid (number of divisions along the side of a base-resolution pixel).
-        hp = HEALPix(nside=nside)  # Initialise the HEALPix pixellisation class.
+        hp = HEALPix(nside=nside)  # Initialise the HEALPix pixelisation class.
         indices = hp.lonlat_to_healpix(ra * u.deg, dec * u.deg)  # Create list of HEALPix indices from particles' ra and dec.
         density = np.bincount(indices, minlength=hp.npix)  # Count number of data points in each HEALPix pixel.
         

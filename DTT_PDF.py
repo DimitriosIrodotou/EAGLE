@@ -137,7 +137,7 @@ class DiscToTotalProbabilityDensityFunction:
         
         # Create HEALPix map #
         nside = 2 ** 5  # Define the resolution of the grid (number of divisions along the side of a base-resolution pixel).
-        hp = HEALPix(nside=nside)  # Initialise the HEALPix pixellisation class.
+        hp = HEALPix(nside=nside)  # Initialise the HEALPix pixelisation class.
         indices = hp.lonlat_to_healpix(ra * u.deg, dec * u.deg)  # Create list of HEALPix indices from particles' ra and dec.
         density = np.bincount(indices, minlength=hp.npix)  # Count number of data points in each HEALPix pixel.
         
@@ -245,7 +245,7 @@ class DiscToTotalProbabilityDensityFunction:
         
         ax11.plot(glx_mass_bins, yBulge, color='blue', lw=2, label="$\mathrm{Irodotou+18}$")
         
-        # Save the plot #
+        # Save the figure. #
         plt.savefig(plots_path + 'BTT_PDF' + '-' + date + '.png', bbox_inches='tight')
         return None
 

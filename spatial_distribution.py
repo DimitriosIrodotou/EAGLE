@@ -104,7 +104,7 @@ class SpatialDistribution:
         
         # Plot a HEALPix histogram #
         nside = 2 ** 5  # Define the resolution of the grid (number of divisions along the side of a base-resolution pixel).
-        hp = HEALPix(nside=nside)  # Initialise the HEALPix pixellisation class.
+        hp = HEALPix(nside=nside)  # Initialise the HEALPix pixelisation class.
         indices = hp.lonlat_to_healpix(ra * u.deg, dec * u.deg)  # Create list of HEALPix indices from particles' ra and dec.
         density = np.bincount(indices, minlength=hp.npix)  # Count number of data points in each HEALPix pixel.
         
@@ -150,7 +150,7 @@ class SpatialDistribution:
         axcbar.xaxis.set_label_position("top")
         axcbar.tick_params(direction='out', which='both', right='on', labelsize=16)
         
-        # Save the plot #
+        # Save the figure. #
         plt.savefig(plots_path + str(group_number) + '_' + str(subgroup_number) + '-' + 'SD' + '-' + date + '.png', bbox_inches='tight')
         return None
 

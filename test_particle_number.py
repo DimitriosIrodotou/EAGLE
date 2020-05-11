@@ -78,7 +78,7 @@ class TestParticleNumber:
         plt.plot(x_value, median, color='silver', linewidth=5, zorder=5)
         plt.fill_between(x_value, shigh, slow, color='silver', alpha='0.5', zorder=5)
         
-        # Save the plot #
+        # Save the figure. #
         plt.savefig(plots_path + 'TPN' + '-' + date + '.png', bbox_inches='tight')
         return None
 

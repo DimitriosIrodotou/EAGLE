@@ -33,6 +33,7 @@ class ComponentBeta:
         
         disc_betas = np.load(data_path + 'disc_betas.npy')
         bulge_betas = np.load(data_path + 'bulge_betas.npy')
+        gaseous_masses = np.load(data_path + 'glx_gaseous_masses.npy')
         stellar_masses = np.load(data_path + 'glx_stellar_masses.npy')
         disc_fractions_IT20 = np.load(data_path + 'glx_disc_fractions_IT20.npy')
         print('Loaded data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
@@ -41,7 +42,7 @@ class ComponentBeta:
         # Plot the data #
         start_local_time = time.time()  # Start the local time.
         
-        self.plot(disc_betas, bulge_betas, stellar_masses, disc_fractions_IT20)
+        self.plot(disc_betas, bulge_betas, gaseous_masses, stellar_masses, disc_fractions_IT20)
         print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
@@ -49,7 +50,7 @@ class ComponentBeta:
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
-    def plot(self, disc_betas, bulge_betas, stellar_masses, disc_fractions_IT20):
+    def plot(self, disc_betas, bulge_betas, gaseous_masses, stellar_masses, disc_fractions_IT20):
         """
         Plot the disc and bulge beta-mass relation colour-coded by DTT plot.
         :param disc_betas: defined as the disc anisotropy parameter.
@@ -72,18 +73,18 @@ class ComponentBeta:
             axis.set_yscale('log')
             axis.set_ylim(3e-3, 1)
             # axis.set_xlim(1e9, 6e11)
-            axis.set_xlabel(r'$\mathrm{M_{\bigstar}/M_{\odot}}$', size=16)
+            axis.set_xlabel(r'$\mathrm{D/T_{30\degree}}$', size=16)
             axis.tick_params(direction='out', which='both', top='on', right='on', left='on', labelsize=16)
         ax11.yaxis.tick_right()
         ax11.yaxis.set_label_position("right")
         ax10.set_ylabel(r'$\mathrm{exp(\beta_{bulge}-1)}$', size=16)
         ax11.set_ylabel(r'$\mathrm{exp(\beta_{disc}-1)}$', size=16)
         
-        ax10.scatter(disc_fractions_IT20, np.exp(bulge_betas - 1), c=disc_fractions_IT20, s=8, cmap='seismic_r', vmin=0, vmax=1, marker='h')
-        sc = ax11.scatter(disc_fractions_IT20, np.exp(disc_betas - 1), c=disc_fractions_IT20, s=8, cmap='seismic_r', vmin=0, vmax=1, marker='h')
-        plot_tools.create_colorbar(ax00, sc, r'$\mathrm{D/T_{30\degree}}$', 'horizontal')
+        ax10.scatter(disc_fractions_IT20, np.exp(bulge_betas - 1), c=np.log10(gaseous_masses+stellar_masses), s=8, cmap='nipy_spectral_r', marker='h')
+        sc = ax11.scatter(disc_fractions_IT20, np.exp(disc_betas - 1), c=np.log10(gaseous_masses+stellar_masses), s=8, cmap='nipy_spectral_r', marker='h')
+        plot_tools.create_colorbar(ax00, sc, r'$\mathrm{log_{10}(M_{bar.})}$', 'horizontal')
         
-        # Save the plot #
+        # Save the figure. #
         plt.savefig(plots_path + 'CB' + '-' + date + '.png', bbox_inches='tight')
         return None
 
