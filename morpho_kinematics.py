@@ -5,7 +5,7 @@ from scipy import interpolate, linalg
 class MorphoKinematic:
     
     @staticmethod
-    def cumsummedian(a, weights=None):
+    def weighted_median(a, weights=None):
         """
         Calculate the weighted median.
         :param a: Input array.
@@ -36,7 +36,7 @@ class MorphoKinematic:
         :param masses: Masses of particles.
         :param velocities: Velocities of particles.
         :param particlebindingenergy: Specific binding energies of particles.
-        :return: kappa, discfrac, orbi, vrotsig, vrots, delta, zaxis, glx_angular_momentum_magnitude
+        :return: kappa, discfrac, circularity, vrotsig, vrots, delta, sigmas
         """
         
         # Group the attributes of the particles #
@@ -71,18 +71,22 @@ class MorphoKinematic:
         sortE = np.argsort(sbindingenergy)
         unsortE = np.argsort(sortE)
         jzE = np.vstack([sbindingenergy, smomentumz]).T[sortE]
-        orbital = (jzE[:, 1] / np.maximum.accumulate(np.abs(jzE[:, 1])))[unsortE]
-        orbi = np.median(orbital)
+        circularity = (jzE[:, 1] / np.maximum.accumulate(np.abs(jzE[:, 1])))[unsortE]
+        orbi = np.median(circularity)
         
-        # Calculate rotation-to-dispersion and dispersion anisotropy
-        Vrot = np.abs(MorphoKinematic.cumsummedian(vrots, weights=prc_attributes[:, 3]))
-        SigmaXY = np.sqrt(np.average(np.sum(prc_attributes[:, [3]] * np.vstack([vrads, vrots]).T ** 2, axis=0) / glx_mass))  #
-        SigmaO = np.sqrt(SigmaXY ** 2 - .5 * Vrot ** 2)
-        # SigmaZ = np.sqrt(np.average(vheis ** 2, weights=prc_attributes[:, 3]))
-        vrotsig = Vrot / SigmaO
-        # delta = 1 - (SigmaZ / SigmaO) ** 2
+        # Calculate rotation-to-dispersion and dispersion anisotropy parameter.
+        Vrot = np.abs(MorphoKinematic.weighted_median(vrots, weights=prc_attributes[:, 3]))
+        sigma_xy = np.sqrt(np.average(np.sum(prc_attributes[:, [3]] * np.vstack([vrads, vrots]).T ** 2, axis=0) / glx_mass))
+        sigma_0 = np.sqrt(sigma_xy ** 2 - 0.5 * Vrot ** 2)
+        sigma_z = np.sqrt(np.average(vheis ** 2, weights=prc_attributes[:, 3]))
+        vrotsig = Vrot / sigma_0
+        delta = 1 - (sigma_z / sigma_0) ** 2
+
+        # Standard deviation of the rotational velocity (aka velocity dispersion). #
+        sigmas = np.sqrt((vrots * prc_attributes[:, [3]] - np.average(vrots, weights=prc_attributes[:, 3])) ** 2)
+        sigmas /= glx_mass
         
-        return kappa, discfrac, orbital, vrotsig, vrots, zaxis, glx_angular_momentum_magnitude
+        return kappa, discfrac, circularity, vrotsig, vrots, delta, sigmas
     
     
     @staticmethod

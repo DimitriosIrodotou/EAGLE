@@ -172,19 +172,18 @@ class MultipleDecomposition:
         ax11.axvspan(0, 30, facecolor='0.2', alpha=0.5)  # Draw a vertical span.
         
         # Calculate the kinematic diagnostics #
-        kappa, discfrac, orbital, vrotsig, vrots, zaxis, momentum = MorphoKinematic.kinematic_diagnostics(np.fliplr(stellar_data_tmp['Coordinates']),
-                                                                                                          stellar_data_tmp['Mass'],
-                                                                                                          np.fliplr(stellar_data_tmp['Velocity']),
-                                                                                                          stellar_data_tmp['ParticleBindingEnergy'])
+        kappa, discfrac, circularity, vrotsig, vrots, delta, sigmas = MorphoKinematic.kinematic_diagnostics(
+            np.fliplr(stellar_data_tmp['Coordinates']), stellar_data_tmp['Mass'], np.fliplr(stellar_data_tmp['Velocity']),
+            stellar_data_tmp['ParticleBindingEnergy'])
         
         # Calculate and plot the distribution of orbital circularity #
-        j, = np.where(orbital < 0.0)
-        k, = np.where((orbital > 0.7) & (orbital < 1.7))
-        l, = np.where((orbital > -1.7) & (orbital < 1.7))
+        j, = np.where(circularity < 0.0)
+        k, = np.where((circularity > 0.7) & (circularity < 1.7))
+        l, = np.where((circularity > -1.7) & (circularity < 1.7))
         disc_fraction_00 = 1 - 2 * np.sum(stellar_data_tmp['Mass'][j]) / np.sum(stellar_data_tmp['Mass'][l])
         disc_fraction_07 = np.sum(stellar_data_tmp['Mass'][k]) / np.sum(stellar_data_tmp['Mass'][l])
         
-        ydata, edges = np.histogram(orbital, bins=100, range=[-1.7, 1.7], weights=stellar_data_tmp['Mass'] / np.sum(stellar_data_tmp['Mass']))
+        ydata, edges = np.histogram(circularity, bins=100, range=[-1.7, 1.7], weights=stellar_data_tmp['Mass'] / np.sum(stellar_data_tmp['Mass']))
         ydata /= edges[1:] - edges[:-1]
         ax12.plot(0.5 * (edges[1:] + edges[:-1]), ydata, label='D/T = %.3f' % disc_fraction_07)
         
