@@ -405,7 +405,7 @@ class AddAttributes:
         :return: disc_fraction, rotational_over_dispersion
         """
         
-        kappa_old, disc_fraction, circularity, rotational_over_dispersion, vrots, delta, sigmas = MorphoKinematic.kinematic_diagnostics(
+        kappa_old, disc_fraction, circularity, rotational_over_dispersion, vrots, delta = MorphoKinematic.kinematic_diagnostics(
             stellar_data_tmp['Coordinates'], stellar_data_tmp['Mass'], stellar_data_tmp['Velocity'], stellar_data_tmp['ParticleBindingEnergy'])
         
         return disc_fraction, rotational_over_dispersion

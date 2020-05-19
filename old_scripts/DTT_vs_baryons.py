@@ -74,11 +74,12 @@ class DiscToTotalVsBaryons:
         colors = iter(matplotlib.cm.rainbow(np.linspace(0, 1, 10)))
         # norm = matplotlib.colors.Normalize(vmin=0, vmax=1)
         # s_m = matplotlib.cm.ScalarMappable(cmap='copper', norm=norm)
-        for i in np.arange(0, 1, 0.1):
-            mask, = np.where((disc_fractions_IT20 < i) & disc_fractions_IT20 > i - 0.1)
+        for i in np.arange(0, 1, 0.2):
+            mask, = np.where((disc_fractions_IT20 < i) & (disc_fractions_IT20 > i - 0.2))
             x_value, median, shigh, slow = plot_tools.median_1sigma(stellar_masses[mask], disc_fractions_IT20[mask], 0.17, log=True)
-            pl = plt.plot(x_value, median, color=next(colors), linewidth=5,
-                          zorder=5)  # plt.fill_between(x_value, shigh, slow, color=s_m.to_rgba(i), alpha='0.5', zorder=5)  #   #
+            pl = plt.plot(x_value, median, color=next(colors), linewidth=5, zorder=5)
+            
+            # plt.fill_between(x_value, shigh, slow, color=s_m.to_rgba(i), alpha='0.5', zorder=5)
             # plot_tools.create_colorbar(axcbar, pl, r'$\mathrm{Counts\;per\;hexbin}$', 'horizontal')
         
         # Save the figure. #

@@ -16,7 +16,7 @@ import eagle_IO.eagle_IO.eagle_IO as E
 from matplotlib import gridspec
 from matplotlib import animation
 from mpl_toolkits.mplot3d import axes3d
-from morpho_kinematics import MorphoKinematics
+from morpho_kinematics import MorphoKinematic
 
 # Create a parser and add argument to read data #
 parser = argparse.ArgumentParser(description='Create 2 dimensional histograms of the position of stellar particles.')
@@ -40,7 +40,7 @@ class Position3D:
         """
         A constructor method for the class.
         :param simulation_path: simulation directory
-        :param tag: redshift folder
+        :param tag: redshift directory
         """
         
         p = 1  # Counter.
@@ -50,7 +50,7 @@ class Position3D:
             # Extract particle and subhalo attributes and convert them to astronomical units #
             self.stellar_data, self.subhalo_data = self.read_galaxies(simulation_path, tag)
             print('Read data for ' + re.split('EAGLE/|/data', simulation_path)[2] + ' in %.4s s' % (time.time() - start_global_time))
-            print('–––––––––––––––––––––––––––––––––––––––––')
+            print('–––––––––––––––––––––––––––––––––––––––––––––')
             
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes to select only those with stellar mass > 10^8Msun.
         
@@ -66,7 +66,7 @@ class Position3D:
                     np.save(data_path + 'group_number_' + str(group_number), group_number)
                     np.save(data_path + 'subgroup_number_' + str(group_number), subgroup_number)
                     np.save(data_path + 'stellar_data_tmp_' + str(group_number), stellar_data_tmp)
-                    print('Masked and saved data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
+                    print('Masked and saved data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                         round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
                     p += 1
@@ -75,7 +75,7 @@ class Position3D:
                     start_local_time = time.time()  # Start the local time.
                     
                     stellar_data_tmp = self.mask_galaxies(group_number, subgroup_number)  # Mask the data
-                    print('Masked data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
+                    print('Masked data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                         round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
                     p += 1
@@ -87,7 +87,7 @@ class Position3D:
                     subgroup_number = np.load(data_path + 'subgroup_number_' + str(group_number) + '.npy')
                     stellar_data_tmp = np.load(data_path + 'stellar_data_tmp_' + str(group_number) + '.npy', allow_pickle=True)
                     stellar_data_tmp = stellar_data_tmp.item()
-                    print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
+                    print('Loaded data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (time.time() - start_local_time))
                     # + ' (' + str(round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
                 
@@ -95,11 +95,11 @@ class Position3D:
                 start_local_time = time.time()  # Start the local time.
                 
                 self.plot(stellar_data_tmp, group_number, subgroup_number)
-                print('Plotted data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
-                print('–––––––––––––––––––––––––––––––––––––––––')
+                print('Plotted data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (time.time() - start_local_time))
+                print('–––––––––––––––––––––––––––––––––––––––––––––')
         
         print('Finished Position3D for ' + re.split('EAGLE/|/data', simulation_path)[2] + ' in %.4s s' % (time.time() - start_global_time))  # Print total time.
-        print('–––––––––––––––––––––––––––––––––––––––––')
+        print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
     @staticmethod
@@ -107,7 +107,7 @@ class Position3D:
         """
          Extract particle and subhalo attributes and convert them to astronomical units.
         :param simulation_path: simulation directory
-        :param tag: redshift folder
+        :param tag: redshift directory
         :return: stellar_data, subhalo_data
         """
         
@@ -134,12 +134,12 @@ class Position3D:
     
     def mask_haloes(self):
         """
-        Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e8 Msun.
+        Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e9 Msun.
         :return: subhalo_data_tmp
         """
         
         # Mask the data to select haloes more #
-        mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 1e8)
+        mask = np.where(self.subhalo_data['ApertureMeasurements/Mass/030kpc'][:, 4] > 1e9)
         
         # Mask the temporary dictionary for each galaxy #
         subhalo_data_tmp = {}
@@ -223,7 +223,7 @@ class Position3D:
             Create the 3D scatter of the positions of the particles.
             :return: figure
             """
-            kappa, discfrac, orbi, vrotsig, vrots, zaxis, Momentum = MorphoKinematics.kinematics_diagnostics(stellar_data_tmp['Coordinates'],
+            kappa, discfrac, circularity, vrotsig, vrots, delta = MorphoKinematic.kinematic_diagnostics(stellar_data_tmp['Coordinates'],
                                                                                                              stellar_data_tmp['Mass'],
                                                                                                              stellar_data_tmp['Velocity'],
                                                                                                              stellar_data_tmp[

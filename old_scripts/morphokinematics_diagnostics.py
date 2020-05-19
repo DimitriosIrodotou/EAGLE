@@ -68,7 +68,7 @@ def center_and_unloop(XYZ, XYZ0, BoxL=np.inf):
     return XYZ_out
 
 
-def kinematics_diagnostics(XYZ, mass, Vxyz, PBE, aperture=0.03, CoMvelocity=True):
+def kinematic_diagnostics(XYZ, mass, Vxyz, PBE, aperture=0.03, CoMvelocity=True):
     """
     Calculate the various kinematics diagnostics.
 

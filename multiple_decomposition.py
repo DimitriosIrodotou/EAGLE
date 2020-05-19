@@ -172,9 +172,8 @@ class MultipleDecomposition:
         ax11.axvspan(0, 30, facecolor='0.2', alpha=0.5)  # Draw a vertical span.
         
         # Calculate the kinematic diagnostics #
-        kappa, discfrac, circularity, vrotsig, vrots, delta, sigmas = MorphoKinematic.kinematic_diagnostics(
-            np.fliplr(stellar_data_tmp['Coordinates']), stellar_data_tmp['Mass'], np.fliplr(stellar_data_tmp['Velocity']),
-            stellar_data_tmp['ParticleBindingEnergy'])
+        kappa, discfrac, circularity, vrotsig, vrots, delta = MorphoKinematic.kinematic_diagnostics(stellar_data_tmp['Coordinates'],
+            stellar_data_tmp['Mass'], stellar_data_tmp['Velocity'], stellar_data_tmp['ParticleBindingEnergy'])
         
         # Calculate and plot the distribution of orbital circularity #
         j, = np.where(circularity < 0.0)

@@ -38,7 +38,7 @@ class PositionHistogram:
         """
         A constructor method for the class.
         :param simulation_path: simulation directory
-        :param tag: redshift folder
+        :param tag: redshift directory
         """
         
         p = 1  # Counter.
@@ -64,7 +64,7 @@ class PositionHistogram:
                     np.save(data_path + 'group_number_' + str(group_number), group_number)
                     np.save(data_path + 'subgroup_number_' + str(group_number), subgroup_number)
                     np.save(data_path + 'stellar_data_tmp_' + str(group_number), stellar_data_tmp)
-                    print('Masked and saved data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
+                    print('Masked and saved data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                         round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
                     p += 1
@@ -73,7 +73,7 @@ class PositionHistogram:
                     start_local_time = time.time()  # Start the local time.
                     
                     stellar_data_tmp = self.mask_galaxies(group_number, subgroup_number)  # Mask the data
-                    print('Masked data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
+                    print('Masked data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
                         round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
                     p += 1
@@ -86,7 +86,7 @@ class PositionHistogram:
                     glx_unit_vector = np.load(data_path + 'glx_unit_vectors/' + 'glx_unit_vector_' + str(group_number) + '.npy')
                     stellar_data_tmp = np.load(data_path + 'stellar_data_tmps/' + 'stellar_data_tmp_' + str(group_number) + '.npy', allow_pickle=True)
                     stellar_data_tmp = stellar_data_tmp.item()
-                    print('Loaded data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
+                    print('Loaded data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (time.time() - start_local_time))
                     # + ' (' + str(round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
                 
@@ -94,7 +94,7 @@ class PositionHistogram:
                 start_local_time = time.time()  # Start the local time.
                 
                 self.plot(stellar_data_tmp, glx_unit_vector, group_number, subgroup_number)
-                print('Plotted data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
+                print('Plotted data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (time.time() - start_local_time))
                 print('–––––––––––––––––––––––––––––––––––––––––––––')
         
         print('Finished PositionHistogram for ' + re.split('EAGLE/|/data', simulation_path)[2] + ' in %.4s s' % (
@@ -107,7 +107,7 @@ class PositionHistogram:
         """
          Extract particle and subhalo attributes and convert them to astronomical units.
         :param simulation_path: simulation directory
-        :param tag: redshift folder
+        :param tag: redshift directory
         :return: stellar_data, subhalo_data
         """
         

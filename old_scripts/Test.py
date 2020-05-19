@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import eagle_IO.eagle_IO.eagle_IO as E
 
 from matplotlib import gridspec
-from morpho_kinematics import MorphoKinematics
+from morpho_kinematics import MorphoKinematic
 
 date = time.strftime('%d_%m_%y_%H%M')  # Date
 start_global_time = time.time()  # Start the global time.
@@ -93,7 +93,7 @@ print(glx_angular_momentum, np.shape(glx_angular_momentum))
 # ax10.scatter(angular_theta_from_X * np.divide(180.0, np.pi), counts, c='red', s=50)  # In degrees.
 #
 # distance = np.linalg.norm(np.subtract(position_X, position_other), axis=1)
-# index = np.where(distance < np.divide(np.pi, 6.0))
+# index, = np.where(distance < np.divide(np.pi, 6.0))
 # ax00.scatter(position_other[index, 0], position_other[index, 1], s=10, c='pink')
 #
 

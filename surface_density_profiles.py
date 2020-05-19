@@ -101,7 +101,7 @@ class SurfaceDensityProfiles:
             :return: exponential_profile(r, I_0d, R_d) + sersic_profile(r, I_0b, b, n)
             """
             y = exponential_profile(r, I_0d, R_d) + sersic_profile(r, I_0b, b, n)
-            return (y)
+            return y
         
         
         def sersic_b_n(n):

@@ -27,14 +27,14 @@ class MassSize:
         """
         A constructor method for the class.
         :param sim: simulation directory
-        :param tag: redshift folder
+        :param tag: redshift directory
         """
 
         # Load data #
         # Extract particle and subhalo attributes and convert them to astronomical units #
         self.stellar_data, self.subhalo_data = self.read_galaxies(sim, tag)
         print('--- Finished reading the data in %.5s seconds ---' % (time.time() - start_global_time))  # Print reading time.
-        print('–––––––––––––––––––––––––––––––––––––––––')
+        print('–––––––––––––––––––––––––––––––––––––––––––––')
 
         print('Found ' + str(len(list(set(self.subhalo_data['GroupNumber'])))) + ' FoF groups and ' + str(
             len(list(set(self.subhalo_data['SubGroupNumber'])))) + ' subfind groups ' + 'for G-EAGLE_' + re.split('GEAGLE_|/data', sim)[2])
@@ -48,10 +48,10 @@ class MassSize:
                     start_local_time = time.time()  # Start the local time.
                     self.plot(stellar_data_tmp, group_number, subgroup_number)
                     print('--- Finished plotting the data in %.5s seconds ---' % (time.time() - start_local_time))  # Print plotting time.
-                    print('–––––––––––––––––––––––––––––––––––––––––')
+                    print('–––––––––––––––––––––––––––––––––––––––––––––')
 
         print('--- Finished MassSize.py in %.5s seconds ---' % (time.time() - start_global_time))  # Print total time.
-        print('–––––––––––––––––––––––––––––––––––––––––')
+        print('–––––––––––––––––––––––––––––––––––––––––––––')
 
 
     @staticmethod
@@ -59,7 +59,7 @@ class MassSize:
         """
          Extract particle and subhalo attributes and convert them to astronomical units.
         :param sim: simulation directory
-        :param tag: redshift folder
+        :param tag: redshift directory
         :return: stellar_data, subhalo_data
         """
 

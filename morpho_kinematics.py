@@ -36,7 +36,7 @@ class MorphoKinematic:
         :param masses: Masses of particles.
         :param velocities: Velocities of particles.
         :param particlebindingenergy: Specific binding energies of particles.
-        :return: kappa, discfrac, circularity, vrotsig, vrots, delta, sigmas
+        :return: kappa, discfrac, circularity, vrotsig, vrots, delta
         """
         
         # Group the attributes of the particles #
@@ -82,11 +82,7 @@ class MorphoKinematic:
         vrotsig = Vrot / sigma_0
         delta = 1 - (sigma_z / sigma_0) ** 2
 
-        # Standard deviation of the rotational velocity (aka velocity dispersion). #
-        sigmas = np.sqrt((vrots * prc_attributes[:, [3]] - np.average(vrots, weights=prc_attributes[:, 3])) ** 2)
-        sigmas /= glx_mass
-        
-        return kappa, discfrac, circularity, vrotsig, vrots, delta, sigmas
+        return kappa, discfrac, circularity, vrotsig, vrots, delta
     
     
     @staticmethod
