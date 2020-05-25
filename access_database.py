@@ -55,51 +55,49 @@ def create_merger_tree(group_number, subgroup_number):
     :return:
     """
     # Find the specific galaxy in the database and extract its ids. #
-    for redshift in range(27, 25, -1):
-        print(redshift)
-        if redshift == 27:
-            query = 'SELECT \
-                SH.GalaxyID as gid, \
-                SH.TopLeafID as tlid, \
-                SH.LastProgID as lpid, \
-                SH.DescendantID as did \
-            FROM \
-                RefL0100N1504_SubHalo as SH \
-            WHERE \
-                SH.SnapNum = %d and  \
-                SH.GroupNumber = %d and \
-                SH.SubGroupNumber = %d' % (redshift, group_number, subgroup_number)
-            
-            # Connect to database and execute the query #
-            connnect = sql.connect("hnz327", password="HRC478zd")
-            sql_data = sql.execute_query(connnect, query)
-            
-            # Save the result in a data frame #
-            df = pd.DataFrame(sql_data, columns=['gid', 'tlid', 'lpid', 'did'], index=[0])
-            gid = df['gid'][0]
-            tlid = df['lpid'][0]
-            dfs = [df]
-            print(df)
-        else:
-            # Navigate through the main branch and get all the progenitors. #
-            print(df)
-            query = 'SELECT \
-                DES.GalaxyID as gid, \
-                DES.TopLeafID as tlid, \
-                DES.LastProgID as lpid, \
-                DES.DescendantID as did \
-            FROM \
-                RefL0100N1504_SubHalo as DES, \
-                RefL0100N1504_Subhalo as PROG \
-            WHERE \
-                PROG.SnapNum = %d and \
-                PROG.MassType_Star between 1E9 and 1E12 and \
-                PROG.GalaxyID between DES.GalaxyID and DES.LastProgID' % (redshift)
-            # Connect to database and execute the query #
-            connnect = sql.connect("hnz327", password="HRC478zd")
-            sql_data = sql.execute_query(connnect, query)
-            df = pd.DataFrame(sql_data, columns=['gid', 'tlid', 'lpid', 'did'])
-            dfs.append(df)
-            tree = pd.concat(dfs, ignore_index=True)
+    query = 'SELECT \
+        SH.GalaxyID as galaxy, \
+        SH.TopLeafID as top_leaf, \
+        SH.LastProgID as last_progenitor, \
+        SH.DescendantID as descendant \
+    FROM \
+        RefL0100N1504_SubHalo as SH \
+    WHERE \
+        SH.SnapNum = 27 and  \
+        SH.GroupNumber = %d and \
+        SH.SubGroupNumber = %d' % (group_number, subgroup_number)
+    
+    # Connect to database and execute the query #
+    connnect = sql.connect("hnz327", password="HRC478zd")
+    sql_data = sql.execute_query(connnect, query)
+    
+    # Save the result in a data frame #
+    df = pd.DataFrame(sql_data, columns=['galaxy', 'top_leaf', 'last_progenitor', 'descendant'], index=[0])
+    main_galaxy = df['galaxy'][0]
+    main_top_leaf = df['last_progenitor'][0]
+    dfs = [df]
+    
+    # Navigate through the main branch and get all the progenitors. #
+    query = 'SELECT \
+        PROG.GalaxyID as galaxy, \
+        PROG.TopLeafID as top_leaf, \
+        PROG.LastProgID as last_progenitor, \
+        PROG.DescendantID as descendant \
+    FROM \
+        RefL0100N1504_Subhalo as PROG \
+    WHERE \
+        PROG.SnapNum > 10 and \
+        PROG.MassType_Star >= 1E5 and \
+        PROG.GalaxyID between %d and %d' % (main_galaxy, main_top_leaf)
+    
+    # Connect to database and execute the query #
+    connnect = sql.connect("hnz327", password="HRC478zd")
+    sql_data = sql.execute_query(connnect, query)
+    
+    # Save the result in a data frame #
+    df = pd.DataFrame(sql_data, columns=['galaxy', 'top_leaf', 'last_progenitor', 'descendant'])
+    dfs.append(df)
+    tree = pd.concat(dfs, ignore_index=True)
     print(tree)
+    
     return tree
