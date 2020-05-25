@@ -66,8 +66,8 @@ class SampleRAEl:
         Plot a sample of HEALPix histograms.
         :param axis: from __init__.
         :param stellar_data_tmp: from read_add_attributes.py.
-        :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber'])).
-        :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber'])).
+        :param group_number: from read_add_attributes.py.
+        :param subgroup_number: from read_add_attributes.py.
         :return: None
         """
         # Calculate the angular momentum for each particle and for the galaxy and the unit vector parallel to the galactic angular momentum

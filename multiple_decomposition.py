@@ -25,7 +25,7 @@ warnings.filterwarnings('ignore', category=matplotlib.cbook.mplDeprecation)  # I
 
 class MultipleDecomposition:
     """
-    For each galaxy create: a HEALPix histogram from the angular momentum of particles - an angular distance plot - a surface density plot / mock
+    For each galaxy create: a HEALPix histogram from the angular momentum of particles - an angular distance plot - a surface density plot / gri mock
     image - a circularity distribution.
     a circularity plot.
     """
@@ -64,11 +64,11 @@ class MultipleDecomposition:
     @staticmethod
     def plot(stellar_data_tmp, group_number, subgroup_number):
         """
-        Plot a HEALPix histogram from the angular momentum of particles - an angular distance plot - a surface density plot / mock image - a
+        Plot a HEALPix histogram from the angular momentum of particles - an angular distance plot - a surface density plot / gri mock image - a
         circularity distribution.
         :param stellar_data_tmp: from read_add_attributes.py.
-        :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber']))
-        :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
+        :param group_number: from read_add_attributes.py.
+        :param subgroup_number: from read_add_attributes.py.
         :return: None
         """
         # Generate the figure and define its parameters #
@@ -173,7 +173,9 @@ class MultipleDecomposition:
         
         # Calculate the kinematic diagnostics #
         kappa, discfrac, circularity, vrotsig, vrots, delta = MorphoKinematic.kinematic_diagnostics(stellar_data_tmp['Coordinates'],
-            stellar_data_tmp['Mass'], stellar_data_tmp['Velocity'], stellar_data_tmp['ParticleBindingEnergy'])
+                                                                                                    stellar_data_tmp['Mass'],
+                                                                                                    stellar_data_tmp['Velocity'],
+                                                                                                    stellar_data_tmp['ParticleBindingEnergy'])
         
         # Calculate and plot the distribution of orbital circularity #
         j, = np.where(circularity < 0.0)

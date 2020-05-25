@@ -56,11 +56,11 @@ class TestResolution:
     @staticmethod
     def plot(stellar_data_tmp, group_number, subgroup_number):
         """
-        Plot a HEALPix histogram from the angular momentum of particles - an angular distance plot - a surface density plot / mock image - a
+        Plot a HEALPix histogram from the angular momentum of particles - an angular distance plot - a surface density plot / gri mock image - a
         circularity distribution.
         :param stellar_data_tmp: from read_add_attributes.py.
-        :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber']))
-        :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
+        :param group_number: from read_add_attributes.py.
+        :param subgroup_number: from read_add_attributes.py.
         :return: None
         """
         # Generate the figure and define its parameters #

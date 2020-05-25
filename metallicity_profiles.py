@@ -148,8 +148,8 @@ class MetallicityProfiles:
     def mask_galaxies(self, group_number, subgroup_number):
         """
         Mask galaxies and normalise data.
-        :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber'])).
-        :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber'])).
+        :param group_number: from read_add_attributes.py.
+        :param subgroup_number: from read_add_attributes.py.
         :return: stellar_data_tmp
         """
         
@@ -179,8 +179,8 @@ class MetallicityProfiles:
         """
         Plot surface density profiles.
         :param stellar_data_tmp: from read_add_attributes.py.
-        :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber'])).
-        :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber'])).
+        :param group_number: from read_add_attributes.py.
+        :param subgroup_number: from read_add_attributes.py.
         :return: None
         """
         

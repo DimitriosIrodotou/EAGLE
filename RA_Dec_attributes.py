@@ -155,8 +155,8 @@ class RADecAttributes:
     def mask_galaxies(self, group_number, subgroup_number):
         """
         Mask galaxies and normalise data.
-        :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber'])).
-        :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber'])).
+        :param group_number: from read_add_attributes.py.
+        :param subgroup_number: from read_add_attributes.py.
         :return: stellar_data_tmp
         """
         
@@ -194,8 +194,8 @@ class RADecAttributes:
         Plot RA and Dec from the angular momentum of particles colour-coded by different attributes.
         :param stellar_data_tmp: from read_add_attributes.py.
         :param glx_unit_vector: from mask_galaxies.
-        :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber'])).
-        :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber'])).
+        :param group_number: from read_add_attributes.py.
+        :param subgroup_number: from read_add_attributes.py.
         :return: None
         """
         # Generate the figure and define its parameters #
