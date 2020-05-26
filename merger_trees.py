@@ -5,6 +5,7 @@ import random
 import warnings
 import matplotlib
 import access_database
+
 matplotlib.use('Agg')
 
 import numpy as np
@@ -53,175 +54,130 @@ class MergerTree:
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
-    @staticmethod
-    def plot(stellar_data_tmp, group_number, subgroup_number):
+    # @staticmethod
+    def plot(self, stellar_data_tmp, group_number, subgroup_number):
         """
-        Plot a merger tree
+        Plot a merger tree.
         :param stellar_data_tmp: from read_add_attributes.py.
         :param group_number: from read_add_attributes.py.
         :param subgroup_number: from read_add_attributes.py.
         :return: None
         """
         # Generate the figure and define its parameters #
-        # plt.close()
-        # plt.figure(0, figsize=(16, 9))
+        plt.close()
+        figure, axis = plt.subplots(1, figsize=(10, 7.5))
         
-        # Plot the 2D surface density projections #
+        plt.ylabel('z')
+        axis.tick_params(left=True, labelleft=True)
         
-        df2 = access_database.create_merger_tree(group_number, subgroup_number)
+        df = access_database.create_merger_tree(group_number, subgroup_number)
         
-        # galaxyid = df2['gid'][0]
-        #
-        # fig, ax = plt.subplots()
-        # G = nx.from_pandas_edgelist(df=df2, source='DescGalaxyID', target='DescID', create_using=nx.Graph)
-        # G.add_nodes_from(nodes_for_adding=df2.DescGalaxyID.tolist())
-        # # df2=df2.reindex(G.nodes())
-        # tree = nx.bfs_tree(G, galaxyid)
-        # zlist = df2.lbt.tolist()
-        # colourparam = 'red'
-        # # pos = hierarchy_pos(tree, df2, root=galaxyid)
-        # print("EEEEE")
-        # nx.draw_networkx(G, with_labels=False, font_size=9, node_size=50, node_color=df2[colourparam], cmap=plt.cm.plasma,
-        #                  vmin=df2[colourparam].min(), vmax=df2[colourparam].max(), ax=ax)
-        # sm = plt.cm.ScalarMappable(cmap=plt.cm.plasma, norm=plt.Normalize(vmin=df2[colourparam].min(), vmax=df2[colourparam].max()))
-        # sm.set_array([])
-        #
-        # ax.tick_params(left=True, labelleft=True)
-        # locs, labels = plt.yticks()
-        # print('locs={}, labels={}'.format(locs, labels))
-        # print(df2.z.min())
-        # # labels2 = np.linspace(-df2.lbt.max(), -df2.lbt.min(), len(locs))
-        # # labels2=np.around(labels2,decimals=1)
-        # labels2 = np.array(locs) * (-1)
-        # labels2.sort()
-        # print(labels2)
-        # plt.yticks(locs, labels2)
-        # plt.ylabel('z')
-        # cbar = plt.colorbar(sm).set_label(colourparam)
-        # plt.title('Galaxy Merger Tree for galaxy' + str(galaxyid))
-        #
-        # plt.savefig(plots_path + str(group_number) + '_' + str(subgroup_number) + '-' + 'MT' + '-' + date + '.png', bbox_inches='tight')
+        ##############
+        # G = nx.Graph()
+        # G.add_edges_from([(df['galaxy'][0], 2), (df['galaxy'][0], 3), (df['galaxy'][0], 4)])
+        # pos = self.hierarchy_pos(G, root=df['galaxy'][0])
+        # nx.draw_networkx(G, pos=pos, with_labels=True, node_color=df['stellar_mass'], cmap=plt.cm.plasma, ax=axis)
+        ##############
+        
+        G = nx.from_pandas_edgelist(df=df, source='galaxy', target='descendant', create_using=nx.Graph)
+        G.add_nodes_from(nodes_for_adding=df['galaxy'].tolist())
+        tree = nx.bfs_tree(G, df['galaxy'][0])
+        
+        pos = self.hierarchy_pos(tree, root=df['galaxy'][0])
+        nx.draw_networkx(G, pos=pos, with_labels=True)#, node_color=df['stellar_mass'], cmap=plt.cm.plasma, ax=axis)
+        
+        # Create a mappable for the colorbar. #
+        sm = plt.cm.ScalarMappable(cmap=plt.cm.plasma, norm=matplotlib.colors.LogNorm(vmin=df['stellar_mass'].min(), vmax=df['stellar_mass'].max()))
+        sm.set_array([])
+        plt.colorbar(sm).set_label(r'$\mathrm{M_{\bigstar}}$')
+        
+        # Save the figure. #
+        plt.savefig(plots_path + str(group_number) + '_' + str(subgroup_number) + '-' + 'MT' + '-' + date + '.png', bbox_inches='tight')
         return None
+    
+    
+    @staticmethod
+    def hierarchy_pos(G, root, xcenter=0.5, width=1.0, vert_gap=0.2, vert_loc=0):
+        """
+        Return the positions to plot a merger tree in a hierarchical layout where a leaf node at a higher level gets the entire space allocated to
+        its descendant leaves.
 
-    #
-    # def hierarchy_pos(G, df, root=None, width=1., vert_gap=0.2, vert_loc=0, leaf_vs_root_factor=1):
-    #     """
-    #     If the graph is a tree this will return the positions to plot this in a
-    #     hierarchical layout.
-    #
-    #     Based on Joel's answer at https://stackoverflow.com/a/29597209/2966723,
-    #     but with some modifications.
-    #
-    #     We include this because it may be useful for plotting transmission trees,
-    #     and there is currently no networkx equivalent (though it may be coming soon).
-    #
-    #     There are two basic approaches we think of to allocate the horizontal
-    #     location of a node.
-    #
-    #     - Top down: we allocate horizontal space to a node.  Then its ``k``
-    #       descendants split up that horizontal space equally.  This tends to result
-    #       in overlapping nodes when some have many descendants.
-    #     - Bottom up: we allocate horizontal space to each leaf node.  A node at a
-    #       higher level gets the entire space allocated to its descendant leaves.
-    #       Based on this, leaf nodes at higher levels get the same space as leaf
-    #       nodes very deep in the tree.
-    #
-    #     We use use both of these approaches simultaneously with ``leaf_vs_root_factor``
-    #     determining how much of the horizontal space is based on the bottom up
-    #     or top down approaches.  ``0`` gives pure bottom up, while 1 gives pure top
-    #     down.
-    #
-    #
-    #     **root** the root node of the tree
-    #     - if the tree is directed and this is not given, the root will be found and used
-    #     - if the tree is directed and this is given, then the positions will be
-    #       just for the descendants of this node.
-    #     - if the tree is undirected and not given, then a random choice will be used.
-    #
-    #     **width** horizontal space allocated for this branch - avoids overlap with other branches
-    #
-    #     **vert_gap** gap between levels of hierarchy
-    #
-    #     **vert_loc** vertical location of root
-    #
-    #     **leaf_vs_root_factor**
-    #
-    #     xcenter: horizontal location of root
-    #     :param G: the graph
-    #     :param df:
-    #     :param root:
-    #     :param width:
-    #     :param vert_gap:
-    #     :param vert_loc:
-    #     :param leaf_vs_root_factor:
-    #     :return:
-    #     """
-    #     if not nx.is_tree(G):
-    #         raise TypeError('cannot use hierarchy_pos on a graph that is not a tree')
-    #
-    #     if root is None:
-    #         if isinstance(G, nx.DiGraph):
-    #             root = next(iter(nx.topological_sort(G)))  # allows back compatibility with nx version 1.11
-    #         else:
-    #             root = random.choice(list(G.nodes))
-    #
-    #
-    #     def _hierarchy_pos(G, root, leftmost, width, leafdx=0.2, vert_gap=0.2, vert_loc=0.8, xcenter=0.5, rootpos=None, leafpos=None, parent=None):
-    #         '''
-    #         see hierarchy_pos docstring for most arguments
-    #
-    #         pos: a dict saying where all nodes go if they have been assigned
-    #         parent: parent of this branch. - only affects it if non-directed
-    #
-    #         '''
-    #
-    #         if rootpos is None:
-    #             rootpos = {root:(xcenter, vert_loc)}
-    #         else:
-    #             rootpos[root] = (xcenter, vert_loc)
-    #         if leafpos is None:
-    #             leafpos = {}
-    #         children = list(G.neighbors(root))
-    #         leaf_count = 0
-    #         if not isinstance(G, nx.DiGraph) and parent is not None:
-    #             children.remove(parent)
-    #         if len(children) != 0:
-    #             rootdx = width / len(children)
-    #             nextx = xcenter - width / 2 - rootdx / 2
-    #             for child in children:
-    #                 nextx += rootdx
-    #                 rootpos, leafpos, newleaves = _hierarchy_pos(G, child, leftmost + leaf_count * leafdx, width=rootdx, leafdx=leafdx, vert_gap=vert_gap,
-    #                                                              vert_loc=vert_loc - vert_gap, xcenter=nextx, rootpos=rootpos, leafpos=leafpos,
-    #                                                              parent=root)
-    #                 leaf_count += newleaves
-    #
-    #             leftmostchild = min((x for x, y in [leafpos[child] for child in children]))
-    #             rightmostchild = max((x for x, y in [leafpos[child] for child in children]))
-    #             leafpos[root] = ((leftmostchild + rightmostchild) / 2, vert_loc)
-    #         else:
-    #             leaf_count = 1
-    #             leafpos[root] = (leftmost, vert_loc)
-    #         # pos[root] = (leftmost + (leaf_count-1)*dx/2., vert_loc)
-    #         # print(leaf_count)
-    #         return rootpos, leafpos, leaf_count
-    #
-    #
-    #     xcenter = width / 2.
-    #     if isinstance(G, nx.DiGraph):
-    #         leafcount = len([node for node in nx.descendants(G, root) if G.out_degree(node) == 0])
-    #     elif isinstance(G, nx.Graph):
-    #         leafcount = len([node for node in nx.node_connected_component(G, root) if G.degree(node) == 1 and node != root])
-    #     rootpos, leafpos, leaf_count = _hierarchy_pos(G, root, 0, width, leafdx=width * 1. / leafcount, vert_gap=vert_gap, vert_loc=vert_loc,
-    #                                                   xcenter=xcenter)
-    #     pos = {}
-    #     for node in rootpos:
-    #         pos[node] = (leaf_vs_root_factor * leafpos[node][0] + (1 - leaf_vs_root_factor) * rootpos[node][0], leafpos[node][
-    #             1])  # pos = {node:(leaf_vs_root_factor*x1+(1-leaf_vs_root_factor)*x2, y1) for ((x1,y1), (x2,y2)) in (leafpos[node], rootpos[node]) for
-    #         # node in rootpos}
-    #     xmax = max(x for x, y in pos.values())
-    #     for node in pos:
-    #         pos[node] = (pos[node][0] * width / xmax, df.loc[df['DescGalaxyID'] == node]['lbt'].item())
-    #     return pos
+        :param G: the graph (must be a tree).
+        :param root: the root node of the tree.
+        :param xcenter: the horizontal location of root.
+        :param width: the horizontal space allocated for a branch.
+        :param vert_gap: the gap between levels of hierarchy.
+        :param vert_loc: the vertical location of root
+        :return: pos: a dictionary with nodes as keys and positions as values
+        """
+        
+        if root is None:
+            if isinstance(G, nx.DiGraph):
+                root = next(iter(nx.topological_sort(G)))  # allows back compatibility with nx version 1.11
+            else:
+                root = random.choice(list(G.nodes))
+        
+        
+        def _hierarchy_pos(G, root, leftmost, width, leafdx=0.2, vert_gap=vert_gap, vert_loc=0.8, xcenter=xcenter, rootpos=None, leafpos=None,
+                           parent=None):
+            """
+            :param G: the graph (must be a tree).
+            :param root: the root node of the tree.
+            :param leftmost:
+            :param width: the horizontal space allocated for a branch.
+            :param leafdx:
+            :param vert_gap: the gap between levels of hierarchy.
+            :param vert_loc: the vertical location of root
+            :param xcenter: the horizontal location of root.
+            :param rootpos: the position of the root.
+            :param leafpos: the position of the leaf.
+            :param parent: parent of this branch.
+            :return:
+            """
+            
+            if rootpos is None:
+                rootpos = {root:(xcenter, vert_loc)}
+            else:
+                rootpos[root] = (xcenter, vert_loc)
+            if leafpos is None:
+                leafpos = {}
+            children = list(G.neighbors(root))
+            leaf_count = 0
+            if not isinstance(G, nx.DiGraph) and parent is not None:
+                children.remove(parent)
+            if len(children) != 0:
+                rootdx = width / len(children)
+                nextx = xcenter - width / 2 - rootdx / 2
+                for child in children:
+                    nextx += rootdx
+                    rootpos, leafpos, newleaves = _hierarchy_pos(G, child, leftmost + leaf_count * leafdx, width=rootdx, leafdx=leafdx,
+                                                                 vert_gap=vert_gap, vert_loc=vert_loc - vert_gap, xcenter=nextx, rootpos=rootpos,
+                                                                 leafpos=leafpos, parent=root)
+                    leaf_count += newleaves
+                
+                leftmostchild = min((x for x, y in [leafpos[child] for child in children]))
+                rightmostchild = max((x for x, y in [leafpos[child] for child in children]))
+                leafpos[root] = ((leftmostchild + rightmostchild) / 2, vert_loc)
+            else:
+                leaf_count = 1
+                leafpos[root] = (leftmost, vert_loc)
+            return rootpos, leafpos, leaf_count
+        
+        
+        xcenter = width / 2.
+        if isinstance(G, nx.DiGraph):
+            leafcount = len([node for node in nx.descendants(G, root) if G.out_degree(node) == 0])
+        elif isinstance(G, nx.Graph):
+            leafcount = len([node for node in nx.node_connected_component(G, root) if G.degree(node) == 1 and node != root])
+        rootpos, leafpos, leaf_count = _hierarchy_pos(G, root, 0, width, leafdx=width * 1. / leafcount, vert_gap=vert_gap, vert_loc=vert_loc,
+                                                      xcenter=xcenter)
+        pos = {}
+        for node in rootpos:
+            pos[node] = (rootpos[node][0], leafpos[node][1])
+        xmax = max(x for x, y in pos.values())
+        for node in pos:
+            pos[node] = (pos[node][0] * width / xmax, pos[node][1])
+        return pos
 
 
 if __name__ == '__main__':

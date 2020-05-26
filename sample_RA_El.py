@@ -33,8 +33,8 @@ class SampleRAEl:
         """
         # Generate the figure and define its parameters #
         plt.close()
-        fig, axes = plt.subplots(nrows=10, ncols=10, figsize=(10, 10), subplot_kw={'projection':'mollweide'})
-        for i, axis in enumerate(axes.flatten()):
+        figure, axis = plt.subplots(nrows=10, ncols=10, figsize=(10, 10), subplot_kw={'projection':'mollweide'})
+        for i, axis in enumerate(axis.flatten()):
             start_local_time = time.time()  # Start the local time.
             
             group_number = i + 1

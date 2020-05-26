@@ -187,7 +187,7 @@ class ThetaVsRadius:
         
         # Generate the figure and define its parameters #
         plt.close()
-        figure, ax = plt.subplots(1, figsize=(10, 7.5))
+        figure, axis = plt.subplots(1, figsize=(10, 7.5))
         plt.grid(True)
         plt.xscale('log')
         plt.yscale('log')
@@ -196,8 +196,8 @@ class ThetaVsRadius:
         plt.ylabel(r'$\mathrm{Angular\;distance\;from\;densest\;grid\;cell\;[\degree]}$', size=16)
         plt.tick_params(direction='out', which='both', top='on', right='on', labelsize=16)
         
-        ax.annotate(r'$\mathrm{Disc}$', xy=(1e-2, 2e1), xycoords='data', size=16)
-        ax.annotate(r'$\mathrm{Bulge}$', xy=(1e-2, 4e1), xycoords='data', size=16)
+        axis.annotate(r'$\mathrm{Disc}$', xy=(1e-2, 2e1), xycoords='data', size=16)
+        axis.annotate(r'$\mathrm{Bulge}$', xy=(1e-2, 4e1), xycoords='data', size=16)
         
         # Rotate coordinates and velocities of stellar particles wrt galactic angular momentum #
         stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_angular_momentum, glx_angular_momentum = RotateCoordinates.rotate_Jz(
@@ -231,7 +231,7 @@ class ThetaVsRadius:
             plot = plt.scatter(prc_spherical_radius[mask], angular_theta_from_densest[mask] * np.divide(180.0, np.pi),
                                c=np.log10(np.linalg.norm(prc_angular_momentum[mask], axis=1)), vmin=5, vmax=12, cmap='nipy_spectral_r', s=3)
         plt.axhline(y=30, c='black', lw=3, linestyle='dashed')  # Horizontal line at 30 degrees.
-        cbar = plt.colorbar(plot, ax=ax)
+        cbar = plt.colorbar(plot, ax=axis)
         cbar.set_label(r'$\mathrm{log_{10}(|\vec{J}_{prc,d}|/(M_{\odot}\; kpc\; km\; s^{-1}))}$', size=16)
         
         # Save the figure. #

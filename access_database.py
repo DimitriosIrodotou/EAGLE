@@ -56,10 +56,12 @@ def create_merger_tree(group_number, subgroup_number):
     """
     # Find the specific galaxy in the database and extract its ids. #
     query = 'SELECT \
+        SH.Redshift as z, \
+        SH.SnapNum as snap, \
         SH.GalaxyID as galaxy, \
         SH.TopLeafID as top_leaf, \
-        SH.LastProgID as last_progenitor, \
-        SH.DescendantID as descendant \
+        SH.DescendantID as descendant, \
+        SH.LastProgID as last_progenitor \
     FROM \
         RefL0100N1504_SubHalo as SH \
     WHERE \
@@ -72,32 +74,34 @@ def create_merger_tree(group_number, subgroup_number):
     sql_data = sql.execute_query(connnect, query)
     
     # Save the result in a data frame #
-    df = pd.DataFrame(sql_data, columns=['galaxy', 'top_leaf', 'last_progenitor', 'descendant'], index=[0])
+    df = pd.DataFrame(sql_data, columns=['z', 'snap', 'galaxy', 'top_leaf', 'descendant', 'last_progenitor'], index=[0])
     main_galaxy = df['galaxy'][0]
-    main_top_leaf = df['last_progenitor'][0]
-    dfs = [df]
+    main_top_leaf = df['top_leaf'][0]
     
     # Navigate through the main branch and get all the progenitors. #
     query = 'SELECT \
-        PROG.GalaxyID as galaxy, \
-        PROG.TopLeafID as top_leaf, \
-        PROG.LastProgID as last_progenitor, \
-        PROG.DescendantID as descendant \
+        SH.Redshift as z, \
+        SH.SnapNum as snap, \
+        SH.GalaxyID as galaxy, \
+        SH.DescendantID as descendant, \
+        SH.MassType_Star as stellar_mass \
     FROM \
-        RefL0100N1504_Subhalo as PROG \
+        RefL0100N1504_Subhalo as SH, \
+        RefL0100N1504_Subhalo as REF \
     WHERE \
-        PROG.SnapNum > 10 and \
-        PROG.MassType_Star >= 1E5 and \
-        PROG.GalaxyID between %d and %d' % (main_galaxy, main_top_leaf)
+        REF.GalaxyID = %d and \
+        SH.MassType_Star >= 1E7 and \
+        SH.SnapNum between 24 and 27 and \
+        SH.GalaxyID between REF.GalaxyID and REF.TopLeafID \
+    ORDER BY \
+        SH.Redshift' % (main_galaxy)
     
     # Connect to database and execute the query #
     connnect = sql.connect("hnz327", password="HRC478zd")
     sql_data = sql.execute_query(connnect, query)
     
     # Save the result in a data frame #
-    df = pd.DataFrame(sql_data, columns=['galaxy', 'top_leaf', 'last_progenitor', 'descendant'])
-    dfs.append(df)
-    tree = pd.concat(dfs, ignore_index=True)
-    print(tree)
+    df = pd.DataFrame(sql_data, columns=['z', 'snap', 'galaxy', 'descendant', 'stellar_mass'])
+    print(df)
     
-    return tree
+    return df
