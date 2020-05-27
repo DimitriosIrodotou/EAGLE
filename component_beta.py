@@ -84,7 +84,7 @@ class ComponentBeta:
         sc = ax11.scatter(disc_fractions_IT20, np.exp(disc_betas - 1), c=np.log10(gaseous_masses+stellar_masses), s=8, cmap='nipy_spectral_r', marker='h')
         plot_tools.create_colorbar(ax00, sc, r'$\mathrm{log_{10}(M_{bar.})}$', 'horizontal')
         
-        # Save the figure. #
+        # Save the figure #
         plt.savefig(plots_path + 'CB' + '-' + date + '.png', bbox_inches='tight')
         return None
 

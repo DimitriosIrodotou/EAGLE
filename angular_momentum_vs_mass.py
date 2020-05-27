@@ -86,7 +86,7 @@ class AngularMomentumVsMass:
         plt.plot(np.power(10, FR18['Mstar'][2:4]), np.power(10, FR18['jstar'][2:4]), color='red', lw=3, linestyle='dashed',
                  label=r'$\mathrm{Fall\; &\; Romanowsky\, 18:Bulges}$', zorder=4)
         
-        # Save the figure. #
+        # Save the figure #
         plt.savefig(plots_path + 'AM_M' + '-' + date + '.png', bbox_inches='tight')
         return None
 

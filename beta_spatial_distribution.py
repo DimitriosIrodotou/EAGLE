@@ -270,7 +270,7 @@ class BetaSpatialDistribution:
         axcbar.xaxis.set_label_position("top")
         axcbar.tick_params(direction='out', which='both', right='on', labelsize=16)
         
-        # Save the figure. #
+        # Save the figure #
         plt.savefig(plots_path + str(group_number) + '_' + str(subgroup_number) + '-' + 'BSP' + '-' + date + '.png', bbox_inches='tight')
         return None
 

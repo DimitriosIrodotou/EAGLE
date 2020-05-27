@@ -245,7 +245,7 @@ class DiscToTotalProbabilityDensityFunction:
         
         ax11.plot(glx_mass_bins, yBulge, color='blue', lw=2, label="$\mathrm{Irodotou+18}$")
         
-        # Save the figure. #
+        # Save the figure #
         plt.savefig(plots_path + 'BTT_PDF' + '-' + date + '.png', bbox_inches='tight')
         return None
 

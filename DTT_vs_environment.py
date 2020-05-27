@@ -99,7 +99,7 @@ class DTTVsEnvironment:
             
             axis.set_xlabel(label, size=16)
         
-        # Save the figure. #
+        # Save the figure #
         plt.savefig(plots_path + 'DTT_E' + '-' + date + '.png', bbox_inches='tight')
         return None
 

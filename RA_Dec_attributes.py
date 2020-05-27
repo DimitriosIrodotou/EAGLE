@@ -280,7 +280,7 @@ class RADecAttributes:
         cbar = plt.colorbar(scatter, ax=ax11, orientation='horizontal')
         cbar.set_label('$\mathrm{log_{10}(Birth\;density)}$', size=16)
         
-        # Save the figure. #
+        # Save the figure #
         # plt.title('z ~ ' + re.split('_z0|p000', tag)[1])
         plt.savefig(plots_path + str(group_number) + '_' + str(subgroup_number) + '-' + 'RDP' + '-' + date + '.png', bbox_inches='tight')
         

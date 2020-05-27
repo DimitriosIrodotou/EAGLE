@@ -163,7 +163,7 @@ class RADecDistribution:
         cbar.set_label('$\mathrm{Number\;of\;galaxies\;per\;grid\;cell}$', size=16)
         plt.pcolormesh(np.radians(ra), np.radians(dec), density_map, cmap='magma_r')
         
-        # Save the figure. #
+        # Save the figure #
         plt.savefig(plots_path + 'RDD' + '-' + date + '.png', bbox_inches='tight')
         return None
 

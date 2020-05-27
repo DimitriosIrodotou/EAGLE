@@ -54,7 +54,7 @@ def create_merger_tree(group_number, subgroup_number):
     :param subgroup_number: from read_add_attributes.py.
     :return:
     """
-    # Find the specific galaxy in the database and extract its ids. #
+    # Find the specific galaxy in the database and extract its ids #
     query = 'SELECT \
         SH.Redshift as z, \
         SH.SnapNum as snap, \
@@ -78,30 +78,32 @@ def create_merger_tree(group_number, subgroup_number):
     main_galaxy = df['galaxy'][0]
     main_top_leaf = df['top_leaf'][0]
     
-    # Navigate through the main branch and get all the progenitors. #
+    # Navigate through the main branch and get all the progenitors #
     query = 'SELECT \
         SH.Redshift as z, \
         SH.SnapNum as snap, \
         SH.GalaxyID as galaxy, \
         SH.DescendantID as descendant, \
+        SH.LastProgID as last_progenitor, \
         SH.MassType_Star as stellar_mass \
     FROM \
         RefL0100N1504_Subhalo as SH, \
         RefL0100N1504_Subhalo as REF \
     WHERE \
+        Ref.SnapNum=27 and \
         REF.GalaxyID = %d and \
         SH.MassType_Star >= 1E7 and \
-        SH.SnapNum between 24 and 27 and \
-        SH.GalaxyID between REF.GalaxyID and REF.TopLeafID \
+        ((SH.SnapNum > REF.SnapNum and REF.GalaxyID between SH.GalaxyID and SH.TopLeafID) or (SH.SnapNum >= 25 and SH.GalaxyID between ' \
+            'REF.GalaxyID and REF.LastProgID)) \
     ORDER BY \
-        SH.Redshift' % (main_galaxy)
+        SH.Redshift' % main_galaxy
     
     # Connect to database and execute the query #
     connnect = sql.connect("hnz327", password="HRC478zd")
     sql_data = sql.execute_query(connnect, query)
     
     # Save the result in a data frame #
-    df = pd.DataFrame(sql_data, columns=['z', 'snap', 'galaxy', 'descendant', 'stellar_mass'])
+    df = pd.DataFrame(sql_data, columns=['z', 'snap', 'galaxy', 'descendant', 'last_progenitor', 'stellar_mass'])
     print(df)
     
     return df

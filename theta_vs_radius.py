@@ -234,7 +234,7 @@ class ThetaVsRadius:
         cbar = plt.colorbar(plot, ax=axis)
         cbar.set_label(r'$\mathrm{log_{10}(|\vec{J}_{prc,d}|/(M_{\odot}\; kpc\; km\; s^{-1}))}$', size=16)
         
-        # Save the figure. #
+        # Save the figure #
         plt.savefig(plots_path + str(group_number) + '_' + str(subgroup_number) + '-' + 'T_R' + '-' + date + '.png', bbox_inches='tight')
         return None
 

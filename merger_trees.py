@@ -13,6 +13,8 @@ import networkx as nx
 import matplotlib.cbook
 import matplotlib.pyplot as plt
 
+from astropy.cosmology import Planck13
+
 date = time.strftime('%d_%m_%y_%H%M')  # Date
 start_global_time = time.time()  # Start the global time.
 warnings.filterwarnings('ignore', category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
@@ -66,32 +68,51 @@ class MergerTree:
         # Generate the figure and define its parameters #
         plt.close()
         figure, axis = plt.subplots(1, figsize=(10, 7.5))
+        # plt.axis('off')
         
-        plt.ylabel('z')
-        axis.tick_params(left=True, labelleft=True)
-        
+        # Get the merger tree information from the database and display it in a hierarchical tree structure #
         df = access_database.create_merger_tree(group_number, subgroup_number)
-        
-        ##############
-        # G = nx.Graph()
-        # G.add_edges_from([(df['galaxy'][0], 2), (df['galaxy'][0], 3), (df['galaxy'][0], 4)])
-        # pos = self.hierarchy_pos(G, root=df['galaxy'][0])
-        # nx.draw_networkx(G, pos=pos, with_labels=True, node_color=df['stellar_mass'], cmap=plt.cm.plasma, ax=axis)
-        ##############
-        
         G = nx.from_pandas_edgelist(df=df, source='galaxy', target='descendant', create_using=nx.Graph)
         G.add_nodes_from(nodes_for_adding=df['galaxy'].tolist())
         tree = nx.bfs_tree(G, df['galaxy'][0])
         
+        # Create the hierarchical tree structure and display it #
+        # pos = nx.drawing.nx_agraph.graphviz_layout(tree, root=df['galaxy'][0])
         pos = self.hierarchy_pos(tree, root=df['galaxy'][0])
-        nx.draw_networkx(G, pos=pos, with_labels=True)#, node_color=df['stellar_mass'], cmap=plt.cm.plasma, ax=axis)
         
-        # Create a mappable for the colorbar. #
-        sm = plt.cm.ScalarMappable(cmap=plt.cm.plasma, norm=matplotlib.colors.LogNorm(vmin=df['stellar_mass'].min(), vmax=df['stellar_mass'].max()))
+        # Reorder df to assign the colors to each node based on lookback time and plot #
+        df['lbt'] = df.apply(lambda x:round(Planck13.lookback_time(x.z).value, 1), axis=1)
+        df = df.set_index('galaxy')
+        df = df.reindex(tree.nodes())
+        nx.draw_networkx(tree, pos=pos, with_labels=True, node_color=df['lbt'], cmap=plt.cm.plasma, alpha=0.5, vmin=df['lbt'].min(),
+                         vmax=df['lbt'].max(), ax=axis)
+        
+        # Create a mappable for the colorbar #
+        sm = plt.cm.ScalarMappable(cmap=plt.cm.plasma, norm=plt.Normalize(vmin=df['lbt'].min(), vmax=df['lbt'].max()))
         sm.set_array([])
-        plt.colorbar(sm).set_label(r'$\mathrm{M_{\bigstar}}$')
+        plt.colorbar(sm).set_label(r'$\mathrm{t_{lookback}/Gyr}$')
         
-        # Save the figure. #
+        axis.tick_params(left=True, labelleft=True)
+        locs, labels = plt.yticks()
+        labels2 = np.linspace(df['z'].max(), df['z'].min(), len(locs))
+        print('locs={}, labels={}'.format(locs, labels2))
+        plt.yticks(locs, labels2)
+        plt.ylabel('z')
+        
+        # locs, labels = plt.yticks()
+        # labels2 = set(df['z'].tolist())
+        # print(locs[:-1],labels2)
+        # locs, labels = plt.yticks()
+        # print(locs[:-1],labels2)
+        #
+        # plt.yticks(locs, labels2)
+        # locs, labels = plt.yticks()
+        # labels2 = np.array(locs)
+        # labels2.sort()
+        # plt.yticks(locs, labels2)
+        
+        
+        # Save the figure #
         plt.savefig(plots_path + str(group_number) + '_' + str(subgroup_number) + '-' + 'MT' + '-' + date + '.png', bbox_inches='tight')
         return None
     
@@ -110,12 +131,6 @@ class MergerTree:
         :param vert_loc: the vertical location of root
         :return: pos: a dictionary with nodes as keys and positions as values
         """
-        
-        if root is None:
-            if isinstance(G, nx.DiGraph):
-                root = next(iter(nx.topological_sort(G)))  # allows back compatibility with nx version 1.11
-            else:
-                root = random.choice(list(G.nodes))
         
         
         def _hierarchy_pos(G, root, leftmost, width, leafdx=0.2, vert_gap=vert_gap, vert_loc=0.8, xcenter=xcenter, rootpos=None, leafpos=None,
@@ -141,6 +156,7 @@ class MergerTree:
                 rootpos[root] = (xcenter, vert_loc)
             if leafpos is None:
                 leafpos = {}
+            
             children = list(G.neighbors(root))
             leaf_count = 0
             if not isinstance(G, nx.DiGraph) and parent is not None:
@@ -173,7 +189,8 @@ class MergerTree:
                                                       xcenter=xcenter)
         pos = {}
         for node in rootpos:
-            pos[node] = (rootpos[node][0], leafpos[node][1])
+            leaf_vs_root_factor = 1
+            pos[node] = (leaf_vs_root_factor * leafpos[node][0] + (1 - leaf_vs_root_factor) * rootpos[node][0], leafpos[node][1])
         xmax = max(x for x, y in pos.values())
         for node in pos:
             pos[node] = (pos[node][0] * width / xmax, pos[node][1])

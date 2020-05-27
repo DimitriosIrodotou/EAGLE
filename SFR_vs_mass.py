@@ -80,7 +80,7 @@ class SFRVsMass:
         ax10.plot(x_value, median, color='black', linewidth=5, zorder=5)
         ax10.fill_between(x_value, shigh, slow, color='black', alpha='0.5', zorder=5)
         
-        # Save the figure. #
+        # Save the figure #
         plt.savefig(plots_path + 'SFR_M' + '-' + date + '.png', bbox_inches='tight')
         return None
 

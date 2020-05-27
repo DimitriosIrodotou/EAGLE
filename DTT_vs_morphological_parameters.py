@@ -103,7 +103,7 @@ class DiscToTotalVsMorphologicalParameters:
             axis.axvline(x=threshold, c='tab:red')  # Plot threshold lines.
             
             axis.set_xlabel(label, size=16)
-        # Save the figure. #
+        # Save the figure #
         plt.savefig(plots_path + 'DTT_MP' + '-' + date + '.png', bbox_inches='tight')
         return None
 

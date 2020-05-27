@@ -83,7 +83,7 @@ class ComponentMZR:
         sc = ax11.scatter(stellar_masses, disc_metallicities, c=disc_fractions_IT20, s=8, cmap='seismic_r', vmin=0, vmax=1, marker='h')
         plot_tools.create_colorbar(ax00, sc, r'$\mathrm{D/T_{30\degree}}$', 'horizontal')
         
-        # Save the figure. #
+        # Save the figure #
         plt.savefig(plots_path + 'CMZR' + '-' + date + '.png', bbox_inches='tight')
         return None
 
