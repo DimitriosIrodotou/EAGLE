@@ -2,6 +2,7 @@ import os
 import os.path
 import urllib.request
 
+import numpy as np
 import pandas as pd
 import eagleSqlTools._eagleSqlTools as sql
 
@@ -24,9 +25,9 @@ def download_image(group_number, subgroup_number):
                 FROM \
                     RefL0100N1504_SubHalo as SH \
                 WHERE \
-                    SH.SnapNum = 27 and  \
-                    SH.GroupNumber = %d and \
-                    SH.SubGroupNumber = %d' % (group_number, subgroup_number)
+                    SH.SnapNum = 27 \
+                    and  SH.GroupNumber = %d \
+                    and SH.SubGroupNumber = %d' % (group_number, subgroup_number)
     
     # Connect to database and execute the query #
     connnect = sql.connect("hnz327", password="HRC478zd")
@@ -65,9 +66,9 @@ def create_merger_tree(group_number, subgroup_number):
     FROM \
         RefL0100N1504_SubHalo as SH \
     WHERE \
-        SH.SnapNum = 27 and  \
-        SH.GroupNumber = %d and \
-        SH.SubGroupNumber = %d' % (group_number, subgroup_number)
+        SH.SnapNum = 27 \
+        and SH.GroupNumber = %d \
+        and SH.SubGroupNumber = %d' % (group_number, subgroup_number)
     
     # Connect to database and execute the query #
     connnect = sql.connect("hnz327", password="HRC478zd")
@@ -88,12 +89,15 @@ def create_merger_tree(group_number, subgroup_number):
         SH.MassType_Star as stellar_mass \
     FROM \
         RefL0100N1504_Subhalo as SH, \
-        RefL0100N1504_Subhalo as REF \
+        RefL0100N1504_Subhalo as REF, \
+        RefL0100N1504_Aperture as AP \
     WHERE \
-        Ref.SnapNum=27 and \
-        REF.GalaxyID = %d and \
-        SH.MassType_Star >= 1E7 and \
-        ((SH.SnapNum > REF.SnapNum and REF.GalaxyID between SH.GalaxyID and SH.TopLeafID) or (SH.SnapNum >= 25 and SH.GalaxyID between ' \
+        Ref.SnapNum=27 \
+        and REF.GalaxyID = %d \
+        and AP.ApertureSize = 30 \
+        and SH.MassType_Star >= 1E7 \
+        and AP.GalaxyID = REF.GalaxyID \
+        and ((SH.SnapNum > REF.SnapNum and REF.GalaxyID between SH.GalaxyID and SH.TopLeafID) or (SH.SnapNum >= 25 and SH.GalaxyID between ' \
             'REF.GalaxyID and REF.LastProgID)) \
     ORDER BY \
         SH.Redshift' % main_galaxy
@@ -104,6 +108,24 @@ def create_merger_tree(group_number, subgroup_number):
     
     # Save the result in a data frame #
     df = pd.DataFrame(sql_data, columns=['z', 'snap', 'galaxy', 'descendant', 'last_progenitor', 'stellar_mass'])
-    print(df)
+    # print(df)
     
-    return df
+    # Find how many progenitors exist in the previous snap (26) to check if the galaxy had a merger #
+    if len(df.loc[lambda df:df['snap'] == 26, :]) == 1:
+        flag, n_mergers = 0, 0
+    # If it had merger(s) check if they were minor or major mergers based on the mass ratios (with 0.3 threshold) of the involved galaxies #
+    elif len(df.loc[lambda df:df['snap'] == 26, :]) > 1:
+        df_26 = df.loc[lambda df:df['snap'] == 26, 'stellar_mass'].to_numpy()
+        ratios = [x / max(df_26) for x in df_26]
+        n_mergers = len(ratios) - 1
+        
+        if 0 <= np.sum(ratios) < 1 + len(ratios) * 0.3:  # Minor merger(s).
+            flag = 1
+        elif 1 + len(ratios) * 0.3 <= np.sum(ratios) < 1 + len(ratios) * 1:  # Major merger(s).
+            flag = 2
+        else:
+            raise KeyError("wrong merger ratio in create_merger_tree")
+    else:
+        raise KeyError("wrong number of mergers in create_merger_tree")
+    
+    return df, flag, n_mergers

@@ -1,7 +1,6 @@
 import os
 import re
 import time
-import random
 import warnings
 import matplotlib
 import access_database
@@ -33,21 +32,11 @@ class MergerTree:
         :param tag: redshift directory.
         """
         
-        for group_number in range(25, 26):  # Loop over all masked haloes.
+        for group_number in range(19, 26):  # Loop over all masked haloes.
             for subgroup_number in range(0, 1):  # Get centrals only.
                 start_local_time = time.time()  # Start the local time.
                 
-                # Load data from numpy arrays #
-                stellar_data_tmp = np.load(
-                    data_path + 'stellar_data_tmps/stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy', allow_pickle=True)
-                stellar_data_tmp = stellar_data_tmp.item()
-                print('Loaded data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (time.time() - start_local_time))
-                print('–––––––––––––––––––––––––––––––––––––––––––––')
-                
-                # Plot the data #
-                start_local_time = time.time()  # Start the local time.
-                
-                self.plot(stellar_data_tmp, group_number, subgroup_number)
+                self.plot(group_number, subgroup_number)
                 print('Plotted data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (time.time() - start_local_time))
                 print('–––––––––––––––––––––––––––––––––––––––––––––')
         
@@ -56,11 +45,9 @@ class MergerTree:
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
-    # @staticmethod
-    def plot(self, stellar_data_tmp, group_number, subgroup_number):
+    def plot(self, group_number, subgroup_number):
         """
         Plot a merger tree.
-        :param stellar_data_tmp: from read_add_attributes.py.
         :param group_number: from read_add_attributes.py.
         :param subgroup_number: from read_add_attributes.py.
         :return: None
@@ -68,10 +55,9 @@ class MergerTree:
         # Generate the figure and define its parameters #
         plt.close()
         figure, axis = plt.subplots(1, figsize=(10, 7.5))
-        # plt.axis('off')
         
         # Get the merger tree information from the database and display it in a hierarchical tree structure #
-        df = access_database.create_merger_tree(group_number, subgroup_number)
+        df, flag, n_mergers = access_database.create_merger_tree(group_number, subgroup_number)
         G = nx.from_pandas_edgelist(df=df, source='galaxy', target='descendant', create_using=nx.Graph)
         G.add_nodes_from(nodes_for_adding=df['galaxy'].tolist())
         tree = nx.bfs_tree(G, df['galaxy'][0])
@@ -84,33 +70,21 @@ class MergerTree:
         df['lbt'] = df.apply(lambda x:round(Planck13.lookback_time(x.z).value, 1), axis=1)
         df = df.set_index('galaxy')
         df = df.reindex(tree.nodes())
-        nx.draw_networkx(tree, pos=pos, with_labels=True, node_color=df['lbt'], cmap=plt.cm.plasma, alpha=0.5, vmin=df['lbt'].min(),
-                         vmax=df['lbt'].max(), ax=axis)
+        nx.draw_networkx(tree, pos=pos, with_labels=True, node_color=np.log10(df['stellar_mass']), cmap='jet', alpha=0.7,
+                         vmin=np.log10(df['stellar_mass'].min()), vmax=np.log10(df['stellar_mass'].max()), ax=axis)
         
         # Create a mappable for the colorbar #
-        sm = plt.cm.ScalarMappable(cmap=plt.cm.plasma, norm=plt.Normalize(vmin=df['lbt'].min(), vmax=df['lbt'].max()))
+        sm = plt.cm.ScalarMappable(cmap='jet', norm=plt.Normalize(vmin=np.log10(df['stellar_mass'].min()), vmax=np.log10(df['stellar_mass'].max())))
         sm.set_array([])
-        plt.colorbar(sm).set_label(r'$\mathrm{t_{lookback}/Gyr}$')
+        plt.colorbar(sm).set_label(r'$\mathrm{M_{\bigstar}/M_{\odot}}$')
         
+        axis.set_ylabel(r'$\mathrm{z}$')
+        axis.spines['top'].set_visible(False)
+        axis.spines['right'].set_visible(False)
+        axis.spines['bottom'].set_visible(False)
         axis.tick_params(left=True, labelleft=True)
-        locs, labels = plt.yticks()
-        labels2 = np.linspace(df['z'].max(), df['z'].min(), len(locs))
-        print('locs={}, labels={}'.format(locs, labels2))
-        plt.yticks(locs, labels2)
-        plt.ylabel('z')
-        
-        # locs, labels = plt.yticks()
-        # labels2 = set(df['z'].tolist())
-        # print(locs[:-1],labels2)
-        # locs, labels = plt.yticks()
-        # print(locs[:-1],labels2)
-        #
-        # plt.yticks(locs, labels2)
-        # locs, labels = plt.yticks()
-        # labels2 = np.array(locs)
-        # labels2.sort()
-        # plt.yticks(locs, labels2)
-        
+        plt.text(0.1, 1, r'$\mathrm{Flag: }$' + str(flag), fontsize=12, transform=axis.transAxes)
+        axis.set_yticklabels(('', '0.27', '', '0.18', '', '0.1', '', '0.0', ''))
         
         # Save the figure #
         plt.savefig(plots_path + str(group_number) + '_' + str(subgroup_number) + '-' + 'MT' + '-' + date + '.png', bbox_inches='tight')

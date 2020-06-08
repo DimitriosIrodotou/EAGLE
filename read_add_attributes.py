@@ -47,11 +47,11 @@ class ReadAttributes:
             start_local_time = time.time()  # Start the local time.
             
             # Mask galaxies and normalise data #
-            stellar_data_tmp, gaseous_data_tmp, dark_matter_data_tmp = self.mask_galaxies(group_number, subgroup_number)
+            stellar_data_tmp, gaseous_data_tmp, dark_matter_data_tmp, subhalo_data_tmp = self.mask_galaxies(group_number, subgroup_number)
             
             # Save data in numpy array #
             np.save(data_path + 'FOF_data_tmps/FOF_data_tmp_' + str(group_number), self.FOF_data)
-            np.save(data_path + 'subhalo_data_tmps/subhalo_data_tmp_' + str(group_number) + '_' + str(subgroup_number), self.subhalo_data_tmp)
+            np.save(data_path + 'subhalo_data_tmps/subhalo_data_tmp_' + str(group_number) + '_' + str(subgroup_number), subhalo_data_tmp)
             np.save(data_path + 'stellar_data_tmps/stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number), stellar_data_tmp)
             np.save(data_path + 'gaseous_data_tmps/gaseous_data_tmp_' + str(group_number) + '_' + str(subgroup_number), gaseous_data_tmp)
             np.save(data_path + 'dark_matter_data_tmps/dark_matter_data_tmp_' + str(group_number) + '_' + str(subgroup_number), dark_matter_data_tmp)
@@ -166,7 +166,10 @@ class ReadAttributes:
                                axis=1) <= 30.0))
         
         # Mask the temporary dictionary for each galaxy #
-        stellar_data_tmp, gaseous_data_tmp, dark_matter_data_tmp = {}, {}, {}
+        subhalo_data_tmp, stellar_data_tmp, gaseous_data_tmp, dark_matter_data_tmp = {}, {}, {}, {}
+        
+        for attribute in self.subhalo_data_tmp.keys():
+            subhalo_data_tmp[attribute] = np.copy(self.subhalo_data_tmp[attribute])[stellar_mask]
         for attribute in self.stellar_data.keys():
             stellar_data_tmp[attribute] = np.copy(self.stellar_data[attribute])[stellar_mask]
         for attribute in self.gaseous_data.keys():
@@ -186,7 +189,7 @@ class ReadAttributes:
         for data in [stellar_data_tmp, gaseous_data_tmp, dark_matter_data_tmp]:
             data['Velocity'] = np.subtract(data['Velocity'], CoM_velocity)
         
-        return stellar_data_tmp, gaseous_data_tmp, dark_matter_data_tmp
+        return stellar_data_tmp, gaseous_data_tmp, dark_matter_data_tmp, subhalo_data_tmp
     
     
     @staticmethod

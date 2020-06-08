@@ -13,8 +13,6 @@ import matplotlib.pyplot as plt
 import eagle_IO.eagle_IO.eagle_IO as E
 
 from astropy.constants import G
-from astropy_healpix import HEALPix
-from rotate_galaxies import RotateCoordinates
 
 # Create a parser and add argument to read data #
 parser = argparse.ArgumentParser(description='Plot metallicity profiles.')

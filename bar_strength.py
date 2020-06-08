@@ -131,17 +131,17 @@ class BarStrength:
             stellar_data_tmp)
         
         # Calculate and plot the bar strength from Fourier modes of surface density as a function of radius plot #
-        nbins = 40  # Number of radial bins.
+        n_bins = 40  # Number of radial bins.
         r = np.sqrt(stellar_data_tmp['Coordinates'][:, 0] ** 2 + stellar_data_tmp['Coordinates'][:, 1] ** 2)  # Radius of each particle.
         
         # Initialise Fourier components #
-        r_m = np.zeros(nbins)
-        beta_2 = np.zeros(nbins)
-        alpha_0 = np.zeros(nbins)
-        alpha_2 = np.zeros(nbins)
+        r_m = np.zeros(n_bins)
+        beta_2 = np.zeros(n_bins)
+        alpha_0 = np.zeros(n_bins)
+        alpha_2 = np.zeros(n_bins)
         
         # Split up galaxy in radius bins and calculate Fourier components #
-        for i in range(0, nbins):
+        for i in range(0, n_bins):
             r_s = float(i) * 0.25
             r_b = float(i) * 0.25 + 0.25
             r_m[i] = float(i) * 0.25 + 0.125

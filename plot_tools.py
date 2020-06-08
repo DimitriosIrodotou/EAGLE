@@ -16,15 +16,15 @@ def median_1sigma(x_data, y_data, delta, log):
         x = np.log10(x_data)
     else:
         x = x_data
-    nbin = int((max(x) - min(x)) / delta)
-    x_value = np.empty(nbin)
-    median = np.empty(nbin)
-    slow = np.empty(nbin)
-    shigh = np.empty(nbin)
+    n_bins = int((max(x) - min(x)) / delta)
+    x_value = np.empty(n_bins)
+    median = np.empty(n_bins)
+    slow = np.empty(n_bins)
+    shigh = np.empty(n_bins)
     x_low = min(x)
     
     # Loop over all bins and calculate the median and 1-sigma lines #
-    for i in range(nbin):
+    for i in range(n_bins):
         index, = np.where((x >= x_low) & (x < x_low + delta))
         x_value[i] = np.mean(x_data[index])
         if len(index) > 0:
