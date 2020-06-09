@@ -75,7 +75,7 @@ class SampleRAEl:
         prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
                                                                                   stellar_data_tmp['Velocity'])  # In Msun kpc km s-1.
         glx_angular_momentum = np.sum(prc_angular_momentum, axis=0)
-        glx_unit_vector = np.divide(glx_angular_momentum, np.linalg.norm(glx_angular_momentum))
+        glx_unit_vector = glx_angular_momentum / np.linalg.norm(glx_angular_momentum)
         
         # Rotate coordinates and velocities of stellar particles so the galactic angular momentum points along the x axis #
         stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_unit_vector, glx_unit_vector = RotateCoordinates.rotate_X(stellar_data_tmp,

@@ -161,8 +161,7 @@ class BetaSpatialDistribution:
         
         # Mask the data to select galaxies with a given GroupNumber and SubGroupNumber and particles inside a 30kpc sphere #
         galaxy_mask = np.where((self.stellar_data['GroupNumber'] == group_number) & (self.stellar_data['SubGroupNumber'] == subgroup_number) & (
-            np.linalg.norm(np.subtract(self.stellar_data['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][halo_mask]),
-                           axis=1) <= 30.0))  # In kpc.
+            np.linalg.norm(self.stellar_data['Coordinates'] - self.subhalo_data_tmp['CentreOfPotential'][halo_mask], axis=1) <= 30.0))  # In kpc.
         
         # Mask the temporary dictionary for each galaxy #
         stellar_data_tmp = {}
@@ -170,10 +169,10 @@ class BetaSpatialDistribution:
             stellar_data_tmp[attribute] = np.copy(self.stellar_data[attribute])[galaxy_mask]
         
         # Normalise the coordinates and velocities wrt the centre of potential of the subhalo #
-        stellar_data_tmp['Coordinates'] = np.subtract(stellar_data_tmp['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][halo_mask])
+        stellar_data_tmp['Coordinates'] = stellar_data_tmp['Coordinates'] - self.subhalo_data_tmp['CentreOfPotential'][halo_mask]
         CoM_velocity = np.divide(np.sum(stellar_data_tmp['Mass'][:, np.newaxis] * stellar_data_tmp['Velocity'], axis=0),
                                  np.sum(stellar_data_tmp['Mass'], axis=0))  # In km s-1.
-        stellar_data_tmp['Velocity'] = np.subtract(stellar_data_tmp['Velocity'], CoM_velocity)
+        stellar_data_tmp['Velocity'] = stellar_data_tmp['Velocity'] - CoM_velocity
         
         return stellar_data_tmp
     
@@ -221,7 +220,7 @@ class BetaSpatialDistribution:
             stellar_data_tmp)
         
         # Calculate the ra and dec of the (unit vector of) angular momentum for each particle #
-        prc_unit_vector = np.divide(prc_angular_momentum, np.linalg.norm(prc_angular_momentum, axis=1)[:, np.newaxis])
+        prc_unit_vector = prc_angular_momentum / np.linalg.norm(prc_angular_momentum, axis=1)[:, np.newaxis]
         ra = np.degrees(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]))
         dec = np.degrees(np.arcsin(prc_unit_vector[:, 2]))
         
@@ -231,7 +230,7 @@ class BetaSpatialDistribution:
         indices = hp.lonlat_to_healpix(ra * u.deg, dec * u.deg)  # Create list of HEALPix indices from particles' ra and dec.
         density = np.bincount(indices, minlength=hp.npix)  # Count number of data points in each HEALPix pixel.
         
-        # Find location of density maximum and plot its positions and the ra and dec of the galactic angular momentum #
+        # Find location of density maximum and plot its positions and the ra (lon) and dec (lat) of the galactic angular momentum #
         index_densest = np.argmax(density)
         lon_densest = (hp.healpix_to_lonlat([index_densest])[0].value + np.pi) % (2 * np.pi) - np.pi
         lat_densest = (hp.healpix_to_lonlat([index_densest])[1].value + np.pi / 2) % (2 * np.pi) - np.pi / 2
@@ -244,19 +243,17 @@ class BetaSpatialDistribution:
         # Calculate e^beta-1 #
         velocity_r_sqred = np.divide(np.sum(stellar_data_tmp['Velocity'] * stellar_data_tmp['Coordinates'], axis=1) ** 2,
                                      np.sum(stellar_data_tmp['Coordinates'] * stellar_data_tmp['Coordinates'], axis=1))
-        beta = np.subtract(1, np.divide(
-            np.subtract(np.sum(stellar_data_tmp['Velocity']* stellar_data_tmp['Velocity'], axis=1), velocity_r_sqred),
-            2 * velocity_r_sqred))
+        beta = 1 - np.divide(np.sum(stellar_data_tmp['Velocity'] * stellar_data_tmp['Velocity'], axis=1) - velocity_r_sqred, 2 * velocity_r_sqred)
         
         # Plot the 2D surface density projection for the disc colour-coded by e^beta-1 #
-        disc_mask, = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))
+        disc_mask, = np.where(angular_theta_from_densest < (np.pi / 6.0))
         ax10.scatter(stellar_data_tmp['Coordinates'][disc_mask, 0], stellar_data_tmp['Coordinates'][disc_mask, 1], c=np.exp(beta[disc_mask] - 1),
                      cmap='viridis', vmax=1, s=1)
         ax20.scatter(stellar_data_tmp['Coordinates'][disc_mask, 0], stellar_data_tmp['Coordinates'][disc_mask, 2], c=np.exp(beta[disc_mask] - 1),
                      cmap='viridis', vmax=1, s=1)
         
         # Plot the 2D surface density projection for the bulge #
-        bulge_mask, = np.where(angular_theta_from_densest > np.divide(np.pi, 6.0))
+        bulge_mask, = np.where(angular_theta_from_densest > (np.pi / 6.0))
         ax11.scatter(stellar_data_tmp['Coordinates'][bulge_mask, 0], stellar_data_tmp['Coordinates'][bulge_mask, 1], c=np.exp(beta[bulge_mask] - 1),
                      cmap='viridis', vmax=1, s=1)
         

@@ -11,9 +11,7 @@ import numpy as np
 import matplotlib.cbook
 import astropy.units as u
 import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
 
-from matplotlib import gridspec
 from astropy_healpix import HEALPix
 from rotate_galaxies import RotateCoordinates
 from morpho_kinematics import MorphoKinematic
@@ -39,11 +37,11 @@ class DeltaRVsDeltaTheta:
         """
         plt.close()
         plt.figure(0, figsize=(10, 10))
-        plt.xscale('log')
-        plt.xlabel('delta r')
-        plt.ylabel('delta theta')
-        plt.yscale('log')
-        for group_number in range(1, 100):  # Loop over all masked haloes.
+        # plt.xscale('log')
+        # plt.yscale('log')
+        plt.xlabel(r'$\mathrm{\delta_{r}/kpc}$', size=16)
+        plt.ylabel(r'$\mathrm{\delta_{\theta}/\degree}$', size=16)
+        for group_number in range(1, 101):  # Loop over all masked haloes.
             for subgroup_number in range(0, 1):  # Get centrals only.
                 start_local_time = time.time()  # Start the local time.
                 
@@ -94,7 +92,7 @@ class DeltaRVsDeltaTheta:
         prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
                                                                                   stellar_data_tmp['Velocity'])  # In Msun kpc km s-1.
         glx_angular_momentum = np.sum(prc_angular_momentum, axis=0)
-        glx_unit_vector = np.divide(glx_angular_momentum, np.linalg.norm(glx_angular_momentum))
+        glx_unit_vector = glx_angular_momentum / np.linalg.norm(glx_angular_momentum)
         
         # Rotate coordinates and velocities of stellar particles so the galactic angular momentum points along the x axis #
         stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_unit_vector, glx_unit_vector = RotateCoordinates.rotate_X(stellar_data_tmp,
@@ -110,7 +108,7 @@ class DeltaRVsDeltaTheta:
         indices = hp.lonlat_to_healpix(ra * u.deg, dec * u.deg)  # Create list of HEALPix indices from particles' ra and dec.
         density = np.bincount(indices, minlength=hp.npix)  # Count number of data points in each HEALPix pixel.
         
-        # Find location of density maximum and plot its positions and the ra and dec of the galactic angular momentum #
+        # Find location of density maximum and plot its positions and the ra (lon) and dec (lat) of the galactic angular momentum #
         index_densest = np.argmax(density)
         lon_densest = (hp.healpix_to_lonlat([index_densest])[0].value + np.pi) % (2 * np.pi) - np.pi
         lat_densest = (hp.healpix_to_lonlat([index_densest])[1].value + np.pi / 2) % (2 * np.pi) - np.pi / 2
@@ -122,27 +120,25 @@ class DeltaRVsDeltaTheta:
             np.sin(position_of_X[0, 1]) * np.sin(lat_densest) + np.cos(position_of_X[0, 1]) * np.cos(lat_densest) * np.cos(
                 position_of_X[0, 0] - lon_densest))  # In radians.
         
-        CoM = np.divide(np.sum(stellar_data_tmp['Mass'][:, np.newaxis] * stellar_data_tmp['Coordinates'], axis=0) + np.sum(
-            gaseous_data_tmp['Mass'][:, np.newaxis] * gaseous_data_tmp['Coordinates'], axis=0) + np.sum(
-            dark_matter_data_tmp['Mass'][:, np.newaxis] * dark_matter_data_tmp['Coordinates'], axis=0),
-                        np.sum(stellar_data_tmp['Mass'], axis=0) + np.sum(gaseous_data_tmp['Mass'], axis=0) + np.sum(dark_matter_data_tmp['Mass'],
-                                                                                                                     axis=0))  # In km s-1.
+        # Calculate disc mass fraction as the mass within 30 degrees from the densest pixel #
+        angular_theta_from_densest = np.arccos(
+            np.sin(lat_densest) * np.sin(np.arcsin(prc_unit_vector[:, 2])) + np.cos(lat_densest) * np.cos(np.arcsin(prc_unit_vector[:, 2])) * np.cos(
+                lon_densest - np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0])))  # In radians.
         
-        halo_mask, = np.where((subhalo_data_tmp['GroupNumber'] == group_number) & (subhalo_data_tmp['SubGroupNumber'] == subgroup_number))
-        all_masses = np.hstack([stellar_data_tmp['Mass'], gaseous_data_tmp['Mass'], dark_matter_data_tmp['Mass']])
-        all_rs = np.hstack(
-            [np.sqrt(np.sum(stellar_data_tmp['Coordinates'] ** 2, axis=1)), np.sqrt(np.sum(gaseous_data_tmp['Coordinates'] ** 2, axis=1)),
-             np.sqrt(np.sum(dark_matter_data_tmp['Coordinates'] ** 2, axis=1))])
+        disc_mask = np.where(angular_theta_from_densest < (np.pi / 6.0))
+        disc_fraction_IT20 = np.sum(stellar_data_tmp['Mass'][disc_mask]) / np.sum(stellar_data_tmp['Mass'])
         
-        mass, edges = np.histogram(all_rs, bins=50, range=(0, 30), weights=all_masses)
-        centers = 0.5 * (edges[1:] + edges[:-1])
-        surface = 1.333 * np.pi * (edges[1:] ** 3 - edges[:-1] ** 3)
-        den = np.divide(mass, surface)
-        print(den)
+        prc_masses = np.hstack([stellar_data_tmp['Mass'], gaseous_data_tmp['Mass']])  # , dark_matter_data_tmp['Mass']])
+        prc_coordinates = np.vstack([stellar_data_tmp['Coordinates'], gaseous_data_tmp['Coordinates']])  # , dark_matter_data_tmp['Coordinates']])
+        CoM = np.divide(np.sum(prc_masses[:, np.newaxis] * prc_coordinates, axis=0), np.sum(prc_masses, axis=0))
         
-        delta_r = np.linalg.norm(subhalo_data_tmp['CentreOfPotential'][halo_mask]) - np.linalg.norm(CoM)
+        delta_r = np.linalg.norm(CoM) / MorphoKinematic.r_mass(stellar_data_tmp, 0.5)
+        delta_theta = np.degrees(angular_theta_from_X)
+
         
-        plt.scatter(delta_r, angular_theta_from_X, color='black')
+        plt.scatter(delta_r, delta_theta, color='black')
+        # plt.text(delta_r, delta_theta, str(round(disc_fraction_IT20, 3)), color="red", fontsize=12)
+        plt.text(delta_r, delta_theta, str(group_number), color="red", fontsize=10)
         
         plt.savefig(plots_path + 'DRDT' + '-' + date + '.png', bbox_inches='tight')
         return None

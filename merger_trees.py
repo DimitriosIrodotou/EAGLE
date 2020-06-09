@@ -32,7 +32,7 @@ class MergerTree:
         :param tag: redshift directory.
         """
         
-        for group_number in range(19, 26):  # Loop over all masked haloes.
+        for group_number in range(3, 4):  # Loop over all masked haloes.
             for subgroup_number in range(0, 1):  # Get centrals only.
                 start_local_time = time.time()  # Start the local time.
                 
@@ -57,7 +57,7 @@ class MergerTree:
         figure, axis = plt.subplots(1, figsize=(10, 7.5))
         
         # Get the merger tree information from the database and display it in a hierarchical tree structure #
-        df, flag, n_mergers = access_database.create_merger_tree(group_number, subgroup_number)
+        df, flag, n_mergers, n_minor_mergers, n_major_mergers = access_database.create_merger_tree(group_number, subgroup_number)
         G = nx.from_pandas_edgelist(df=df, source='galaxy', target='descendant', create_using=nx.Graph)
         G.add_nodes_from(nodes_for_adding=df['galaxy'].tolist())
         tree = nx.bfs_tree(G, df['galaxy'][0])

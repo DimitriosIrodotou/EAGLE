@@ -133,7 +133,7 @@ class SurfaceDensityProfiles:
             stellar_data_tmp)
         
         # Calculate the ra and dec of the (unit vector of) angular momentum for each particle #
-        prc_unit_vector = np.divide(prc_angular_momentum, np.linalg.norm(prc_angular_momentum, axis=1)[:, np.newaxis])
+        prc_unit_vector = prc_angular_momentum / np.linalg.norm(prc_angular_momentum, axis=1)[:, np.newaxis]
         ra = np.degrees(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]))
         dec = np.degrees(np.arcsin(prc_unit_vector[:, 2]))
         
@@ -152,8 +152,8 @@ class SurfaceDensityProfiles:
         angular_theta_from_densest = np.arccos(
             np.sin(lat_densest) * np.sin(np.arcsin(prc_unit_vector[:, 2])) + np.cos(lat_densest) * np.cos(np.arcsin(prc_unit_vector[:, 2])) * np.cos(
                 lon_densest - np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0])))  # In radians.
-        disc_mask, = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))
-        bulge_mask, = np.where(angular_theta_from_densest > np.divide(np.pi, 6.0))
+        disc_mask, = np.where(angular_theta_from_densest < (np.pi / 6.0))
+        bulge_mask, = np.where(angular_theta_from_densest > (np.pi / 6.0))
         
         colors = ['blue', 'red']
         labels = ['Disc', 'Bulge']
@@ -169,7 +169,7 @@ class SurfaceDensityProfiles:
             mass, edges = np.histogram(cylindrical_distance[vertical_mask], bins=50, range=(0, 30), weights=component_mass[vertical_mask])
             centers = 0.5 * (edges[1:] + edges[:-1])
             surface = np.pi * (edges[1:] ** 2 - edges[:-1] ** 2)
-            sden = np.divide(mass, surface)
+            sden = mass / surface
             
             plt.errorbar(centers, sden, yerr=0.1 * sden, c=color, marker='.', linestyle="None", elinewidth=1, capsize=2, capthick=1, zorder=3,
                          label=label)
@@ -203,7 +203,7 @@ class SurfaceDensityProfiles:
         mass, edges = np.histogram(cylindrical_distance[vertical_mask], bins=50, range=(0, 30), weights=stellar_data_tmp['Mass'][vertical_mask])
         centers = 0.5 * (edges[1:] + edges[:-1])
         surface = np.pi * (edges[1:] ** 2 - edges[:-1] ** 2)
-        sden = np.divide(mass, surface)
+        sden = mass / surface
         
         plt.errorbar(centers, sden, yerr=0.1 * sden, c='k', marker='.', linestyle="None", elinewidth=1, capsize=2, capthick=1, zorder=3,
                      label='Total')

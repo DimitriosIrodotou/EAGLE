@@ -49,7 +49,8 @@ class TestResolution:
                 print('Plotted data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (time.time() - start_local_time))
                 print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished TestResolution for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished TestResolution for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (
+            time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
@@ -88,7 +89,7 @@ class TestResolution:
             prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
                                                                                       stellar_data_tmp['Velocity'])  # In Msun kpc km s-1.
             glx_angular_momentum = np.sum(prc_angular_momentum, axis=0)
-            glx_unit_vector = np.divide(glx_angular_momentum, np.linalg.norm(glx_angular_momentum))
+            glx_unit_vector = glx_angular_momentum / np.linalg.norm(glx_angular_momentum)
             
             # Rotate coordinates and velocities of stellar particles so the galactic angular momentum points along the x axis #
             stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_unit_vector, glx_unit_vector = RotateCoordinates.rotate_X(
@@ -104,7 +105,7 @@ class TestResolution:
             indices = hp.lonlat_to_healpix(ra * u.deg, dec * u.deg)  # Create list of HEALPix indices from particles' ra and dec.
             density = np.bincount(indices, minlength=hp.npix)  # Count number of data points in each HEALPix pixel.
             
-            # Find location of density maximum and plot its positions and the ra and dec of the galactic angular momentum #
+            # Find location of density maximum and plot its positions and the ra (lon) and dec (lat) of the galactic angular momentum #
             index_densest = np.argmax(density)
             lon_densest = (hp.healpix_to_lonlat([index_densest])[0].value + np.pi) % (2 * np.pi) - np.pi
             lat_densest = (hp.healpix_to_lonlat([index_densest])[1].value + np.pi / 2) % (2 * np.pi) - np.pi / 2
@@ -132,8 +133,8 @@ class TestResolution:
             # Calculate disc mass fraction as the mass within 30 degrees from the densest pixel #
             angular_theta_from_densest = np.arccos(np.sin(lat_densest) * np.sin(np.arcsin(prc_unit_vector[:, 2])) + np.cos(lat_densest) * np.cos(
                 np.arcsin(prc_unit_vector[:, 2])) * np.cos(lon_densest - np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0])))  # In radians.
-            disc_mask = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))
-            disc_fraction_IT20 = np.divide(np.sum(stellar_data_tmp['Mass'][disc_mask]), np.sum(stellar_data_tmp['Mass']))
+            disc_mask = np.where(angular_theta_from_densest < (np.pi / 6.0))
+            disc_fraction_IT20 = np.sum(stellar_data_tmp['Mass'][disc_mask]) / np.sum(stellar_data_tmp['Mass'])
             axis.text(0.3, 1.01, r'$\mathrm{DTT = %.3f}$' % disc_fraction_IT20, c='black', fontsize=12, transform=axis.transAxes)
         
         plt.savefig(plots_path + str(group_number) + '_' + str(subgroup_number) + '-' + 'TR' + '-' + date + '.png', bbox_inches='tight')

@@ -71,7 +71,8 @@ class RADecDistribution:
         print('Plotted data for halo ' + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished RADecDistribution for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished RADecDistribution for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (
+                time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
@@ -137,7 +138,7 @@ class RADecDistribution:
         plt.ylabel('Dec ($\degree$)')
         
         # Calculate the ra and dec of the (unit vector of) angular momentum for each particle #
-        glx_unit_vectors = np.divide(glx_angular_momentum, np.linalg.norm(glx_angular_momentum))
+        glx_unit_vectors = glx_angular_momentum / np.linalg.norm(glx_angular_momentum)
         glx_unit_vectors = glx_unit_vectors[~np.isnan(glx_unit_vectors).any(axis=1)]
         ra = np.degrees(np.arctan2(glx_unit_vectors[:, 1], glx_unit_vectors[:, 0]))
         dec = np.degrees(np.arcsin(glx_unit_vectors[:, 2]))

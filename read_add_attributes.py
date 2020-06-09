@@ -106,12 +106,12 @@ class ReadAttributes:
         stellar_data['Mass'] *= u.g.to(u.Msun)
         stellar_data['Velocity'] *= u.cm.to(u.km)  # per second.
         stellar_data['Coordinates'] *= u.cm.to(u.kpc)
-        stellar_data['BirthDensity'] *= np.divide(u.g.to(u.Msun), u.cm.to(u.kpc) ** 3)
+        stellar_data['BirthDensity'] *= u.g.to(u.Msun) / u.cm.to(u.kpc) ** 3
         
         gaseous_data['Mass'] *= u.g.to(u.Msun)
         gaseous_data['Velocity'] *= u.cm.to(u.km)  # per second.
         gaseous_data['Coordinates'] *= u.cm.to(u.kpc)
-        gaseous_data['StarFormationRate'] *= np.divide(u.g.to(u.Msun), u.second.to(u.year))
+        gaseous_data['StarFormationRate'] *= u.g.to(u.Msun) / u.second.to(u.year)
         
         dark_matter_data['Coordinates'] *= u.cm.to(u.kpc)
         dark_matter_data['Velocity'] *= u.cm.to(u.km)  # per second.
@@ -155,15 +155,14 @@ class ReadAttributes:
         
         # Mask the data to select galaxies with a given GroupNumber and SubGroupNumber and particles inside a 30kpc sphere #
         stellar_mask = np.where((self.stellar_data['GroupNumber'] == group_number) & (self.stellar_data['SubGroupNumber'] == subgroup_number) & (
-            np.linalg.norm(np.subtract(self.stellar_data['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][halo_mask]), axis=1) <= 30.0))
+            np.linalg.norm(self.stellar_data['Coordinates'] - self.subhalo_data_tmp['CentreOfPotential'][halo_mask], axis=1) <= 30.0))
         
         gaseous_mask = np.where((self.gaseous_data['GroupNumber'] == group_number) & (self.gaseous_data['SubGroupNumber'] == subgroup_number) & (
-            np.linalg.norm(np.subtract(self.gaseous_data['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][halo_mask]), axis=1) <= 30.0))
+            np.linalg.norm(self.gaseous_data['Coordinates'] - self.subhalo_data_tmp['CentreOfPotential'][halo_mask], axis=1) <= 30.0))
         
         dark_matter_mask = np.where(
             (self.dark_matter_data['GroupNumber'] == group_number) & (self.dark_matter_data['SubGroupNumber'] == subgroup_number) & (
-                np.linalg.norm(np.subtract(self.dark_matter_data['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][halo_mask]),
-                               axis=1) <= 30.0))
+                np.linalg.norm(self.dark_matter_data['Coordinates'] - self.subhalo_data_tmp['CentreOfPotential'][halo_mask], axis=1) <= 30.0))
         
         # Mask the temporary dictionary for each galaxy #
         subhalo_data_tmp, stellar_data_tmp, gaseous_data_tmp, dark_matter_data_tmp = {}, {}, {}, {}
@@ -179,15 +178,21 @@ class ReadAttributes:
         
         # Normalise the coordinates and velocities wrt the centre of potential of the subhalo #
         for data in [stellar_data_tmp, gaseous_data_tmp, dark_matter_data_tmp]:
-            data['Coordinates'] = np.subtract(data['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][halo_mask])
+            data['Coordinates'] = data['Coordinates'] - self.subhalo_data_tmp['CentreOfPotential'][halo_mask]
         
-        CoM_velocity = np.divide(np.sum(stellar_data_tmp['Mass'][:, np.newaxis] * stellar_data_tmp['Velocity'], axis=0) + np.sum(
+        prc_masses = np.hstack([stellar_data_tmp['Mass'], gaseous_data_tmp['Mass'], dark_matter_data_tmp['Mass']])
+        prc_velocities = np.vstack([stellar_data_tmp['Velocity'], gaseous_data_tmp['Velocity'], dark_matter_data_tmp['Velocity']])
+        CoM_velocity = np.divide(np.sum(prc_masses[:, np.newaxis] * prc_velocities, axis=0), np.sum(prc_masses, axis=0))  # In km s-1.
+        CoM_velocity2 = np.divide(np.sum(stellar_data_tmp['Mass'][:, np.newaxis] * stellar_data_tmp['Velocity'], axis=0) + np.sum(
             gaseous_data_tmp['Mass'][:, np.newaxis] * gaseous_data_tmp['Velocity'], axis=0) + np.sum(
             dark_matter_data_tmp['Mass'][:, np.newaxis] * dark_matter_data_tmp['Velocity'], axis=0),
                                  np.sum(stellar_data_tmp['Mass'], axis=0) + np.sum(gaseous_data_tmp['Mass'], axis=0) + np.sum(
                                      dark_matter_data_tmp['Mass'], axis=0))  # In km s-1.
+        print(CoM_velocity)
+        print(CoM_velocity2)
+        
         for data in [stellar_data_tmp, gaseous_data_tmp, dark_matter_data_tmp]:
-            data['Velocity'] = np.subtract(data['Velocity'], CoM_velocity)
+            data['Velocity'] = data['Velocity'] - CoM_velocity
         
         return stellar_data_tmp, gaseous_data_tmp, dark_matter_data_tmp, subhalo_data_tmp
     
@@ -333,7 +338,7 @@ class AddAttributes:
         prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
                                                                                   stellar_data_tmp['Velocity'])  # In Msun kpc km s-1.
         glx_stellar_angular_momentum = np.sum(prc_angular_momentum, axis=0)
-        glx_unit_vector = np.divide(glx_stellar_angular_momentum, np.linalg.norm(glx_stellar_angular_momentum))
+        glx_unit_vector = glx_stellar_angular_momentum / np.linalg.norm(glx_stellar_angular_momentum)
         
         # Rotate coordinates and velocities of stellar particles wrt galactic angular momentum #
         coordinates, velocity, prc_unit_vector, glx_unit_vector = RotateCoordinates.rotate_X(stellar_data_tmp, glx_unit_vector)
@@ -357,8 +362,8 @@ class AddAttributes:
         angular_theta_from_densest = np.arccos(
             np.sin(lat_densest) * np.sin(np.arcsin(prc_unit_vector[:, 2])) + np.cos(lat_densest) * np.cos(np.arcsin(prc_unit_vector[:, 2])) * np.cos(
                 lon_densest - np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0])))  # In radians.
-        disc_mask, = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))
-        bulge_mask, = np.where(angular_theta_from_densest > np.divide(np.pi, 6.0))
+        disc_mask, = np.where(angular_theta_from_densest < (np.pi / 6.0))
+        bulge_mask, = np.where(angular_theta_from_densest > (np.pi / 6.0))
         
         return disc_mask, bulge_mask
     
@@ -371,8 +376,8 @@ class AddAttributes:
         :return: c
         """
         
-        # c = np.divide(MorphoKinematic.r_mass(stellar_data_tmp, 0.9), MorphoKinematic.r_mass(stellar_data_tmp, 0.5))
-        c = 5 * np.log10(np.divide(MorphoKinematic.r_mass(stellar_data_tmp, 0.8), MorphoKinematic.r_mass(stellar_data_tmp, 0.2)))
+        # c = MorphoKinematic.r_mass(stellar_data_tmp, 0.9)/ MorphoKinematic.r_mass(stellar_data_tmp, 0.5)
+        c = 5 * np.log10(MorphoKinematic.r_mass(stellar_data_tmp, 0.8) / MorphoKinematic.r_mass(stellar_data_tmp, 0.2))
         return c
     
     
@@ -387,15 +392,15 @@ class AddAttributes:
         # Rotate the galaxy and calculate the unit vector pointing along the glx_stellar_angular_momentum direction.
         coordinates, velocity, prc_angular_momentum, glx_stellar_angular_momentum = RotateCoordinates.rotate_Jz(stellar_data_tmp)
         prc_spc_angular_momentum = np.cross(coordinates, velocity)  # In kpc km s-1.
-        glx_unit_vector = np.divide(glx_stellar_angular_momentum, np.linalg.norm(glx_stellar_angular_momentum))
+        glx_unit_vector = glx_stellar_angular_momentum / np.linalg.norm(glx_stellar_angular_momentum)
         spc_angular_momentum_z = np.sum(glx_unit_vector * prc_spc_angular_momentum, axis=1)  # In kpc km s-1.
         prc_cylindrical_distance = np.sqrt(coordinates[:, 0] ** 2 + coordinates[:, 1] ** 2)  # In kpc.
         
         corotation_mask, = np.where(spc_angular_momentum_z > 0)
-        specific_angular_velocity = np.divide(spc_angular_momentum_z[corotation_mask], prc_cylindrical_distance[corotation_mask])  # In km s^-1.
+        specific_angular_velocity = spc_angular_momentum_z[corotation_mask] / prc_cylindrical_distance[corotation_mask]  # In km s^-1.
         kinetic_energy = np.sum(stellar_data_tmp['Mass'] * np.linalg.norm(velocity, axis=1) ** 2)  # In Msun km^2 s^-2.
         angular_kinetic_energy = np.sum(stellar_data_tmp['Mass'][corotation_mask] * specific_angular_velocity ** 2)  # In Msun km^2 s^-2.
-        kappa_corotation = np.divide(angular_kinetic_energy, kinetic_energy)
+        kappa_corotation = angular_kinetic_energy / kinetic_energy
         
         return kappa_corotation
     
@@ -501,7 +506,7 @@ class AddAttributes:
         mass, edges = np.histogram(cylindrical_distance[vertical_mask], bins=50, range=(0, 30), weights=stellar_data_tmp['Mass'][vertical_mask])
         centers = 0.5 * (edges[1:] + edges[:-1])
         surface = np.pi * (edges[1:] ** 2 - edges[:-1] ** 2)
-        sden = np.divide(mass, surface)
+        sden = mass / surface
         
         try:
             popt, pcov = curve_fit(total_profile, centers, sden, sigma=0.1 * sden, p0=[sden[0], 2, sden[0], 2, 4])  # p0 = [I_0d, R_d, I_0b, b, n]
@@ -586,7 +591,7 @@ class AppendAttributes:
             prc_angular_momentum = gaseous_data_tmp['Mass'][:, np.newaxis] * np.cross(gaseous_data_tmp['Coordinates'],
                                                                                       gaseous_data_tmp['Velocity'])  # In Msun kpc km s-1.
             
-            disc_fraction_IT20 = np.divide(np.sum(stellar_data_tmp['Mass'][stellar_data_tmp['disc_mask_IT20']]), np.sum(stellar_data_tmp['Mass']))
+            disc_fraction_IT20 = np.sum(stellar_data_tmp['Mass'][stellar_data_tmp['disc_mask_IT20']]) / np.sum(stellar_data_tmp['Mass'])
             
             glx_gaseous_mass = np.sum(gaseous_data_tmp['Mass'])
             glx_gaseous_angular_momentum = np.sum(prc_angular_momentum, axis=0)

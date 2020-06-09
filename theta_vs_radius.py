@@ -29,7 +29,7 @@ warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # I
 
 class ThetaVsRadius:
     """
-    Fit surface density profiles to the components produced by RA_Dec_surface_density.
+    For each galaxy create: a angular separation versus particle radius plot.
     """
     
     
@@ -159,8 +159,7 @@ class ThetaVsRadius:
         
         # Mask the data to select galaxies with a given GroupNumber and SubGroupNumber and particles inside a 30kpc sphere #
         galaxy_mask = np.where((self.stellar_data['GroupNumber'] == group_number) & (self.stellar_data['SubGroupNumber'] == subgroup_number) & (
-            np.linalg.norm(np.subtract(self.stellar_data['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][halo_mask]),
-                           axis=1) <= 30.0))  # In kpc.
+            np.linalg.norm(self.stellar_data['Coordinates'] - self.subhalo_data_tmp['CentreOfPotential'][halo_mask], axis=1) <= 30.0))  # In kpc.
         
         # Mask the temporary dictionary for each galaxy #
         stellar_data_tmp = {}
@@ -168,17 +167,17 @@ class ThetaVsRadius:
             stellar_data_tmp[attribute] = np.copy(self.stellar_data[attribute])[galaxy_mask]
         
         # Normalise the coordinates and velocities wrt the centre of potential of the subhalo #
-        stellar_data_tmp['Coordinates'] = np.subtract(stellar_data_tmp['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][halo_mask])
+        stellar_data_tmp['Coordinates'] = stellar_data_tmp['Coordinates'] - self.subhalo_data_tmp['CentreOfPotential'][halo_mask]
         CoM_velocity = np.divide(np.sum(stellar_data_tmp['Mass'][:, np.newaxis] * stellar_data_tmp['Velocity'], axis=0),
                                  np.sum(stellar_data_tmp['Mass'], axis=0))  # In km s-1.
-        stellar_data_tmp['Velocity'] = np.subtract(stellar_data_tmp['Velocity'], CoM_velocity)
+        stellar_data_tmp['Velocity'] = stellar_data_tmp['Velocity'] - CoM_velocity
         
         return stellar_data_tmp
     
     
     def plot(self, stellar_data_tmp, group_number, subgroup_number):
         """
-        Plot surface density profiles.
+        Plot angular separation versus particle radius
         :param stellar_data_tmp: from read_add_attributes.py.
         :param group_number: from read_add_attributes.py.
         :param subgroup_number: from read_add_attributes.py.
@@ -204,7 +203,7 @@ class ThetaVsRadius:
             stellar_data_tmp)
         
         # Calculate the ra and dec of the (unit vector of) angular momentum for each particle #
-        prc_unit_vector = np.divide(prc_angular_momentum, np.linalg.norm(prc_angular_momentum, axis=1)[:, np.newaxis])
+        prc_unit_vector = prc_angular_momentum / np.linalg.norm(prc_angular_momentum, axis=1)[:, np.newaxis]
         ra = np.degrees(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]))
         dec = np.degrees(np.arcsin(prc_unit_vector[:, 2]))
         
@@ -223,12 +222,12 @@ class ThetaVsRadius:
         angular_theta_from_densest = np.arccos(
             np.sin(lat_densest) * np.sin(np.arcsin(prc_unit_vector[:, 2])) + np.cos(lat_densest) * np.cos(np.arcsin(prc_unit_vector[:, 2])) * np.cos(
                 lon_densest - np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0])))  # In radians.
-        disc_mask, = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))
-        bulge_mask, = np.where(angular_theta_from_densest > np.divide(np.pi, 6.0))
+        disc_mask, = np.where(angular_theta_from_densest < (np.pi / 6.0))
+        bulge_mask, = np.where(angular_theta_from_densest > (np.pi / 6.0))
         
         for mask in [disc_mask, bulge_mask]:
             prc_spherical_radius = np.sqrt(np.sum(stellar_data_tmp['Coordinates'] ** 2, axis=1))  # Radius of each particle.
-            plot = plt.scatter(prc_spherical_radius[mask], angular_theta_from_densest[mask] * np.divide(180.0, np.pi),
+            plot = plt.scatter(prc_spherical_radius[mask], angular_theta_from_densest[mask] * (180.0 / np.pi),
                                c=np.log10(np.linalg.norm(prc_angular_momentum[mask], axis=1)), vmin=5, vmax=12, cmap='nipy_spectral_r', s=3)
         plt.axhline(y=30, c='black', lw=3, linestyle='dashed')  # Horizontal line at 30 degrees.
         cbar = plt.colorbar(plot, ax=axis)

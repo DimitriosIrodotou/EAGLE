@@ -52,7 +52,7 @@ class SpatialDistribution:
                 print('–––––––––––––––––––––––––––––––––––––––––––––')
         
         print('Finished SpatialDistribution for ' + re.split('EAGLE/|/data', simulation_path)[2] + str(tag) + ' in %.4s s' % (
-                time.time() - start_global_time))
+            time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
@@ -98,7 +98,7 @@ class SpatialDistribution:
             stellar_data_tmp)
         
         # Calculate the ra and dec of the (unit vector of) angular momentum for each particle #
-        prc_unit_vector = np.divide(prc_angular_momentum, np.linalg.norm(prc_angular_momentum, axis=1)[:, np.newaxis])
+        prc_unit_vector = prc_angular_momentum / np.linalg.norm(prc_angular_momentum, axis=1)[:, np.newaxis]
         ra = np.degrees(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]))
         dec = np.degrees(np.arcsin(prc_unit_vector[:, 2]))
         
@@ -108,7 +108,7 @@ class SpatialDistribution:
         indices = hp.lonlat_to_healpix(ra * u.deg, dec * u.deg)  # Create list of HEALPix indices from particles' ra and dec.
         density = np.bincount(indices, minlength=hp.npix)  # Count number of data points in each HEALPix pixel.
         
-        # Find location of density maximum and plot its positions and the ra and dec of the galactic angular momentum #
+        # Find location of density maximum and plot its positions and the ra (lon) and dec (lat) of the galactic angular momentum #
         index_densest = np.argmax(density)
         lon_densest = (hp.healpix_to_lonlat([index_densest])[0].value + np.pi) % (2 * np.pi) - np.pi
         lat_densest = (hp.healpix_to_lonlat([index_densest])[1].value + np.pi / 2) % (2 * np.pi) - np.pi / 2
@@ -119,7 +119,7 @@ class SpatialDistribution:
                 lon_densest - np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0])))  # In radians.
         
         # Plot the 2D surface density projection and scatter for the disc #
-        disc_mask, = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))
+        disc_mask, = np.where(angular_theta_from_densest < (np.pi / 6.0))
         weights = stellar_data_tmp['Mass'][disc_mask]
         vmin, vmax = 0, 5e7
         
@@ -132,7 +132,7 @@ class SpatialDistribution:
         ax20.imshow(count.T, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', vmin=vmin, interpolation='gaussian', aspect='equal')
         
         # Plot the 2D surface density projection and scatter for the bulge #
-        bulge_mask, = np.where(angular_theta_from_densest > np.divide(np.pi, 6.0))
+        bulge_mask, = np.where(angular_theta_from_densest > (np.pi / 6.0))
         
         weights = stellar_data_tmp['Mass'][bulge_mask]
         count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][bulge_mask, 0], stellar_data_tmp['Coordinates'][bulge_mask, 1],
