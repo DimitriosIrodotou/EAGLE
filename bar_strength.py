@@ -14,7 +14,7 @@ import eagle_IO.eagle_IO.eagle_IO as E
 
 from rotate_galaxies import RotateCoordinates
 
-date = time.strftime('%d_%m_%y_%H%M')  # Date
+date = time.strftime('%d_%m_%y_%H%M')  # Date.
 start_global_time = time.time()  # Start the global time.
 warnings.filterwarnings('ignore', category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
 
@@ -123,7 +123,7 @@ class BarStrength:
         
         # Calculate the angular momentum for each particle and for the galaxy and the unit vector parallel to the galactic angular momentum vector #
         prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
-                                                                                  stellar_data_tmp['Velocity'])  # In Msun kpc km s-1.
+                                                                                  stellar_data_tmp['Velocity'])  # In Msun kpc km s^-1.
         glx_angular_momentum = np.sum(prc_angular_momentum, axis=0)
         glx_unit_vector = glx_angular_momentum / np.linalg.norm(glx_angular_momentum)
         

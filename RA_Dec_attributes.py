@@ -24,7 +24,7 @@ parser.add_argument('-l', action='store_true', help='Load data')
 parser.add_argument('-rs', action='store_true', help='Read data and save to numpy arrays')
 args = parser.parse_args()
 
-date = time.strftime('%d_%m_%y_%H%M')  # Date
+date = time.strftime('%d_%m_%y_%H%M')  # Date.
 start_global_time = time.time()  # Start the global time.
 warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
 
@@ -176,13 +176,13 @@ class RADecAttributes:
         # Normalise the coordinates and velocities wrt the centre of mass of the subhalo #
         stellar_data_tmp['Coordinates'] = stellar_data_tmp['Coordinates'] - self.subhalo_data_tmp['CentreOfPotential'][halo_mask]
         CoM_velocity = np.divide(np.sum(stellar_data_tmp['Mass'][:, np.newaxis] * stellar_data_tmp['Velocity'], axis=0),
-                                 np.sum(stellar_data_tmp['Mass']))  # In km s-1.
+                                 np.sum(stellar_data_tmp['Mass']))  # In km s^-1.
         stellar_data_tmp['Velocity'] = stellar_data_tmp['Velocity'] - CoM_velocity
         
         # Calculate the angular momentum for each particle and for the galaxy and the unit vector parallel to the galactic angular momentum vector #
         prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
-                                                                                  stellar_data_tmp['Velocity'])  # In Msun kpc km s-1.
-        glx_angular_momentum = np.sum(prc_angular_momentum, axis=0)  # In Msun kpc km s-1.
+                                                                                  stellar_data_tmp['Velocity'])  # In Msun kpc km s^-1.
+        glx_angular_momentum = np.sum(prc_angular_momentum, axis=0)  # In Msun kpc km s^-1.
         glx_unit_vector = glx_angular_momentum / np.linalg.norm(glx_angular_momentum)
         
         return stellar_data_tmp, glx_unit_vector

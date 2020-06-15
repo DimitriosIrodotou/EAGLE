@@ -17,10 +17,9 @@ start_global_time = time.time()  # Start the global time.
 warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
 
 
-class DiscToTotalVsMorphologicalParameters:
+class DiscToTotalVsGalacticAttributes:
     """
-    For all galaxies create: a disc to total ratio as a function of concentration index, kappa corotation, disc fraction and rotational over
-    dispersion plot.
+    For all galaxies create: a disc to total ratio as a function of mass, angular momentum.
     """
     
     
@@ -32,33 +31,34 @@ class DiscToTotalVsMorphologicalParameters:
         """
         start_local_time = time.time()  # Start the local time.
         
-        disc_fractions = np.load(data_path + 'glx_disc_fractions.npy')
-        kappas_corotation = np.load(data_path + 'glx_kappas_corotation.npy')
+        gaseous_masses = np.load(data_path + 'glx_gaseous_masses.npy')
+        stellar_masses = np.load(data_path + 'glx_stellar_masses.npy')
         disc_fractions_IT20 = np.load(data_path + 'glx_disc_fractions_IT20.npy')
-        concentration_indices = np.load(data_path + 'glx_concentration_indices.npy')
-        rotationals_over_dispersions = np.load(data_path + 'glx_rotationals_over_dispersions.npy')
+        star_formation_rates = np.load(data_path + 'glx_star_formation_rates.npy')
+        stellar_angular_momenta = np.load(data_path + 'glx_stellar_angular_momenta.npy')
         print('Loaded data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
         # Plot the data #
         start_local_time = time.time()  # Start the local time.
         
-        self.plot(disc_fractions, kappas_corotation, disc_fractions_IT20, concentration_indices, rotationals_over_dispersions)
+        self.plot(gaseous_masses, stellar_masses, disc_fractions_IT20, star_formation_rates, stellar_angular_momenta)
         print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished DTT_MP for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (time.time() - start_global_time))
+        print(
+            'Finished DTT_GP for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
-    def plot(self, disc_fractions, kappas_corotation, disc_fractions_IT20, concentration_indices, rotationals_over_dispersions):
+    def plot(self, gaseous_masses, stellar_masses, disc_fractions_IT20, star_formation_rates, stellar_angular_momenta):
         """
-        Plot the disc to total ratio as a function of concentration index, kappa corotation, disc fraction and rotational over dispersion.
-        :param disc_fractions: where the bulge is assumed to have zero net angualr momentum.
-        :param kappas_corotation: defined as angular kinetic energy over kinetic energy.
+        Plot the disc to total ratio as a function of mass, angular momentum.
+        :param gaseous_masses: defined as the mass of all gaseous particles within 30kpc from the most bound particle.
+        :param stellar_masses: defined as the mass of all stellar particles within 30kpc from the most bound particle.
+        :param star_formation_rates: defined as the star formation rate of all gaseous particles within 30kpc from the most bound particle.
+        :param stellar_angular_momenta: defined as the sum of each stellar particle's angular momentum.
         :param disc_fractions_IT20: where the disc consists of particles whose angular momentum angular separation is 30deg from the densest pixel.
-        :param concentration_indices: defined as R90/R50
-        :param rotationals_over_dispersions: defined as vrot/sigam
         :return: None
         """
         # Generate the figure and define its parameters #
@@ -74,37 +74,40 @@ class DiscToTotalVsMorphologicalParameters:
         ax12 = figure.add_subplot(gs[1, 2])
         ax13 = figure.add_subplot(gs[1, 3])
         
-        ax10.set_xlim(0, 9)
-        ax10.set_ylabel(r'$\mathrm{D/T_{30\degree}}$', size=16)
+        ax12.set_xlim(1e-3, 1e0)
+        ax10.set_xlim(1e9, 5e11)
         cmap = matplotlib.cm.get_cmap('copper')
+        ax10.set_ylabel(r'$\mathrm{D/T_{30\degree}}$', size=16)
         for axis in [ax10, ax11, ax12, ax13]:
             axis.set_ylim(0, 1)
+            axis.set_xscale('log')
             axis.set_facecolor(cmap(0))
-            axis.grid(True, which='both', axis='both')
+            axis.grid(True, which='major', axis='both')
             axis.tick_params(direction='out', which='both', top='on', right='on', left='on', labelsize=16)
         for axis in [ax11, ax12, ax13]:
             axis.set_yticklabels([])
         
+        fgas = np.divide(gaseous_masses, gaseous_masses + stellar_masses)
+        spc_stellar_angular_momenta = np.linalg.norm(stellar_angular_momenta, axis=1) / stellar_masses
         axes = [ax10, ax11, ax12, ax13]
         cbar_axes = [ax00, ax01, ax02, ax03]
-        thresholds = [2.5, 0.4, 0.5, 0.55]
-        x_attributes = [concentration_indices, kappas_corotation, disc_fractions, rotationals_over_dispersions]
-        labels = [r'$\mathrm{Concentration\;index}$', r'$\mathrm{\kappa_{co}}$', r'$\mathrm{D/T_{\vec{J}_{b}=0}}$', r'$\mathrm{V_{rot}/\sigma}$']
-        for axis, cbar_axis, x_attribute, label, threshold in zip(axes, cbar_axes, x_attributes, labels, thresholds):
+        x_attributes = [stellar_masses, spc_stellar_angular_momenta, fgas[fgas > 0], star_formation_rates[star_formation_rates > 0]]
+        y_attributes = [disc_fractions_IT20, disc_fractions_IT20, disc_fractions_IT20[fgas > 0], disc_fractions_IT20[star_formation_rates > 0]]
+        labels = [r'$\mathrm{M_{\bigstar}/M_{\odot}}$', r'$\mathrm{(|\vec{J}_{\bigstar}|/M_{\bigstar})/(kpc\;km\;s^{-1})}$', r'$\mathrm{f_{gas}}$',
+                  r'$\mathrm{SFR/(M_{\odot}\;yr^{-1})}$']
+        for axis, cbar_axis, x_attribute, y_attribute, label in zip(axes, cbar_axes, x_attributes, y_attributes, labels):
             # Plot attributes #
-            hb = axis.hexbin(x_attribute, disc_fractions_IT20, gridsize=100, label=r'$D/T_{\vec{J}_{b} = 0}$', cmap=cmap)
+            hb = axis.hexbin(x_attribute, y_attribute, xscale='log', gridsize=100, label=r'$D/T_{\vec{J}_{b} = 0}$', cmap=cmap)
             plot_tools.create_colorbar(cbar_axis, hb, r'$\mathrm{Counts\;per\;hexbin}$', 'horizontal')
             
             # Plot median and 1-sigma lines #
-            x_value, median, shigh, slow = plot_tools.median_1sigma(x_attribute, disc_fractions_IT20, 0.09, log=False)
+            x_value, median, shigh, slow = plot_tools.median_1sigma(x_attribute, disc_fractions_IT20, 0.17, log=True)
             axis.plot(x_value, median, color='silver', linewidth=3, zorder=5)
             axis.fill_between(x_value, shigh, slow, color='silver', alpha='0.3', zorder=5)
             
-            axis.axvline(x=threshold, c='tab:red')  # Plot threshold lines.
-            
             axis.set_xlabel(label, size=16)
         # Save the figure #
-        plt.savefig(plots_path + 'DTT_MP' + '-' + date + '.png', bbox_inches='tight')
+        plt.savefig(plots_path + 'DTT_GP' + '-' + date + '.png', bbox_inches='tight')
         return None
 
 
@@ -113,4 +116,4 @@ if __name__ == '__main__':
     simulation_path = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
     plots_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/'  # Path to save plots.
     data_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/'  # Path to save/load data.
-    x = DiscToTotalVsMorphologicalParameters(simulation_path, tag)
+    x = DiscToTotalVsGalacticAttributes(simulation_path, tag)

@@ -15,7 +15,7 @@ from astropy_healpix import HEALPix
 from scipy.optimize import curve_fit
 from rotate_galaxies import RotateCoordinates
 
-date = time.strftime('%d_%m_%y_%H%M')  # Date.
+date = time.strftime('%d_%m_%y_%H%M')  # Date..
 start_global_time = time.time()  # Start the global time.
 warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
 
@@ -194,7 +194,7 @@ class SurfaceDensityProfiles:
                     bulge_mass = np.pi * I_0b * R_eff ** 2 * gamma(2.0 / n + 1)
             
             except RuntimeError:
-                print('WARNING: Could not fit a profile')
+                print('Could not fit a Sersic or exponential profile')
         
         cylindrical_distance = np.sqrt(
             stellar_data_tmp['Coordinates'][:, 0] ** 2 + stellar_data_tmp['Coordinates'][:, 1] ** 2)  # Radius of each particle.
@@ -220,7 +220,7 @@ class SurfaceDensityProfiles:
             disk_fraction = disk_mass / (bulge_mass + disk_mass)
         
         except RuntimeError:
-            print('WARNING: Could not fit a profile')
+            print('Could not fit a Sersic+exponential profile')
         
         figure.text(0.5, 0.72, '\n' r'$\mathrm{n}=%.2f$' '\n' r'$\mathrm{R_{d}}=%.2f$ kpc' '\n' r'$\mathrm{R_{eff}}=%.2f$ kpc' '\n' % (n, R_d, R_eff),
                     size=16)

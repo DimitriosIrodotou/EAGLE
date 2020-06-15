@@ -36,7 +36,7 @@ class MorphoKinematic:
         :param masses: Masses of particles.
         :param velocities: Velocities of particles.
         :param particlebindingenergy: Specific binding energies of particles.
-        :return: kappa, discfrac, circularity, vrotsig, vrots, delta
+        :return: kappa, disc_fraction, circularity, rotational_over_dispersion, vrots, rotational_velocity, sigma_0, delta
         """
         
         # Group the attributes of the particles #
@@ -64,7 +64,7 @@ class MorphoKinematic:
         kappa = Mvrot2 / np.sum(prc_attributes[:, 3] * (np.linalg.norm(prc_attributes[:, 4:7], axis=1)) ** 2)
         
         # Calculate disc-to-total masses fraction estimated from the counter-rotating bulge #
-        discfrac = 1 - 2 * np.sum(prc_attributes[vrots <= 0, 3]) / glx_mass
+        disc_fraction = 1 - 2 * np.sum(prc_attributes[vrots <= 0, 3]) / glx_mass
         
         # Calculate the mean orbital circularity #
         sbindingenergy = prc_attributes[:, 7]
@@ -75,14 +75,14 @@ class MorphoKinematic:
         orbi = np.median(circularity)
         
         # Calculate rotation-to-dispersion and dispersion anisotropy parameter.
-        Vrot = np.abs(MorphoKinematic.weighted_median(vrots, weights=prc_attributes[:, 3]))
+        rotational_velocity = np.abs(MorphoKinematic.weighted_median(vrots, weights=prc_attributes[:, 3]))
         sigma_xy = np.sqrt(np.average(np.sum(prc_attributes[:, [3]] * np.vstack([vrads, vrots]).T ** 2, axis=0) / glx_mass))
-        sigma_0 = np.sqrt(sigma_xy ** 2 - 0.5 * Vrot ** 2)
+        sigma_0 = np.sqrt(sigma_xy ** 2 - 0.5 * rotational_velocity ** 2)
         sigma_z = np.sqrt(np.average(vheis ** 2, weights=prc_attributes[:, 3]))
-        vrotsig = Vrot / sigma_0
+        rotational_over_dispersion = rotational_velocity / sigma_0
         delta = 1 - (sigma_z / sigma_0) ** 2
-
-        return kappa, discfrac, circularity, vrotsig, vrots, delta
+        
+        return kappa, disc_fraction, circularity, rotational_over_dispersion, vrots, rotational_velocity, sigma_0, delta
     
     
     @staticmethod
@@ -194,7 +194,7 @@ class MorphoKinematic:
     def r_mass(stellar_data_tmp, fraction):
         """
         Calculate the radius that contains a provided fraction of the total stellar mass.
-        stellar_data_tmp: from mask_galaxies
+        stellar_data_tmp: from read_add_attributes.py.
         :return: r_mass
         """
         

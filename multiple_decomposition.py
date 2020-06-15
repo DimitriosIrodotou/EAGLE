@@ -18,7 +18,7 @@ from astropy_healpix import HEALPix
 from rotate_galaxies import RotateCoordinates
 from morpho_kinematics import MorphoKinematic
 
-date = time.strftime('%d_%m_%y_%H%M')  # Date
+date = time.strftime('%d_%m_%y_%H%M')  # Date.
 start_global_time = time.time()  # Start the global time.
 warnings.filterwarnings('ignore', category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
 
@@ -105,7 +105,7 @@ class MultipleDecomposition:
         
         # Calculate the angular momentum for each particle and for the galaxy and the unit vector parallel to the galactic angular momentum vector #
         prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
-                                                                                  stellar_data_tmp['Velocity'])  # In Msun kpc km s-1.
+                                                                                  stellar_data_tmp['Velocity'])  # In Msun kpc km s^-1.
         glx_angular_momentum = np.sum(prc_angular_momentum, axis=0)
         glx_unit_vector = glx_angular_momentum / np.linalg.norm(glx_angular_momentum)
         
@@ -172,10 +172,9 @@ class MultipleDecomposition:
         ax11.axvspan(0, 30, facecolor='0.2', alpha=0.5)  # Draw a vertical span.
         
         # Calculate the kinematic diagnostics #
-        kappa, discfrac, circularity, vrotsig, vrots, delta = MorphoKinematic.kinematic_diagnostics(stellar_data_tmp['Coordinates'],
-                                                                                                    stellar_data_tmp['Mass'],
-                                                                                                    stellar_data_tmp['Velocity'],
-                                                                                                    stellar_data_tmp['ParticleBindingEnergy'])
+        kappa, disc_fraction, circularity, rotational_over_dispersion, vrots, rotational_velocity, sigma_0, \
+        delta = MorphoKinematic.kinematic_diagnostics(
+            stellar_data_tmp['Coordinates'], stellar_data_tmp['Mass'], stellar_data_tmp['Velocity'], stellar_data_tmp['ParticleBindingEnergy'])
         
         # Calculate and plot the distribution of orbital circularity #
         j, = np.where(circularity < 0.0)
