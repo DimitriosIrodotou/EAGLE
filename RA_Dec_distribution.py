@@ -132,7 +132,7 @@ class RADecDistribution:
         # Generate the figure and define its parameters #
         plt.close()
         figure = plt.figure(figsize=(10, 7.5))
-        ax = figure.add_subplot(projection='mollweide')
+        axis = figure.add_subplot(projection='mollweide')
         
         plt.xlabel('RA ($\degree$)')
         plt.ylabel('Dec ($\degree$)')
@@ -160,7 +160,7 @@ class RADecDistribution:
         
         # Display data on a 2D regular raster and create a pseudo-color plot #
         im = plt.imshow(density_map, cmap='magma_r', aspect='auto', vmin=1)
-        cbar = plt.colorbar(im, ax=ax, orientation='horizontal')
+        cbar = plt.colorbar(im, ax=axis, orientation='horizontal')
         cbar.set_label('$\mathrm{Number\;of\;galaxies\;per\;grid\;cell}$', size=16)
         plt.pcolormesh(np.radians(ra), np.radians(dec), density_map, cmap='magma_r')
         

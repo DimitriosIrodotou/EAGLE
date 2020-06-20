@@ -187,7 +187,7 @@ class ThetaVsRadius:
         # Generate the figure and define its parameters #
         plt.close()
         figure, axis = plt.subplots(1, figsize=(10, 7.5))
-        plt.grid(True)
+        plt.grid(True, which='both', axis='both')
         plt.xscale('log')
         plt.yscale('log')
         plt.axis([1e-2, 4e1, 1e-1, 2e2])

@@ -60,22 +60,22 @@ class AngularMomentumVsMass:
         plt.close()
         figure = plt.figure(figsize=(10, 7.5))
         gs = gridspec.GridSpec(2, 1, wspace=0.0, hspace=0.0, height_ratios=[0.05, 1])
-        ax00 = figure.add_subplot(gs[0, 0])
-        ax10 = figure.add_subplot(gs[1, 0])
+        axis00 = figure.add_subplot(gs[0, 0])
+        axis10 = figure.add_subplot(gs[1, 0])
         
-        ax10.grid(True, which='both', axis='both')
-        ax10.set_xscale('log')
-        ax10.set_yscale('log')
-        ax10.set_ylim(1e0, 1e5)
-        ax10.set_xlim(1e9, 1e12)
-        ax10.set_xlabel(r'$\mathrm{log_{10}(M_{\bigstar}/M_{\odot})}$', size=16)
-        ax10.set_ylabel(r'$\mathrm{(|\vec{J}_{\bigstar}|/M_{\bigstar})/(kpc\;km\;s^{-1})}$', size=16)
-        ax10.tick_params(direction='out', which='both', top='on', right='on', left='on', labelsize=16)
+        axis10.grid(True, which='both', axis='both')
+        axis10.set_xscale('log')
+        axis10.set_yscale('log')
+        axis10.set_ylim(1e0, 1e5)
+        axis10.set_xlim(1e9, 1e12)
+        axis10.set_xlabel(r'$\mathrm{log_{10}(M_{\bigstar}/M_{\odot})}$', size=16)
+        axis10.set_ylabel(r'$\mathrm{(|\vec{J}_{\bigstar}|/M_{\bigstar})/(kpc\;km\;s^{-1})}$', size=16)
+        axis10.tick_params(direction='out', which='both', top='on', right='on',  labelsize=16)
         
         bulge_fractions_IT20 = 1 - disc_fractions_IT20
         spc_stellar_angular_momenta = np.linalg.norm(stellar_angular_momenta, axis=1) / stellar_masses
-        sc = ax10.scatter(stellar_masses, spc_stellar_angular_momenta, c=bulge_fractions_IT20, s=8, cmap='RdYlBu_r', marker='h')
-        plot_tools.create_colorbar(ax00, sc, r'$\mathrm{B/T_{30\degree}}$', 'horizontal')
+        sc = axis10.scatter(stellar_masses, spc_stellar_angular_momenta, c=bulge_fractions_IT20, s=8, cmap='RdYlBu_r', marker='h')
+        plot_tools.create_colorbar(axis00, sc, r'$\mathrm{B/T_{30\degree}}$', 'horizontal')
         
         # Read observational data from FR18 #
         FR18 = np.genfromtxt('./Obs_Data/FR18.csv', delimiter=',', names=['Mstar', 'jstar'])

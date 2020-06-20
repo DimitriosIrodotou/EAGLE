@@ -170,32 +170,32 @@ class DiscToTotalProbabilityDensityFunction:
         figure = plt.figure(0, figsize=(20, 15))
         
         gs = gridspec.GridSpec(2, 2)
-        ax00 = plt.subplot(gs[0, 0])
-        ax10 = plt.subplot(gs[1, 0])
-        ax01 = plt.subplot(gs[0, 1])
-        ax11 = plt.subplot(gs[1, 1])
+        axis00 = plt.subplot(gs[0, 0])
+        axis10 = plt.subplot(gs[1, 0])
+        axis01 = plt.subplot(gs[0, 1])
+        axis11 = plt.subplot(gs[1, 1])
         
-        for axis in [ax00, ax10, ax01, ax11]:
-            axis.grid(True)
+        for axis in [axis00, axis10, axis01, axis11]:
+            axis.grid(True, which='both', axis='both')
             axis.set_ylim(0.0, 1.2)
         
-        ax10.set_xscale('log')
-        ax00.set_xlabel(r'$\mathrm{(B/T)_{\bigstar}}$', size=16)
-        ax00.set_ylabel(r'$\mathrm{f(B/T)_{\bigstar}}$', size=16)
-        ax10.set_ylabel(r'$\mathrm{f(B/T>0.5)}$', size=16)
-        ax10.set_xlabel(r'$\mathrm{M_{\bigstar} / M_{\odot}}$', size=16)
+        axis10.set_xscale('log')
+        axis00.set_xlabel(r'$\mathrm{(B/T)_{\bigstar}}$', size=16)
+        axis00.set_ylabel(r'$\mathrm{f(B/T)_{\bigstar}}$', size=16)
+        axis10.set_ylabel(r'$\mathrm{f(B/T>0.5)}$', size=16)
+        axis10.set_xlabel(r'$\mathrm{M_{\bigstar} / M_{\odot}}$', size=16)
         
         mass_mask = np.where(masses > 1e10)
         bulge_fraction = 1 - disc_fractions_IT20
         
         # Plots BBT19 bar's midpoints #
         BBT19 = np.genfromtxt('./Obs_Data/BBT19.csv', delimiter=',', names=['BT', 'f'])
-        ax00.scatter(BBT19['BT'], BBT19['f'], color='red', s=3, marker='_', zorder=2, label="$\mathrm{Bluck+19}$")
+        axis00.scatter(BBT19['BT'], BBT19['f'], color='red', s=3, marker='_', zorder=2, label="$\mathrm{Bluck+19}$")
         
         # Weight each bin by its contribution to the total number of values and create a histogram #
         weights = np.ones_like(bulge_fraction[mass_mask]) / float(len(bulge_fraction[mass_mask]))
-        ax00.hist(bulge_fraction[mass_mask], align='left', weights=weights, histtype='step', edgecolor='black', bins=20)
-        figure.text(0.0, 0.95, r'$\mathrm{M_{\bigstar}>10^{10}M_{\odot}}$', fontsize=16, transform=ax00.transAxes)
+        axis00.hist(bulge_fraction[mass_mask], align='left', weights=weights, histtype='step', edgecolor='black', bins=20)
+        figure.text(0.0, 0.95, r'$\mathrm{M_{\bigstar}>10^{10}M_{\odot}}$', fontsize=16, transform=axis00.transAxes)
         
         # Put galaxies into bins #
         bins = np.logspace(9, 11.5 + 0.1, 20)
@@ -211,7 +211,7 @@ class DiscToTotalProbabilityDensityFunction:
             yBulge[iBin] = len(np.where(bulge_fraction[indThisBin] > 0.5)[0]) / float(allBin)
         
         # Plot data #
-        ax10.plot(glx_mass_bins, yBulge, color='blue', lw=2, label="$\mathrm{Irodotou+18}$")
+        axis10.plot(glx_mass_bins, yBulge, color='blue', lw=2, label="$\mathrm{Irodotou+18}$")
         
         satellites, = np.where(subgroup_numbers != 0)
         # Put galaxies into bins #
@@ -227,7 +227,7 @@ class DiscToTotalProbabilityDensityFunction:
             allBin = len(indThisBin)
             yBulge[iBin] = len(np.where(bulge_fraction[indThisBin] > 0.5)[0]) / float(allBin)
         
-        ax01.plot(glx_mass_bins, yBulge, color='blue', lw=2, label="$\mathrm{Irodotou+18}$")
+        axis01.plot(glx_mass_bins, yBulge, color='blue', lw=2, label="$\mathrm{Irodotou+18}$")
         
         centrals, = np.where(subgroup_numbers == 0)
         # Put galaxies into bins #
@@ -243,7 +243,7 @@ class DiscToTotalProbabilityDensityFunction:
             allBin = len(indThisBin)
             yBulge[iBin] = len(np.where(bulge_fraction[indThisBin] > 0.5)[0]) / float(allBin)
         
-        ax11.plot(glx_mass_bins, yBulge, color='blue', lw=2, label="$\mathrm{Irodotou+18}$")
+        axis11.plot(glx_mass_bins, yBulge, color='blue', lw=2, label="$\mathrm{Irodotou+18}$")
         
         # Save the figure #
         plt.savefig(plots_path + 'BTT_PDF' + '-' + date + '.png', bbox_inches='tight')

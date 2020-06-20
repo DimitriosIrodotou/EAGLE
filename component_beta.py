@@ -63,26 +63,26 @@ class ComponentBeta:
         plt.close()
         figure = plt.figure(figsize=(20, 7.5))
         gs = gridspec.GridSpec(2, 2, wspace=0.0, hspace=0.0, height_ratios=[0.05, 1])
-        ax00 = figure.add_subplot(gs[0, :])
-        ax10 = figure.add_subplot(gs[1, 0])
-        ax11 = figure.add_subplot(gs[1, 1])
+        axis00 = figure.add_subplot(gs[0, :])
+        axis10 = figure.add_subplot(gs[1, 0])
+        axis11 = figure.add_subplot(gs[1, 1])
         
-        for axis in [ax10, ax11]:
+        for axis in [axis10, axis11]:
             axis.grid(True, which='both', axis='both')
             # axis.set_xscale('log')
             axis.set_yscale('log')
             axis.set_ylim(3e-3, 1)
             # axis.set_xlim(1e9, 6e11)
             axis.set_xlabel(r'$\mathrm{D/T_{30\degree}}$', size=16)
-            axis.tick_params(direction='out', which='both', top='on', right='on', left='on', labelsize=16)
-        ax11.yaxis.tick_right()
-        ax11.yaxis.set_label_position("right")
-        ax10.set_ylabel(r'$\mathrm{exp(\beta_{bulge}-1)}$', size=16)
-        ax11.set_ylabel(r'$\mathrm{exp(\beta_{disc}-1)}$', size=16)
+            axis.tick_params(direction='out', which='both', top='on', right='on',  labelsize=16)
+        axis11.yaxis.tick_right()
+        axis11.yaxis.set_label_position("right")
+        axis10.set_ylabel(r'$\mathrm{exp(\beta_{bulge}-1)}$', size=16)
+        axis11.set_ylabel(r'$\mathrm{exp(\beta_{disc}-1)}$', size=16)
         
-        ax10.scatter(disc_fractions_IT20, np.exp(bulge_betas - 1), c=np.log10(gaseous_masses+stellar_masses), s=8, cmap='nipy_spectral_r', marker='h')
-        sc = ax11.scatter(disc_fractions_IT20, np.exp(disc_betas - 1), c=np.log10(gaseous_masses+stellar_masses), s=8, cmap='nipy_spectral_r', marker='h')
-        plot_tools.create_colorbar(ax00, sc, r'$\mathrm{log_{10}(M_{bar.})}$', 'horizontal')
+        axis10.scatter(disc_fractions_IT20, np.exp(bulge_betas - 1), c=np.log10(gaseous_masses+stellar_masses), s=8, cmap='nipy_spectral_r', marker='h')
+        sc = axis11.scatter(disc_fractions_IT20, np.exp(disc_betas - 1), c=np.log10(gaseous_masses+stellar_masses), s=8, cmap='nipy_spectral_r', marker='h')
+        plot_tools.create_colorbar(axis00, sc, r'$\mathrm{log_{10}(M_{bar.})}$', 'horizontal')
         
         # Save the figure #
         plt.savefig(plots_path + 'CB' + '-' + date + '.png', bbox_inches='tight')

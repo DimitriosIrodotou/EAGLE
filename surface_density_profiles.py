@@ -121,7 +121,7 @@ class SurfaceDensityProfiles:
         # Generate the figure and define its parameters #
         plt.close()
         figure = plt.figure(0, figsize=(10, 7.5))
-        plt.grid(True)
+        plt.grid(True, which='both', axis='both')
         plt.yscale('log')
         plt.axis([0.0, 30.0, 1e6, 1e10])
         plt.xlabel("$\mathrm{R\;[kpc]}$", size=16)

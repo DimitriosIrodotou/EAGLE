@@ -203,12 +203,12 @@ class RADecAttributes:
         figure = plt.figure(0, figsize=(20, 15))
         
         gs = gridspec.GridSpec(2, 2)
-        ax00 = plt.subplot(gs[0, 0], projection="mollweide")
-        ax10 = plt.subplot(gs[1, 0], projection="mollweide")
-        ax01 = plt.subplot(gs[0, 1], projection="mollweide")
-        ax11 = plt.subplot(gs[1, 1], projection="mollweide")
+        axis00 = plt.subplot(gs[0, 0], projection="mollweide")
+        axis10 = plt.subplot(gs[1, 0], projection="mollweide")
+        axis01 = plt.subplot(gs[0, 1], projection="mollweide")
+        axis11 = plt.subplot(gs[1, 1], projection="mollweide")
         
-        for axis in [ax00, ax10, ax01, ax11]:
+        for axis in [axis00, axis10, axis01, axis11]:
             axis.set_xlabel('RA ($\degree$)')
             axis.set_ylabel('Dec ($\degree$)')
             axisset_xticklabels([])
@@ -231,9 +231,9 @@ class RADecAttributes:
         index_densest = np.argmax(density)
         lon_densest = (hp.healpix_to_lonlat([index_densest])[0].value + np.pi) % (2 * np.pi) - np.pi
         lat_densest = (hp.healpix_to_lonlat([index_densest])[1].value + np.pi / 2) % (2 * np.pi) - np.pi / 2
-        ax00.annotate(r'Density maximum', xy=(lon_densest, lat_densest), xycoords='data', xytext=(0.78, 1.00), textcoords='axes fraction',
+        axis00.annotate(r'Density maximum', xy=(lon_densest, lat_densest), xycoords='data', xytext=(0.78, 1.00), textcoords='axes fraction',
                       arrowprops=dict(arrowstyle="-", color='black', connectionstyle="arc3,rad=0"))  # Position of the denset pixel.
-        ax00.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black', marker='X',
+        axis00.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black', marker='X',
                      facecolors='none', zorder=5)  # Position of the galactic angular momentum.
         
         # Sample a 360x180 grid in ra/dec #
@@ -246,17 +246,17 @@ class RADecAttributes:
         density_map = density[coordinate_index]
         
         # Display data on a 2D regular raster and create a pseudo-color plot #
-        im = ax00.imshow(density_map, cmap='nipy_spectral_r', aspect='auto', norm=matplotlib.colors.LogNorm(vmin=1))
-        cbar = plt.colorbar(im, ax=ax00, orientation='horizontal')
+        im = axis00.imshow(density_map, cmap='nipy_spectral_r', aspect='auto', norm=matplotlib.colors.LogNorm(vmin=1))
+        cbar = plt.colorbar(im, ax=axis00, orientation='horizontal')
         cbar.set_label('$\mathrm{Particles\;per\;grid\;cell}$', size=16)
-        ax00.pcolormesh(np.radians(ra), np.radians(dec), density_map, cmap='nipy_spectral_r')
+        axis00.pcolormesh(np.radians(ra), np.radians(dec), density_map, cmap='nipy_spectral_r')
         
         # Plot the RA and Dec projection colour-coded by StellarFormationTime #
-        scatter = ax01.scatter(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]), np.arcsin(prc_unit_vector[:, 2]),
+        scatter = axis01.scatter(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]), np.arcsin(prc_unit_vector[:, 2]),
                                c=stellar_data_tmp['StellarFormationTime'], cmap='jet_r', s=1, zorder=-1)
         
         # Generate the color bar #
-        cbar = plt.colorbar(scatter, ax=ax01, orientation='horizontal')
+        cbar = plt.colorbar(scatter, ax=axis01, orientation='horizontal')
         cbar.set_label('$\mathrm{StellarFormationTime}$', size=16)
         
         # Plot the RA and Dec projection colour-coded by e^beta-1 #
@@ -264,19 +264,19 @@ class RADecAttributes:
                                      np.sum(stellar_data_tmp['Coordinates'] * stellar_data_tmp['Coordinates'], axis=1))
         beta = 1 - np.divide(np.sum(stellar_data_tmp['Velocity'] * stellar_data_tmp['Velocity'], axis=1) - velocity_r_sqred, 2 * velocity_r_sqred)
         
-        scatter = ax10.scatter(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]), np.arcsin(prc_unit_vector[:, 2]), c=np.exp(beta - 1),
+        scatter = axis10.scatter(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]), np.arcsin(prc_unit_vector[:, 2]), c=np.exp(beta - 1),
                                cmap='magma', vmax=1, s=1, zorder=-1)
         
         # Generate the color bar #
-        cbar = plt.colorbar(scatter, ax=ax10, orientation='horizontal')
+        cbar = plt.colorbar(scatter, ax=axis10, orientation='horizontal')
         cbar.set_label(r'$\mathrm{exp(\beta-1)}$', size=16)
         
         # Plot the RA and Dec projection colour-coded by BirthDensity #
-        scatter = ax11.scatter(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]), np.arcsin(prc_unit_vector[:, 2]),
+        scatter = axis11.scatter(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]), np.arcsin(prc_unit_vector[:, 2]),
                                c=np.log10(stellar_data_tmp['BirthDensity']), cmap='jet', s=1, zorder=-1)
         
         # Generate the color bar #
-        cbar = plt.colorbar(scatter, ax=ax11, orientation='horizontal')
+        cbar = plt.colorbar(scatter, ax=axis11, orientation='horizontal')
         cbar.set_label('$\mathrm{log_{10}(Birth\;density)}$', size=16)
         
         # Save the figure #

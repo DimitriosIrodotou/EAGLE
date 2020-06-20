@@ -70,28 +70,28 @@ class SpatialDistribution:
         plt.figure(0, figsize=(20, 15))
         
         gs = gridspec.GridSpec(3, 2, hspace=0.07, wspace=0.07, height_ratios=[0.05, 1, 1])
-        axcbar = plt.subplot(gs[0, :])
-        ax10 = plt.subplot(gs[1, 0])
-        ax20 = plt.subplot(gs[2, 0])
-        ax11 = plt.subplot(gs[1, 1])
-        ax21 = plt.subplot(gs[2, 1])
+        axiscbar = plt.subplot(gs[0, :])
+        axis10 = plt.subplot(gs[1, 0])
+        axis20 = plt.subplot(gs[2, 0])
+        axis11 = plt.subplot(gs[1, 1])
+        axis21 = plt.subplot(gs[2, 1])
         
-        for axis in [ax10, ax20, ax11, ax21]:
-            axis.grid(True)
+        for axis in [axis10, axis20, axis11, axis21]:
+            axis.grid(True, which='both', axis='both')
             axis.set_xlim(-30, 30)
             axis.set_ylim(-30, 30)
-            axis.tick_params(direction='out', which='both', top='on', right='on', left='on', labelsize=16)
+            axis.tick_params(direction='out', which='both', top='on', right='on',  labelsize=16)
         
-        ax10.set_xticklabels([])
-        ax11.set_xticklabels([])
-        ax10.set_ylabel(r'$\mathrm{y\,[kpc]}$', size=16)
-        ax20.set_xlabel(r'$\mathrm{x\,[kpc]}$', size=16)
-        ax20.set_ylabel(r'$\mathrm{z\,[kpc]}$', size=16)
-        ax11.set_ylabel(r'$\mathrm{y\,[kpc]}$', size=16)
-        ax21.set_xlabel(r'$\mathrm{x\,[kpc]}$', size=16)
-        ax21.set_ylabel(r'$\mathrm{z\,[kpc]}$', size=16)
-        ax10.annotate(r'$\mathrm{Disc}$', xy=(-25, 25), xycoords='data', size=16)
-        ax11.annotate(r'$\mathrm{Bulge}$', xy=(-25, 25), xycoords='data', size=16)
+        axis10.set_xticklabels([])
+        axis11.set_xticklabels([])
+        axis10.set_ylabel(r'$\mathrm{y\,[kpc]}$', size=16)
+        axis20.set_xlabel(r'$\mathrm{x\,[kpc]}$', size=16)
+        axis20.set_ylabel(r'$\mathrm{z\,[kpc]}$', size=16)
+        axis11.set_ylabel(r'$\mathrm{y\,[kpc]}$', size=16)
+        axis21.set_xlabel(r'$\mathrm{x\,[kpc]}$', size=16)
+        axis21.set_ylabel(r'$\mathrm{z\,[kpc]}$', size=16)
+        axis10.annotate(r'$\mathrm{Disc}$', xy=(-25, 25), xycoords='data', size=16)
+        axis11.annotate(r'$\mathrm{Bulge}$', xy=(-25, 25), xycoords='data', size=16)
         
         # Rotate coordinates and velocities of stellar particles so the galactic angular momentum points along the x axis #
         stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_angular_momentum, glx_angular_momentum = RotateCoordinates.rotate_Jz(
@@ -125,11 +125,11 @@ class SpatialDistribution:
         
         count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][disc_mask, 0], stellar_data_tmp['Coordinates'][disc_mask, 1],
                                                weights=weights, bins=500, range=[[-30, 30], [-30, 30]])
-        ax10.imshow(count.T, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', vmin=vmin, interpolation='gaussian', aspect='equal')
+        axis10.imshow(count.T, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', vmin=vmin, interpolation='gaussian', aspect='equal')
         
         count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][disc_mask, 0], stellar_data_tmp['Coordinates'][disc_mask, 2],
                                                weights=weights, bins=500, range=[[-30, 30], [-30, 30]])
-        ax20.imshow(count.T, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', vmin=vmin, interpolation='gaussian', aspect='equal')
+        axis20.imshow(count.T, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', vmin=vmin, interpolation='gaussian', aspect='equal')
         
         # Plot the 2D surface density projection and scatter for the bulge #
         bulge_mask, = np.where(angular_theta_from_densest > (np.pi / 6.0))
@@ -137,18 +137,18 @@ class SpatialDistribution:
         weights = stellar_data_tmp['Mass'][bulge_mask]
         count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][bulge_mask, 0], stellar_data_tmp['Coordinates'][bulge_mask, 1],
                                                weights=weights, bins=500, range=[[-30, 30], [-30, 30]])
-        im = ax11.imshow(count.T, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', vmin=vmin, interpolation='gaussian',
+        im = axis11.imshow(count.T, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', vmin=vmin, interpolation='gaussian',
                          aspect='equal')
         
         count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][bulge_mask, 0], stellar_data_tmp['Coordinates'][bulge_mask, 2],
                                                weights=weights, bins=500, range=[[-30, 30], [-30, 30]])
-        ax21.imshow(count.T, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', vmin=vmin, interpolation='gaussian', aspect='equal')
+        axis21.imshow(count.T, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', vmin=vmin, interpolation='gaussian', aspect='equal')
         
-        cbar = plt.colorbar(im, cax=axcbar, orientation='horizontal')
+        cbar = plt.colorbar(im, cax=axiscbar, orientation='horizontal')
         cbar.set_label(r'$\mathrm{\Sigma_{\bigstar}\,[M_\odot\,kpc^{-2}]}$', size=16)
-        axcbar.xaxis.tick_top()
-        axcbar.xaxis.set_label_position("top")
-        axcbar.tick_params(direction='out', which='both', right='on', labelsize=16)
+        axiscbar.xaxis.tick_top()
+        axiscbar.xaxis.set_label_position("top")
+        axiscbar.tick_params(direction='out', which='both', right='on', labelsize=16)
         
         # Save the figure #
         plt.savefig(plots_path + str(group_number) + '_' + str(subgroup_number) + '-' + 'SD' + '-' + date + '.png', bbox_inches='tight')

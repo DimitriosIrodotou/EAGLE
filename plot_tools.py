@@ -36,20 +36,59 @@ def median_1sigma(x_data, y_data, delta, log):
     return x_value, median, shigh, slow
 
 
-def create_colorbar(ax, plot, label, orientation='vertical'):
+def create_colorbar(axis, plot, label, orientation='vertical', size=16):
     """
     Generate a colorbar.
-    :param ax: colorbar axis.
+    :param axis: colorbar axis.
     :param plot: corresponding plot.
     :param label: colorbar label.
     :param orientation: colorbar orientation.
     :return: None
     """
-    cbar = plt.colorbar(plot, cax=ax, orientation=orientation)
-    cbar.set_label(label, size=16)
+    cbar = plt.colorbar(plot, cax=axis, orientation=orientation)
+    cbar.set_label(label, size=size)
+    axis.tick_params(direction='out', which='both', right='on', labelsize=size)
     
     if orientation == 'horizontal':
-        ax.xaxis.tick_top()
-        ax.xaxis.set_label_position("top")
-        ax.tick_params(direction='out', which='both', top='on', labelsize=16)
+        axis.xaxis.tick_top()
+        axis.xaxis.set_label_position("top")
+        axis.tick_params(direction='out', which='both', top='on', labelsize=size)
+    return None
+
+
+def set_axis(axis, xlim=None, ylim=None, xscale=None, yscale=None, xlabel=None, ylabel=None, size=16):
+    """
+    Set axis parameters.
+    :param axis: name of the axis.
+    :param xlim: x axis limits.
+    :param ylim: y axis limits.
+    :param xscale: x axis scale.
+    :param yscale: y axis scale.
+    :param xlabel: x axis label.
+    :param ylabel: y axis label.
+    :param size: text size.
+    :return:
+    """
+    # Set axis limits #
+    if xlim:
+        axis.set_xlim(xlim)
+    if ylim:
+        axis.set_ylim(ylim)
+    
+    # Set axis labels #
+    if xlabel:
+        axis.set_xlabel(xlabel, size=size)
+    if ylabel:
+        axis.set_ylabel(ylabel, size=size)
+    
+    # Set axis scales #
+    if xscale:
+        axis.set_xscale(xscale)
+    if yscale:
+        axis.set_yscale(yscale)
+    
+    # Set grid and tick parameters #
+    axis.grid(True, which='both', axis='both')
+    axis.tick_params(direction='out', which='both', top='on', right='on', labelsize=size)
+    
     return None

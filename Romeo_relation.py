@@ -17,9 +17,9 @@ start_global_time = time.time()  # Start the global time.
 warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
 
 
-class ComponentMZR:
+class RomeoRelation:
     """
-    For all galaxies create: a disc and bulge metallicity-mass relation colour-coded by DTT plot.
+    For all galaxies create: a star formation rate versus stellar angular momentum colour-coded by disc to total ratio.
     """
     
     
@@ -32,59 +32,59 @@ class ComponentMZR:
         start_local_time = time.time()  # Start the local time.
         
         stellar_masses = np.load(data_path + 'glx_stellar_masses.npy')
-        disc_metallicities = np.load(data_path + 'disc_metallicities.npy')
-        bulge_metallicities = np.load(data_path + 'bulge_metallicities.npy')
+        stellar_masses = np.load(data_path + 'glx_stellar_masses.npy')
         disc_fractions_IT20 = np.load(data_path + 'glx_disc_fractions_IT20.npy')
+        stellar_angular_momenta = np.load(data_path + 'glx_stellar_angular_momenta.npy')
         print('Loaded data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
         # Plot the data #
         start_local_time = time.time()  # Start the local time.
         
-        self.plot(stellar_masses, disc_metallicities, bulge_metallicities, disc_fractions_IT20)
+        self.plot(stellar_masses, disc_fractions_IT20, star_formation_rates, stellar_angular_momenta)
         print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished CMZR for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished RR for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
-    def plot(self, stellar_masses, disc_metallicities, bulge_metallicities, disc_fractions_IT20):
+    def plot(self, stellar_masses, disc_fractions_IT20, star_formation_rates, stellar_angular_momenta):
         """
-        Plot the disc and bulge metallicity-mass relation colour-coded by DTT.
+        Plot star formation rate versus stellar angular momentum colour-coded by disc to total ratio
         :param stellar_masses: defined as the mass of all stellar particles within 30kpc from the most bound particle.
-        :param disc_metallicities: defined as the mass-weighted sum of each disc particle's metallicity.
-        :param bulge_metallicities: defined as the mass-weighted sum of each bulge particle's metallicity.
         :param disc_fractions_IT20: where the disc consists of particles whose angular momentum angular separation is 30deg from the densest pixel.
+        :param star_formation_rates: defined as the star formation rate of all gaseous particles within 30kpc from the most bound particle.
+        :param stellar_angular_momenta: defined as the sum of each stellar particle's angular momentum.
         :return: None
         """
         # Generate the figure and define its parameters #
         plt.close()
-        figure = plt.figure(figsize=(20, 7.5))
-        gs = gridspec.GridSpec(2, 2, wspace=0.0, hspace=0.0, height_ratios=[0.05, 1])
-        axis00 = figure.add_subplot(gs[0, :])
+        figure = plt.figure(figsize=(10, 7.5))
+        gs = gridspec.GridSpec(2, 1, wspace=0.0, hspace=0.0, height_ratios=[0.05, 1])
+        axis00 = figure.add_subplot(gs[0, 0])
         axis10 = figure.add_subplot(gs[1, 0])
-        axis11 = figure.add_subplot(gs[1, 1])
         
-        for axis in [axis10, axis11]:
-            axis.grid(True, which='both', axis='both')
-            axis.set_xscale('log')
-            axis.set_yscale('log')
-            axis.set_ylim(1e-1, 1e1)
-            axis.set_xlim(1e9, 6e11)
-            axis.set_xlabel(r'$\mathrm{M_{\bigstar}/M_{\odot}}$', size=16)
-            axis.tick_params(direction='out', which='both', top='on', right='on',  labelsize=16)
-        axis11.yaxis.tick_right()
-        axis11.yaxis.set_label_position("right")
-        axis10.set_ylabel(r'$\mathrm{Z_{bulge}/Z_{\odot}}$', size=16)
-        axis11.set_ylabel(r'$\mathrm{Z_{disc}/Z_{\odot}}$', size=16)
+        axis10.grid(True, which='both', axis='both')
+        axis10.set_ylabel(r'$\mathrm{log_{10}((SFR/M_{\bigstar})/yr^{-1})}$', size=16)
+        axis10.set_xlabel(r'$\mathrm{(|\vec{J}_{\bigstar}|/M_{\bigstar})/(kpc\;km\;s^{-1})}$', size=16)
+        axis10.tick_params(direction='out', which='major', top='on', right='on',  labelsize=16)
         
-        axis10.scatter(stellar_masses, bulge_metallicities, c=disc_fractions_IT20, s=8, cmap='seismic_r', vmin=0, vmax=1, marker='h')
-        sc = axis11.scatter(stellar_masses, disc_metallicities, c=disc_fractions_IT20, s=8, cmap='seismic_r', vmin=0, vmax=1, marker='h')
+        spc_angular_momenta = np.linalg.norm(stellar_angular_momenta, axis=1) / stellar_masses
+        spc_star_formation_rates = star_formation_rates / stellar_masses
+        sc = axis10.scatter(np.log10(spc_angular_momenta[spc_star_formation_rates > 0]),
+                          np.log10(spc_star_formation_rates[spc_star_formation_rates > 0]), c=disc_fractions_IT20[spc_star_formation_rates > 0], s=8,
+                          cmap='seismic_r', vmin=0, vmax=1, marker='h')
         plot_tools.create_colorbar(axis00, sc, r'$\mathrm{D/T_{30\degree}}$', 'horizontal')
         
+        # Plot median and 1-sigma lines #
+        x_value, median, shigh, slow = plot_tools.median_1sigma(np.log10(spc_angular_momenta[spc_star_formation_rates > 0]),
+                                                                np.log10(spc_star_formation_rates[spc_star_formation_rates > 0]), 0.1, log=False)
+        axis10.plot(x_value, median, color='black', linewidth=5, zorder=5)
+        axis10.fill_between(x_value, shigh, slow, color='black', alpha='0.5', zorder=5)
+        
         # Save the figure #
-        plt.savefig(plots_path + 'CMZR' + '-' + date + '.png', bbox_inches='tight')
+        plt.savefig(plots_path + 'RR' + '-' + date + '.png', bbox_inches='tight')
         return None
 
 
@@ -93,4 +93,4 @@ if __name__ == '__main__':
     simulation_path = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
     plots_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/'  # Path to save plots.
     data_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/'  # Path to save/load data.
-    x = ComponentMZR(simulation_path, tag)
+    x = RomeoRelation(simulation_path, tag)

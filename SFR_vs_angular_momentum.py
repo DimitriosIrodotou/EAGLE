@@ -19,7 +19,7 @@ warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # I
 
 class SFRVsAngularMomentum:
     """
-    For all galaxies create: star formation rate versus stellar angular momentum colour-coded by disc to total ratio.
+    For all galaxies create: a star formation rate versus stellar angular momentum colour-coded by disc to total ratio.
     """
     
     
@@ -62,26 +62,26 @@ class SFRVsAngularMomentum:
         plt.close()
         figure = plt.figure(figsize=(10, 7.5))
         gs = gridspec.GridSpec(2, 1, wspace=0.0, hspace=0.0, height_ratios=[0.05, 1])
-        ax00 = figure.add_subplot(gs[0, 0])
-        ax10 = figure.add_subplot(gs[1, 0])
+        axis00 = figure.add_subplot(gs[0, 0])
+        axis10 = figure.add_subplot(gs[1, 0])
         
-        ax10.grid(True, which='both', axis='both')
-        ax10.set_ylabel(r'$\mathrm{log_{10}((SFR/M_{\bigstar})/yr^{-1})}$', size=16)
-        ax10.set_xlabel(r'$\mathrm{(|\vec{J}_{\bigstar}|/M_{\bigstar})/(kpc\;km\;s^{-1})}$', size=16)
-        ax10.tick_params(direction='out', which='major', top='on', right='on', left='on', labelsize=16)
+        axis10.grid(True, which='both', axis='both')
+        axis10.set_ylabel(r'$\mathrm{log_{10}((SFR/M_{\bigstar})/yr^{-1})}$', size=16)
+        axis10.set_xlabel(r'$\mathrm{(|\vec{J}_{\bigstar}|/M_{\bigstar})/(kpc\;km\;s^{-1})}$', size=16)
+        axis10.tick_params(direction='out', which='major', top='on', right='on',  labelsize=16)
         
         spc_angular_momenta = np.linalg.norm(stellar_angular_momenta, axis=1) / stellar_masses
         spc_star_formation_rates = star_formation_rates / stellar_masses
-        sc = ax10.scatter(np.log10(spc_angular_momenta[spc_star_formation_rates > 0]),
+        sc = axis10.scatter(np.log10(spc_angular_momenta[spc_star_formation_rates > 0]),
                           np.log10(spc_star_formation_rates[spc_star_formation_rates > 0]), c=disc_fractions_IT20[spc_star_formation_rates > 0], s=8,
                           cmap='seismic_r', vmin=0, vmax=1, marker='h')
-        plot_tools.create_colorbar(ax00, sc, r'$\mathrm{D/T_{30\degree}}$', 'horizontal')
+        plot_tools.create_colorbar(axis00, sc, r'$\mathrm{D/T_{30\degree}}$', 'horizontal')
         
         # Plot median and 1-sigma lines #
         x_value, median, shigh, slow = plot_tools.median_1sigma(np.log10(spc_angular_momenta[spc_star_formation_rates > 0]),
                                                                 np.log10(spc_star_formation_rates[spc_star_formation_rates > 0]), 0.1, log=False)
-        ax10.plot(x_value, median, color='black', linewidth=5, zorder=5)
-        ax10.fill_between(x_value, shigh, slow, color='black', alpha='0.5', zorder=5)
+        axis10.plot(x_value, median, color='black', linewidth=5, zorder=5)
+        axis10.fill_between(x_value, shigh, slow, color='black', alpha='0.5', zorder=5)
         
         # Save the figure #
         plt.savefig(plots_path + 'SFR_AM' + '-' + date + '.png', bbox_inches='tight')

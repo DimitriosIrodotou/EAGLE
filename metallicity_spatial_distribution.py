@@ -191,32 +191,32 @@ class MetallicitySpatialDistribution:
         plt.figure(0, figsize=(20, 15))
         
         gs = gridspec.GridSpec(3, 2, hspace=0.07, wspace=0.0, height_ratios=[0.05, 1, 1])
-        axcbar = plt.subplot(gs[0, :])
-        ax10 = plt.subplot(gs[1, 0])
-        ax20 = plt.subplot(gs[2, 0])
-        ax11 = plt.subplot(gs[1, 1])
-        ax21 = plt.subplot(gs[2, 1])
+        axiscbar = plt.subplot(gs[0, :])
+        axis10 = plt.subplot(gs[1, 0])
+        axis20 = plt.subplot(gs[2, 0])
+        axis11 = plt.subplot(gs[1, 1])
+        axis21 = plt.subplot(gs[2, 1])
         
-        for axis in [ax10, ax20, ax11, ax21]:
-            axis.grid(True)
+        for axis in [axis10, axis20, axis11, axis21]:
+            axis.grid(True, which='both', axis='both')
             axis.set_xlim(-30, 30)
             axis.set_ylim(-30, 30)
             axis.set_aspect('equal')
             axis.set_facecolor('black')
             axis.tick_params(direction='out', which='both', top='on', right='on', labelsize=16)
         
-        ax10.set_xticklabels([])
-        ax11.set_xticklabels([])
-        ax10.set_ylabel(r'$\mathrm{y\,[kpc]}$', size=16)
-        ax20.set_xlabel(r'$\mathrm{x\,[kpc]}$', size=16)
-        ax20.set_ylabel(r'$\mathrm{z\,[kpc]}$', size=16)
-        ax11.set_ylabel(r'$\mathrm{y\,[kpc]}$', size=16)
-        ax21.set_xlabel(r'$\mathrm{x\,[kpc]}$', size=16)
-        ax21.set_ylabel(r'$\mathrm{z\,[kpc]}$', size=16)
-        ax10.annotate(r'$\mathrm{Disc}$' + '\n' + r'$\mathrm{Face-on}$', xy=(-27, 23), xycoords='data', c='w', size=16)
-        ax20.annotate(r'$\mathrm{Disc}$' + '\n' + r'$\mathrm{Edge-on}$', xy=(-27, 23), xycoords='data', c='w', size=16)
-        ax11.annotate(r'$\mathrm{Bulge}$' + '\n' + r'$\mathrm{Face-on}$', xy=(-27, 23), xycoords='data', c='w', size=16)
-        ax21.annotate(r'$\mathrm{Bulge}$' + '\n' + r'$\mathrm{Edge-on}$', xy=(-27, 23), xycoords='data', c='w', size=16)
+        axis10.set_xticklabels([])
+        axis11.set_xticklabels([])
+        axis10.set_ylabel(r'$\mathrm{y\,[kpc]}$', size=16)
+        axis20.set_xlabel(r'$\mathrm{x\,[kpc]}$', size=16)
+        axis20.set_ylabel(r'$\mathrm{z\,[kpc]}$', size=16)
+        axis11.set_ylabel(r'$\mathrm{y\,[kpc]}$', size=16)
+        axis21.set_xlabel(r'$\mathrm{x\,[kpc]}$', size=16)
+        axis21.set_ylabel(r'$\mathrm{z\,[kpc]}$', size=16)
+        axis10.annotate(r'$\mathrm{Disc}$' + '\n' + r'$\mathrm{Face-on}$', xy=(-27, 23), xycoords='data', c='w', size=16)
+        axis20.annotate(r'$\mathrm{Disc}$' + '\n' + r'$\mathrm{Edge-on}$', xy=(-27, 23), xycoords='data', c='w', size=16)
+        axis11.annotate(r'$\mathrm{Bulge}$' + '\n' + r'$\mathrm{Face-on}$', xy=(-27, 23), xycoords='data', c='w', size=16)
+        axis21.annotate(r'$\mathrm{Bulge}$' + '\n' + r'$\mathrm{Edge-on}$', xy=(-27, 23), xycoords='data', c='w', size=16)
         
         # Rotate coordinates and velocities of stellar particles so the galactic angular momentum points along the x axis #
         stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_angular_momentum, glx_angular_momentum = RotateCoordinates.rotate_Jz(
@@ -247,21 +247,21 @@ class MetallicitySpatialDistribution:
         disc_mask, = np.where(angular_theta_from_densest < (np.pi / 6.0))
         bulge_mask, = np.where(angular_theta_from_densest > (np.pi / 6.0))
         
-        axes1 = [ax10, ax11]
-        axes2 = [ax20, ax21]
+        axes1 = [axis10, axis11]
+        axes2 = [axis20, axis21]
         masks = [disc_mask, bulge_mask]
-        for mask, ax1, ax2 in zip(masks, axes1, axes2):
-            ax1.scatter(stellar_data_tmp['Coordinates'][mask, 0], stellar_data_tmp['Coordinates'][mask, 1],
+        for mask, axis1, axis2 in zip(masks, axes1, axes2):
+            axis1.scatter(stellar_data_tmp['Coordinates'][mask, 0], stellar_data_tmp['Coordinates'][mask, 1],
                         c=stellar_data_tmp['Metallicity'][mask] / 0.0134, cmap='Spectral', s=1)
-            scatter = ax2.scatter(stellar_data_tmp['Coordinates'][mask, 0], stellar_data_tmp['Coordinates'][mask, 2],
+            scatter = axis2.scatter(stellar_data_tmp['Coordinates'][mask, 0], stellar_data_tmp['Coordinates'][mask, 2],
                                   c=stellar_data_tmp['Metallicity'][mask] / 0.0134, cmap='Spectral', s=1)
         
         # Generate the color bar #
-        cbar = plt.colorbar(scatter, cax=axcbar, orientation='horizontal')
+        cbar = plt.colorbar(scatter, cax=axiscbar, orientation='horizontal')
         cbar.set_label(r'$\mathrm{Z\;[Z_{\odot}]}$', size=16)
-        axcbar.xaxis.tick_top()
-        axcbar.xaxis.set_label_position("top")
-        axcbar.tick_params(direction='out', which='both', right='on', labelsize=16)
+        axiscbar.xaxis.tick_top()
+        axiscbar.xaxis.set_label_position("top")
+        axiscbar.tick_params(direction='out', which='both', right='on', labelsize=16)
         
         # Save the figure #
         plt.savefig(plots_path + str(group_number) + '_' + str(subgroup_number) + '-' + 'MSP' + '-' + date + '.png', bbox_inches='tight')

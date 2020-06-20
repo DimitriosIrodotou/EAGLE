@@ -76,32 +76,32 @@ class MultipleDecomposition:
         plt.figure(0, figsize=(16, 9))
         
         gs = gridspec.GridSpec(2, 3)
-        ax00 = plt.subplot(gs[0, 0], projection='mollweide')
-        ax01 = plt.subplot(gs[0, 1])
-        ax02 = plt.subplot(gs[0, 2])
-        ax10 = plt.subplot(gs[1, 0])
-        ax11 = plt.subplot(gs[1, 1])
-        ax12 = plt.subplot(gs[1, 2])
+        axis00 = plt.subplot(gs[0, 0], projection='mollweide')
+        axis01 = plt.subplot(gs[0, 1])
+        axis02 = plt.subplot(gs[0, 2])
+        axis10 = plt.subplot(gs[1, 0])
+        axis11 = plt.subplot(gs[1, 1])
+        axis12 = plt.subplot(gs[1, 2])
         
-        for axis in [ax10, ax11, ax12]:
-            axis.grid(True)
+        for axis in [axis10, axis11, axis12]:
+            axis.grid(True, which='both', axis='both')
         
-        for axis in [ax10, ax11]:
+        for axis in [axis10, axis11]:
             axis.set_xlim(-10, 190)
             axis.set_xticks(np.arange(0, 181, 20))
         
-        ax00.set_xlabel('RA ($\degree$)')
-        ax00.set_ylabel('Dec ($\degree$)')
-        ax01.axis('off')
-        ax02.axis('off')
-        ax10.set_ylabel(r'$\mathrm{Particles\;per\;grid\;cell}$')
-        ax10.set_xlabel(r'$\mathrm{Angular\;distance\;from\;X\;(\degree)}$')
-        ax11.set_ylabel(r'$\mathrm{Particles\;per\;grid\;cell}$')
-        ax11.set_xlabel(r'$\mathrm{Angular\;distance\;from\;densest\;grid\;cell\;(\degree)}$')
-        ax12.set_xlabel(r'$\mathrm{\epsilon}$')
-        ax12.set_ylabel(r'$\mathrm{f(\epsilon)}$')
-        ax01.text(0.0, 0.95, r'$\mathrm{Face-on}$', c='w', fontsize=12, transform=ax01.transAxes)
-        ax02.text(0.0, 0.95, r'$\mathrm{Edge-on}$', c='w', fontsize=12, transform=ax02.transAxes)
+        axis00.set_xlabel('RA ($\degree$)')
+        axis00.set_ylabel('Dec ($\degree$)')
+        axis01.axis('off')
+        axis02.axis('off')
+        axis10.set_ylabel(r'$\mathrm{Particles\;per\;grid\;cell}$')
+        axis10.set_xlabel(r'$\mathrm{Angular\;distance\;from\;X\;(\degree)}$')
+        axis11.set_ylabel(r'$\mathrm{Particles\;per\;grid\;cell}$')
+        axis11.set_xlabel(r'$\mathrm{Angular\;distance\;from\;densest\;grid\;cell\;(\degree)}$')
+        axis12.set_xlabel(r'$\mathrm{\epsilon}$')
+        axis12.set_ylabel(r'$\mathrm{f(\epsilon)}$')
+        axis01.text(0.0, 0.95, r'$\mathrm{Face-on}$', c='w', fontsize=12, transform=axis01.transAxes)
+        axis02.text(0.0, 0.95, r'$\mathrm{Edge-on}$', c='w', fontsize=12, transform=axis02.transAxes)
         
         # Calculate the angular momentum for each particle and for the galaxy and the unit vector parallel to the galactic angular momentum vector #
         prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
@@ -127,9 +127,9 @@ class MultipleDecomposition:
         index_densest = np.argmax(density)
         lon_densest = (hp.healpix_to_lonlat([index_densest])[0].value + np.pi) % (2 * np.pi) - np.pi
         lat_densest = (hp.healpix_to_lonlat([index_densest])[1].value + np.pi / 2) % (2 * np.pi) - np.pi / 2
-        ax00.annotate(r'$\mathrm{Density\;maximum}$', xy=(lon_densest, lat_densest), xycoords='data', xytext=(0.78, 1.00), textcoords='axes fraction',
+        axis00.annotate(r'$\mathrm{Density\;maximum}$', xy=(lon_densest, lat_densest), xycoords='data', xytext=(0.78, 1.00), textcoords='axes fraction',
                       arrowprops=dict(arrowstyle='-', color='black', connectionstyle='arc3,rad=0'))  # Position of the densest pixel.
-        ax00.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=100, color='black', marker='X',
+        axis00.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=100, color='black', marker='X',
                      facecolors='none', zorder=5)  # Position of the galactic angular momentum.
         
         # Sample a 360x180 grid in ra/dec #
@@ -142,10 +142,10 @@ class MultipleDecomposition:
         density_map = density[coordinate_index]
         
         # Display data on a 2D regular raster and create a pseudo-color plot #
-        im = ax00.imshow(density_map, cmap='nipy_spectral_r', aspect='auto', norm=matplotlib.colors.LogNorm(vmin=1))
-        cbar = plt.colorbar(im, ax=ax00, orientation='horizontal')
+        im = axis00.imshow(density_map, cmap='nipy_spectral_r', aspect='auto', norm=matplotlib.colors.LogNorm(vmin=1))
+        cbar = plt.colorbar(im, ax=axis00, orientation='horizontal')
         cbar.set_label('$\mathrm{Particles\; per\; grid\; cell}$', size=12)
-        ax00.pcolormesh(np.radians(ra), np.radians(dec), density_map, cmap='nipy_spectral_r')
+        axis00.pcolormesh(np.radians(ra), np.radians(dec), density_map, cmap='nipy_spectral_r')
         
         # Calculate disc mass fraction as the mass within 30 degrees from the densest pixel #
         angular_theta_from_densest = np.arccos(
@@ -158,18 +158,18 @@ class MultipleDecomposition:
         galaxy_id = access_database.download_image(group_number, subgroup_number)
         img = mpimg.imread(data_path + 'images/galface_' + galaxy_id)
         img1 = mpimg.imread(data_path + 'images/galedge_' + galaxy_id)
-        ax01.imshow(img)
-        ax02.imshow(img1)
+        axis01.imshow(img)
+        axis02.imshow(img1)
         
         # Calculate and plot the angular distance (spherical law of cosines) between the densest and all the other grid cells #
         angular_theta_from_densest = np.arccos(
             np.sin(lat_densest) * np.sin(np.radians(dec_grid.value)) + np.cos(lat_densest) * np.cos(np.radians(dec_grid.value)) * np.cos(
                 lon_densest - np.radians(ra_grid.value)))  # In radians.
         
-        ax11.scatter(angular_theta_from_densest[density_map.nonzero()] * (180.0 / np.pi), density_map[density_map.nonzero()], c='black',
+        axis11.scatter(angular_theta_from_densest[density_map.nonzero()] * (180.0 / np.pi), density_map[density_map.nonzero()], c='black',
                      s=5)  # In degrees.
-        ax11.axvline(x=30, c='blue', lw=3, linestyle='dashed', label='D/T= %.3f ' % disc_fraction_IT20)  # Vertical line at 30 degrees.
-        ax11.axvspan(0, 30, facecolor='0.2', alpha=0.5)  # Draw a vertical span.
+        axis11.axvline(x=30, c='blue', lw=3, linestyle='dashed', label='D/T= %.3f ' % disc_fraction_IT20)  # Vertical line at 30 degrees.
+        axis11.axvspan(0, 30, facecolor='0.2', alpha=0.5)  # Draw a vertical span.
         
         # Calculate the kinematic diagnostics #
         kappa, disc_fraction, circularity, rotational_over_dispersion, vrots, rotational_velocity, sigma_0, \
@@ -185,21 +185,21 @@ class MultipleDecomposition:
         
         ydata, edges = np.histogram(circularity, bins=100, range=[-1.7, 1.7], weights=stellar_data_tmp['Mass'] / np.sum(stellar_data_tmp['Mass']))
         ydata /= edges[1:] - edges[:-1]
-        ax12.plot(0.5 * (edges[1:] + edges[:-1]), ydata, label='D/T = %.3f' % disc_fraction_07)
+        axis12.plot(0.5 * (edges[1:] + edges[:-1]), ydata, label='D/T = %.3f' % disc_fraction_07)
         
         # Calculate and plot the angular distance between the (unit vector of) the galactic angular momentum and all the other grid cells #
         position_of_X = np.vstack([np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2])]).T
         
         angular_theta_from_X = np.arccos(np.sin(position_of_X[0, 1]) * np.sin(np.radians(dec_grid.value)) + np.cos(position_of_X[0, 1]) * np.cos(
             np.radians(dec_grid.value)) * np.cos(position_of_X[0, 0] - np.radians(ra_grid.value)))  # In radians.
-        ax10.scatter(angular_theta_from_X[density_map.nonzero()] * (180.0 / np.pi), density_map[density_map.nonzero()], c='black', s=5)  # In degrees.
-        ax10.axvline(x=90, c='red', lw=3, linestyle='dashed', label='D/T= %.3f ' % disc_fraction_00)  # Vertical line at 30 degrees.
-        ax10.axvspan(90, 180, facecolor='0.2', alpha=0.5)  # Draw a vertical span.
+        axis10.scatter(angular_theta_from_X[density_map.nonzero()] * (180.0 / np.pi), density_map[density_map.nonzero()], c='black', s=5)  # In degrees.
+        axis10.axvline(x=90, c='red', lw=3, linestyle='dashed', label='D/T= %.3f ' % disc_fraction_00)  # Vertical line at 30 degrees.
+        axis10.axvspan(90, 180, facecolor='0.2', alpha=0.5)  # Draw a vertical span.
         
         # Create the legends and save the figure #
-        ax10.legend(loc='upper center', fontsize=12, frameon=False, scatterpoints=3)
-        ax11.legend(loc='upper center', fontsize=12, frameon=False, scatterpoints=3)
-        ax12.legend(loc='upper left', fontsize=12, frameon=False, scatterpoints=3)
+        axis10.legend(loc='upper center', fontsize=12, frameon=False, scatterpoints=3)
+        axis11.legend(loc='upper center', fontsize=12, frameon=False, scatterpoints=3)
+        axis12.legend(loc='upper left', fontsize=12, frameon=False, scatterpoints=3)
         plt.savefig(plots_path + str(group_number) + '_' + str(subgroup_number) + '-' + 'MD' + '-' + date + '.png', bbox_inches='tight')
         return None
 

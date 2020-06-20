@@ -115,7 +115,7 @@ class BarStrength:
         plt.close()
         plt.figure(0, figsize=(10, 7.5))
         
-        plt.grid(True)
+        plt.grid(True, which='both', axis='both')
         plt.xlim(0.0, 10.0)
         plt.ylim(-0.2, 1.2)
         plt.xlabel('R [kpc]')

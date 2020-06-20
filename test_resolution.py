@@ -69,15 +69,15 @@ class TestResolution:
         plt.figure(0, figsize=(16, 9))
         
         gs = gridspec.GridSpec(2, 3)
-        ax00 = plt.subplot(gs[0, 0], projection='mollweide')
-        ax01 = plt.subplot(gs[0, 1], projection='mollweide')
-        ax02 = plt.subplot(gs[0, 2], projection='mollweide')
-        ax10 = plt.subplot(gs[1, 0], projection='mollweide')
-        ax11 = plt.subplot(gs[1, 1], projection='mollweide')
-        ax12 = plt.subplot(gs[1, 2], projection='mollweide')
+        axis00 = plt.subplot(gs[0, 0], projection='mollweide')
+        axis01 = plt.subplot(gs[0, 1], projection='mollweide')
+        axis02 = plt.subplot(gs[0, 2], projection='mollweide')
+        axis10 = plt.subplot(gs[1, 0], projection='mollweide')
+        axis11 = plt.subplot(gs[1, 1], projection='mollweide')
+        axis12 = plt.subplot(gs[1, 2], projection='mollweide')
         
         powers = (2, 3, 4, 5, 6, 7)
-        axes = [ax00, ax01, ax02, ax10, ax11, ax12]
+        axes = [axis00, axis01, axis02, axis10, axis11, axis12]
         for axis, power in zip(axes, powers):
             axis.set_xlabel('RA ($\degree$)')
             axis.set_ylabel('Dec ($\degree$)')

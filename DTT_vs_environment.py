@@ -60,37 +60,37 @@ class DTTVsEnvironment:
         plt.close()
         figure = plt.figure(figsize=(20, 7.5))
         gs = gridspec.GridSpec(2, 4, wspace=0.0, hspace=0.0, height_ratios=[0.05, 1])
-        ax00 = figure.add_subplot(gs[0, 0])
-        ax01 = figure.add_subplot(gs[0, 1])
-        ax02 = figure.add_subplot(gs[0, 2])
-        ax03 = figure.add_subplot(gs[0, 3])
-        ax10 = figure.add_subplot(gs[1, 0])
-        ax11 = figure.add_subplot(gs[1, 1])
-        ax12 = figure.add_subplot(gs[1, 2])
-        ax13 = figure.add_subplot(gs[1, 3])
+        axis00 = figure.add_subplot(gs[0, 0])
+        axis01 = figure.add_subplot(gs[0, 1])
+        axis02 = figure.add_subplot(gs[0, 2])
+        axis03 = figure.add_subplot(gs[0, 3])
+        axis10 = figure.add_subplot(gs[1, 0])
+        axis11 = figure.add_subplot(gs[1, 1])
+        axis12 = figure.add_subplot(gs[1, 2])
+        axis13 = figure.add_subplot(gs[1, 3])
         
-        ax10.set_ylabel(r'$\mathrm{D/T_{30\degree}}$', size=16)
+        axis10.set_ylabel(r'$\mathrm{D/T_{30\degree}}$', size=16)
         cmap = matplotlib.cm.get_cmap('copper')
         
-        for axis in [ax10, ax11, ax12, ax13]:
+        for axis in [axis10, axis11, axis12, axis13]:
             axis.set_ylim(0, 1)
             axis.set_facecolor(cmap(0))
             axis.grid(True, which='major', axis='both')
-            axis.tick_params(direction='out', which='both', top='on', right='on', left='on', labelsize=16)
-        for axis in [ax11, ax12, ax13]:
+            axis.tick_params(direction='out', which='both', top='on', right='on',  labelsize=16)
+        for axis in [axis11, axis12, axis13]:
             axis.set_yticklabels([])
         
         angle = np.divide(np.sum(stellar_angular_momenta * gaseous_angular_momenta, axis=1),
                           np.linalg.norm(stellar_angular_momenta, axis=1) * np.linalg.norm(gaseous_angular_momenta, axis=1))
         
-        axes = [ax10, ax11, ax12, ax13]
-        cbar_axes = [ax00, ax01, ax02, ax03]
+        axes = [axis10, axis11, axis12, axis13]
+        axescbar = [axis00, axis01, axis02, axis03]
         x_attributes = [angle]
         y_attributes = [disc_fractions_IT20]
         labels = [r'$\mathrm{(\vec{J}_{\bigstar}\cdot\vec{J}_{gas})/(|\vec{J}_{\bigstar}||\vec{J}_{gas}|)}$']
-        for axis, cbar_axis, x_attribute, y_attribute, label in zip(axes, cbar_axes, x_attributes, y_attributes, labels):
+        for axis, axiscbar, x_attribute, y_attribute, label in zip(axes, axescbar, x_attributes, y_attributes, labels):
             hb = axis.hexbin(x_attribute, y_attribute, gridsize=100, label=r'$D/T_{\vec{J}_{b} = 0}$', cmap=cmap)
-            plot_tools.create_colorbar(cbar_axis, hb, r'$\mathrm{Counts\;per\;hexbin}$', 'horizontal')
+            plot_tools.create_colorbar(axiscbar, hb, r'$\mathrm{Counts\;per\;hexbin}$', 'horizontal')
             
             # Plot median and 1-sigma lines #
             x_value, median, shigh, slow = plot_tools.median_1sigma(x_attribute, disc_fractions_IT20, 0.05, log=False)
