@@ -66,15 +66,15 @@ class TestResolution:
         """
         # Generate the figure and define its parameters #
         plt.close()
-        plt.figure(0, figsize=(16, 9))
+        figure = plt.figure(0, figsize=(16, 9))
         
         gs = gridspec.GridSpec(2, 3)
-        axis00 = plt.subplot(gs[0, 0], projection='mollweide')
-        axis01 = plt.subplot(gs[0, 1], projection='mollweide')
-        axis02 = plt.subplot(gs[0, 2], projection='mollweide')
-        axis10 = plt.subplot(gs[1, 0], projection='mollweide')
-        axis11 = plt.subplot(gs[1, 1], projection='mollweide')
-        axis12 = plt.subplot(gs[1, 2], projection='mollweide')
+        axis00 = figure.add_subplot(gs[0, 0], projection='mollweide')
+        axis01 = figure.add_subplot(gs[0, 1], projection='mollweide')
+        axis02 = figure.add_subplot(gs[0, 2], projection='mollweide')
+        axis10 = figure.add_subplot(gs[1, 0], projection='mollweide')
+        axis11 = figure.add_subplot(gs[1, 1], projection='mollweide')
+        axis12 = figure.add_subplot(gs[1, 2], projection='mollweide')
         
         powers = (2, 3, 4, 5, 6, 7)
         axes = [axis00, axis01, axis02, axis10, axis11, axis12]

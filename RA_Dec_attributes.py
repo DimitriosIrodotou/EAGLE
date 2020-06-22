@@ -203,10 +203,10 @@ class RADecAttributes:
         figure = plt.figure(0, figsize=(20, 15))
         
         gs = gridspec.GridSpec(2, 2)
-        axis00 = plt.subplot(gs[0, 0], projection="mollweide")
-        axis10 = plt.subplot(gs[1, 0], projection="mollweide")
-        axis01 = plt.subplot(gs[0, 1], projection="mollweide")
-        axis11 = plt.subplot(gs[1, 1], projection="mollweide")
+        axis00 = figure.add_subplot(gs[0, 0], projection="mollweide")
+        axis10 = figure.add_subplot(gs[1, 0], projection="mollweide")
+        axis01 = figure.add_subplot(gs[0, 1], projection="mollweide")
+        axis11 = figure.add_subplot(gs[1, 1], projection="mollweide")
         
         for axis in [axis00, axis10, axis01, axis11]:
             axis.set_xlabel('RA ($\degree$)')

@@ -170,10 +170,10 @@ class DiscToTotalProbabilityDensityFunction:
         figure = plt.figure(0, figsize=(20, 15))
         
         gs = gridspec.GridSpec(2, 2)
-        axis00 = plt.subplot(gs[0, 0])
-        axis10 = plt.subplot(gs[1, 0])
-        axis01 = plt.subplot(gs[0, 1])
-        axis11 = plt.subplot(gs[1, 1])
+        axis00 = figure.add_subplot(gs[0, 0])
+        axis10 = figure.add_subplot(gs[1, 0])
+        axis01 = figure.add_subplot(gs[0, 1])
+        axis11 = figure.add_subplot(gs[1, 1])
         
         for axis in [axis00, axis10, axis01, axis11]:
             axis.grid(True, which='both', axis='both')

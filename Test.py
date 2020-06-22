@@ -168,8 +168,8 @@ class RADec:
         halo_mask = np.where((self.subhalo_data_tmp['GroupNumber'] == group_number) & (self.subhalo_data_tmp['SubGroupNumber'] == subgroup_number))[0]
         
         # Mask the data to select galaxies with a given GroupNumber and SubGroupNumber and particles inside a 30kpc sphere #
-        galaxy_mask = np.where((np.linalg.norm(np.subtract(self.stellar_data['Coordinates'], self.subhalo_data_tmp['CentreOfPotential'][halo_mask]),
-                                               axis=1) <= 30.0))  # kpc
+        galaxy_mask = np.where(
+            np.linalg.norm(self.stellar_data['Coordinates'] - self.subhalo_data_tmp['CentreOfPotential'][halo_mask], axis=1) <= 30.0)  # kpc
         
         # Mask the temporary dictionary for each galaxy #
         stellar_data_tmp = {}
@@ -209,51 +209,51 @@ class RADec:
         
         # Generate the figure and define its parameters #
         plt.close()
-        plt.figure(0, figsize=(20, 22.5))
+        figure = plt.figure(0, figsize=(20, 22.5))
         
         gs = gridspec.GridSpec(3, 2)
-        ax00 = plt.subplot(gs[0, 0], projection='mollweide')
-        ax01 = plt.subplot(gs[0, 1])
-        ax10 = plt.subplot(gs[1, 0])
-        ax11 = plt.subplot(gs[1, 1])
-        ax20 = plt.subplot(gs[2, 0])
-        ax21 = plt.subplot(gs[2, 1])
+        axis00 = figure.add_subplot(gs[0, 0], projection='mollweide')
+        axis01 = figure.add_subplot(gs[0, 1])
+        axis10 = figure.add_subplot(gs[1, 0])
+        axis11 = figure.add_subplot(gs[1, 1])
+        axis20 = figure.add_subplot(gs[2, 0])
+        axis21 = figure.add_subplot(gs[2, 1])
         
-        for a in [ax10, ax11, ax20, ax21]:
+        for a in [axis10, axis11, axis20, axis21]:
             a.grid(True)
         
-        for a in [ax10, ax11]:
+        for a in [axis10, axis11]:
             a.set_xlim(-10, 190)
             a.set_xticks(np.arange(0, 181, 20))
         
-        ax01.axis('off')
+        axis01.axis('off')
         
-        ax20.set_ylim(-0.2, 1.2)
-        ax20.set_xlim(0.0, 10.0)
+        axis20.set_ylim(-0.2, 1.2)
+        axis20.set_xlim(0.0, 10.0)
         
-        ax00.set_xlabel('RA ($\degree$)')
-        ax00.set_ylabel('Dec ($\degree$)')
-        ax10.set_ylabel('Particles per grid cell')
-        ax10.set_xlabel('Angular distance from X ($\degree$)')
-        ax11.set_ylabel('Particles per grid cell')
-        ax11.set_xlabel('Angular distance from densest grid cell ($\degree$)')
-        ax20.set_xlabel('R [kpc]')
-        ax20.set_ylabel('$\mathrm{A_{2}}$')
-        ax21.set_xlabel('$\mathrm{\epsilon}$')
-        ax21.set_ylabel('$\mathrm{f(\epsilon)}$')
+        axis00.set_xlabel('RA ($\degree$)')
+        axis00.set_ylabel('Dec ($\degree$)')
+        axis10.set_ylabel('Particles per grid cell')
+        axis10.set_xlabel('Angular distance from X ($\degree$)')
+        axis11.set_ylabel('Particles per grid cell')
+        axis11.set_xlabel('Angular distance from densest grid cell ($\degree$)')
+        axis20.set_xlabel('R [kpc]')
+        axis20.set_ylabel('$\mathrm{A_{2}}$')
+        axis21.set_xlabel('$\mathrm{\epsilon}$')
+        axis21.set_ylabel('$\mathrm{f(\epsilon)}$')
         
         # Set manually the values of the ra axis #
-        ax00.annotate(r'0', xy=(0 - np.pi / 40, - np.pi / 65), xycoords='data', size=18)
-        ax00.annotate(r'30', xy=(np.pi / 6 - np.pi / 25, - np.pi / 65), xycoords='data', size=18)
-        ax00.annotate(r'-30', xy=(-np.pi / 6 - np.pi / 15, - np.pi / 65), xycoords='data', size=18)
-        ax00.annotate(r'60', xy=(np.pi / 3 - np.pi / 25, - np.pi / 65), xycoords='data', size=18)
-        ax00.annotate(r'-60', xy=(-np.pi / 3 - np.pi / 15, - np.pi / 65), xycoords='data', size=18)
-        ax00.annotate(r'90', xy=(np.pi / 2 - np.pi / 25, - np.pi / 65), xycoords='data', size=18)
-        ax00.annotate(r'-90', xy=(-np.pi / 2 - np.pi / 15, -np.pi / 65), xycoords='data', size=18)
-        ax00.annotate(r'120', xy=(2 * np.pi / 3 - np.pi / 15, -np.pi / 65), xycoords='data', size=18)
-        ax00.annotate(r'-120', xy=(-2 * np.pi / 3 - np.pi / 10, -np.pi / 65), xycoords='data', size=18)
-        ax00.annotate(r'150', xy=(2.5 * np.pi / 3 - np.pi / 15, -np.pi / 65), xycoords='data', size=18)
-        ax00.annotate(r'-150', xy=(-2.5 * np.pi / 3 - np.pi / 10, -np.pi / 65), xycoords='data', size=18)
+        axis00.annotate(r'0', xy=(0 - np.pi / 40, - np.pi / 65), xycoords='data', size=18)
+        axis00.annotate(r'30', xy=(np.pi / 6 - np.pi / 25, - np.pi / 65), xycoords='data', size=18)
+        axis00.annotate(r'-30', xy=(-np.pi / 6 - np.pi / 15, - np.pi / 65), xycoords='data', size=18)
+        axis00.annotate(r'60', xy=(np.pi / 3 - np.pi / 25, - np.pi / 65), xycoords='data', size=18)
+        axis00.annotate(r'-60', xy=(-np.pi / 3 - np.pi / 15, - np.pi / 65), xycoords='data', size=18)
+        axis00.annotate(r'90', xy=(np.pi / 2 - np.pi / 25, - np.pi / 65), xycoords='data', size=18)
+        axis00.annotate(r'-90', xy=(-np.pi / 2 - np.pi / 15, -np.pi / 65), xycoords='data', size=18)
+        axis00.annotate(r'120', xy=(2 * np.pi / 3 - np.pi / 15, -np.pi / 65), xycoords='data', size=18)
+        axis00.annotate(r'-120', xy=(-2 * np.pi / 3 - np.pi / 10, -np.pi / 65), xycoords='data', size=18)
+        axis00.annotate(r'150', xy=(2.5 * np.pi / 3 - np.pi / 15, -np.pi / 65), xycoords='data', size=18)
+        axis00.annotate(r'-150', xy=(-2.5 * np.pi / 3 - np.pi / 10, -np.pi / 65), xycoords='data', size=18)
         
         # Rotate coordinates and velocities of stellar particles so the galactic angular momentum points along the x axis #
         glx_unit_vector = np.divide(glx_angular_momentum, np.linalg.norm(glx_angular_momentum))
@@ -274,9 +274,9 @@ class RADec:
         index_densest = np.argmax(density)
         lon_densest = (hp.healpix_to_lonlat([index_densest])[0].value + np.pi) % (2 * np.pi) - np.pi
         lat_densest = (hp.healpix_to_lonlat([index_densest])[1].value + np.pi / 2) % (2 * np.pi) - np.pi / 2
-        ax00.annotate(r'Density maximum', xy=(lon_densest, lat_densest), xycoords='data', xytext=(0.78, 1.00), textcoords='axes fraction',
+        axis00.annotate(r'Density maximum', xy=(lon_densest, lat_densest), xycoords='data', xytext=(0.78, 1.00), textcoords='axes fraction',
                       arrowprops=dict(arrowstyle='-', color='black', connectionstyle='arc3,rad=0'))  # Position of the densest pixel.
-        ax00.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black', marker='X',
+        axis00.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black', marker='X',
                      zorder=5)  # Position of the galactic angular momentum.
         
         # Sample a 360x180 grid in ra/dec #
@@ -289,10 +289,10 @@ class RADec:
         density_map = density[coordinate_index]
         
         # Display data on a 2D regular raster and create a pseudo-color plot #
-        im = ax00.imshow(density_map, cmap='nipy_spectral_r', aspect='auto', norm=matplotlib.colors.LogNorm(vmin=1))
-        cbar = plt.colorbar(im, ax=ax00, orientation='horizontal')
+        im = axis00.imshow(density_map, cmap='nipy_spectral_r', aspect='auto', norm=matplotlib.colors.LogNorm(vmin=1))
+        cbar = plt.colorbar(im, ax=axis00, orientation='horizontal')
         cbar.set_label('$\mathrm{Particles\; per\; grid\; cell}$')
-        ax00.pcolormesh(np.radians(ra), np.radians(dec), density_map, cmap='nipy_spectral_r')
+        axis00.pcolormesh(np.radians(ra), np.radians(dec), density_map, cmap='nipy_spectral_r')
         
         # Calculate disc mass fraction as the mass within 30 degrees from the densest pixel #
         angular_theta_from_densest = np.arccos(
@@ -304,17 +304,17 @@ class RADec:
         # Plot the 2D surface density projection #
         # galaxy_id = access_database.download_image(group_number, subgroup_number)
         # img2 = mpimg.imread(data_path + 'images/galface_' + galaxy_id)
-        # ax01.imshow(img2)
+        # axis01.imshow(img2)
         
         # Calculate and plot the angular distance (spherical law of cosines) between the densest and all the other grid cells #
         angular_theta_from_densest = np.arccos(
             np.sin(lat_densest) * np.sin(np.radians(dec_grid.value)) + np.cos(lat_densest) * np.cos(np.radians(dec_grid.value)) * np.cos(
                 lon_densest - np.radians(ra_grid.value)))  # In radians.
         
-        ax11.scatter(angular_theta_from_densest[density_map.nonzero()] * np.divide(180.0, np.pi), density_map[density_map.nonzero()], c='black',
+        axis11.scatter(angular_theta_from_densest[density_map.nonzero()] * np.divide(180.0, np.pi), density_map[density_map.nonzero()], c='black',
                      s=10)  # In degrees.
-        ax11.axvline(x=30, c='blue', lw=3, linestyle='dashed', label='D/T= %.3f ' % disc_fraction_IT20)  # Vertical line at 30 degrees.
-        ax11.axvspan(0, 30, facecolor='0.2', alpha=0.5)  # Draw a vertical span.
+        axis11.axvline(x=30, c='blue', lw=3, linestyle='dashed', label='D/T= %.3f ' % disc_fraction_IT20)  # Vertical line at 30 degrees.
+        axis11.axvspan(0, 30, facecolor='0.2', alpha=0.5)  # Draw a vertical span.
         
         # Calculate the kinematic diagnostics #
         kappa, disc_fraction, circularity, rotational_over_dispersion, vrots, rotational_velocity, sigma_0, \
@@ -330,17 +330,17 @@ class RADec:
         
         ydata, edges = np.histogram(circularity, bins=100, range=[-1.7, 1.7], weights=stellar_data_tmp['Mass'] / np.sum(stellar_data_tmp['Mass']))
         ydata /= edges[1:] - edges[:-1]
-        ax21.plot(0.5 * (edges[1:] + edges[:-1]), ydata, label='D/T = %.3f' % disc_fraction_07)
+        axis21.plot(0.5 * (edges[1:] + edges[:-1]), ydata, label='D/T = %.3f' % disc_fraction_07)
         
         # Calculate and plot the angular distance between the (unit vector of) the galactic angular momentum and all the other grid cells #
         position_of_X = np.vstack([np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2])]).T
         
         angular_theta_from_X = np.arccos(np.sin(position_of_X[0, 1]) * np.sin(np.radians(dec_grid.value)) + np.cos(position_of_X[0, 1]) * np.cos(
             np.radians(dec_grid.value)) * np.cos(position_of_X[0, 0] - np.radians(ra_grid.value)))  # In radians.
-        ax10.scatter(angular_theta_from_X[density_map.nonzero()] * np.divide(180.0, np.pi), density_map[density_map.nonzero()], c='black',
+        axis10.scatter(angular_theta_from_X[density_map.nonzero()] * np.divide(180.0, np.pi), density_map[density_map.nonzero()], c='black',
                      s=10)  # In degrees.
-        ax10.axvline(x=90, c='red', lw=3, linestyle='dashed', label='D/T= %.3f ' % disc_fraction_00)  # Vertical line at 30 degrees.
-        ax10.axvspan(90, 180, facecolor='0.2', alpha=0.5)  # Draw a vertical span.
+        axis10.axvline(x=90, c='red', lw=3, linestyle='dashed', label='D/T= %.3f ' % disc_fraction_00)  # Vertical line at 30 degrees.
+        axis10.axvspan(90, 180, facecolor='0.2', alpha=0.5)  # Draw a vertical span.
         
         # Calculate and plot the bar strength from Fourier modes of surface density as a function of radius plot #
         nbins = 40  # Number of radial bins.
@@ -367,13 +367,13 @@ class RADec:
         
         a2 = np.divide(np.sqrt(alpha_2[:] ** 2 + beta_2[:] ** 2), alpha_0[:])
         
-        ax20.plot(r_m, a2, label='Bar strength: %.2f' % max(a2))
+        axis20.plot(r_m, a2, label='Bar strength: %.2f' % max(a2))
         
         # Create the legends and save the figure #
-        ax11.legend(loc='upper center', fontsize=16, frameon=False, scatterpoints=3)
-        ax21.legend(loc='upper left', fontsize=16, frameon=False, scatterpoints=3)
-        ax10.legend(loc='upper center', fontsize=16, frameon=False, scatterpoints=3)
-        ax20.legend(loc='upper left', fontsize=16, frameon=False, scatterpoints=3)
+        axis11.legend(loc='upper center', fontsize=16, frameon=False, scatterpoints=3)
+        axis21.legend(loc='upper left', fontsize=16, frameon=False, scatterpoints=3)
+        axis10.legend(loc='upper center', fontsize=16, frameon=False, scatterpoints=3)
+        axis20.legend(loc='upper left', fontsize=16, frameon=False, scatterpoints=3)
         plt.savefig(plots_path + str(group_number) + '_' + str(subgroup_number) + '-' + 'RD' + '-' + date + '.png', bbox_inches='tight')
         return None
 

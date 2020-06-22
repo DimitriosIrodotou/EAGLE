@@ -73,15 +73,15 @@ class MultipleDecomposition:
         """
         # Generate the figure and define its parameters #
         plt.close()
-        plt.figure(0, figsize=(16, 9))
+        figure = plt.figure(0, figsize=(16, 9))
         
         gs = gridspec.GridSpec(2, 3)
-        axis00 = plt.subplot(gs[0, 0], projection='mollweide')
-        axis01 = plt.subplot(gs[0, 1])
-        axis02 = plt.subplot(gs[0, 2])
-        axis10 = plt.subplot(gs[1, 0])
-        axis11 = plt.subplot(gs[1, 1])
-        axis12 = plt.subplot(gs[1, 2])
+        axis00 = figure.add_subplot(gs[0, 0], projection='mollweide')
+        axis01 = figure.add_subplot(gs[0, 1])
+        axis02 = figure.add_subplot(gs[0, 2])
+        axis10 = figure.add_subplot(gs[1, 0])
+        axis11 = figure.add_subplot(gs[1, 1])
+        axis12 = figure.add_subplot(gs[1, 2])
         
         for axis in [axis10, axis11, axis12]:
             axis.grid(True, which='both', axis='both')

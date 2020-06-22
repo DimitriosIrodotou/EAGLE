@@ -97,7 +97,7 @@ def create_merger_tree(group_number, subgroup_number):
         and AP.ApertureSize = 30 \
         and SH.MassType_Star >= 5E8 \
         and AP.GalaxyID = REF.GalaxyID \
-        and ((SH.SnapNum > REF.SnapNum and REF.GalaxyID between SH.GalaxyID and SH.TopLeafID) or (SH.SnapNum >= 25 and SH.GalaxyID between ' \
+        and ((SH.SnapNum > REF.SnapNum and REF.GalaxyID between SH.GalaxyID and SH.TopLeafID) or (SH.SnapNum >= 26 and SH.GalaxyID between ' \
             'REF.GalaxyID and REF.LastProgID)) \
     ORDER BY \
         SH.Redshift' % main_galaxy
@@ -108,28 +108,25 @@ def create_merger_tree(group_number, subgroup_number):
     
     # Save the result in a data frame #
     df = pd.DataFrame(sql_data, columns=['z', 'snap', 'galaxy', 'descendant', 'last_progenitor', 'stellar_mass'])
-    print(df)
     
     # Find how many progenitors exist in the previous snap (26) to check if the galaxy had a merger #
     n_mergers, n_minor_mergers, n_major_mergers = 0, 0, 0
     if len(df.loc[lambda df:df['snap'] == 26, :]) == 1:
-        flag = 0
+        merger_flag = 0
     # If it had merger(s) check if it(they) was(were) minor or major based on the mass ratios (0.3 threshold) of the involved galaxies #
     elif len(df.loc[lambda df:df['snap'] == 26, :]) > 1:
         df_26 = df.loc[lambda df:df['snap'] == 26, 'stellar_mass'].to_numpy()
         ratios = [x / max(df_26) for x in df_26]
-        print(ratios)
         n_mergers = len(ratios) - 1
         if 0 <= np.sum(ratios) < 1 + len(ratios) * 0.3:  # Minor merger(s).
-            flag = 1
+            merger_flag = 1
             n_minor_mergers = n_mergers
         elif 1 + len(ratios) * 0.3 <= np.sum(ratios) < 1 + len(ratios) * 1:  # Major merger(s).
-            flag = 2
+            merger_flag = 2
             n_major_mergers = n_mergers
         else:
             raise KeyError("wrong merger ratio in create_merger_tree")
     else:
         raise KeyError("wrong number of mergers in create_merger_tree")
     
-    print(flag, n_mergers, n_minor_mergers, n_major_mergers)
-    return df, flag, n_mergers, n_minor_mergers, n_major_mergers
+    return df, merger_flag, n_mergers, n_minor_mergers, n_major_mergers

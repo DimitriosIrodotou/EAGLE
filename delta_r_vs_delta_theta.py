@@ -64,10 +64,10 @@ class DeltaRVsDeltaTheta:
         """
         # Generate the figure and define its parameters #
         plt.close()
-        plt.subplots(1, figsize=(10, 7.5))
+        figure = plt.figure(figsize=(10, 7.5))
         gs = gridspec.GridSpec(1, 2, wspace=0.0, width_ratios=[1, 0.05])
-        axis00 = plt.subplot(gs[0, 0])
-        axis10 = plt.subplot(gs[0, 1])
+        axis00 = figure.add_subplot(gs[0, 0])
+        axis10 = figure.add_subplot(gs[0, 1])
         plot_tools.set_axis(axis00, xlim=[0, 2], ylim=[0, 180], xlabel=r'$\mathrm{\delta_{r}/R_{hm}}$', ylabel=r'$\mathrm{\delta_{\theta}/\degree}$')
         
         # sc = axis00.scatter(delta_rs, delta_thetas[:, 0], c=disc_fractions_IT20, cmap='coolwarm_r', vmin=0, vmax=1, s=5)

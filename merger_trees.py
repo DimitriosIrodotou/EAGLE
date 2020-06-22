@@ -57,7 +57,7 @@ class MergerTree:
         figure, axis = plt.subplots(1, figsize=(10, 7.5))
         
         # Get the merger tree information from the database and display it in a hierarchical tree structure #
-        df, flag, n_mergers, n_minor_mergers, n_major_mergers = access_database.create_merger_tree(group_number, subgroup_number)
+        df, merger_flag, n_mergers, n_minor_mergers, n_major_mergers = access_database.create_merger_tree(group_number, subgroup_number)
         G = nx.from_pandas_edgelist(df=df, source='galaxy', target='descendant', create_using=nx.Graph)
         G.add_nodes_from(nodes_for_adding=df['galaxy'].tolist())
         tree = nx.bfs_tree(G, df['galaxy'][0])
@@ -83,7 +83,7 @@ class MergerTree:
         axis.spines['right'].set_visible(False)
         axis.spines['bottom'].set_visible(False)
         axis.tick_params(left=True, labelleft=True)
-        plt.text(0.1, 1, r'$\mathrm{Flag: }$' + str(flag), fontsize=12, transform=axis.transAxes)
+        plt.text(0.1, 1, r'$\mathrm{Flag: }$' + str(merger_flag), fontsize=12, transform=axis.transAxes)
         axis.set_yticklabels(('', '0.27', '', '0.18', '', '0.1', '', '0.0', ''))
         
         # Save the figure #

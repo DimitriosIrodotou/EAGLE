@@ -74,14 +74,16 @@ class ComponentBeta:
             axis.set_ylim(3e-3, 1)
             # axis.set_xlim(1e9, 6e11)
             axis.set_xlabel(r'$\mathrm{D/T_{30\degree}}$', size=16)
-            axis.tick_params(direction='out', which='both', top='on', right='on',  labelsize=16)
+            axis.tick_params(direction='out', which='both', top='on', right='on', labelsize=16)
         axis11.yaxis.tick_right()
         axis11.yaxis.set_label_position("right")
         axis10.set_ylabel(r'$\mathrm{exp(\beta_{bulge}-1)}$', size=16)
         axis11.set_ylabel(r'$\mathrm{exp(\beta_{disc}-1)}$', size=16)
         
-        axis10.scatter(disc_fractions_IT20, np.exp(bulge_betas - 1), c=np.log10(gaseous_masses+stellar_masses), s=8, cmap='nipy_spectral_r', marker='h')
-        sc = axis11.scatter(disc_fractions_IT20, np.exp(disc_betas - 1), c=np.log10(gaseous_masses+stellar_masses), s=8, cmap='nipy_spectral_r', marker='h')
+        axis10.scatter(disc_fractions_IT20, np.exp(bulge_betas - 1), c=np.log10(gaseous_masses + stellar_masses), s=8, cmap='nipy_spectral_r',
+                       marker='h')
+        sc = axis11.scatter(disc_fractions_IT20, np.exp(disc_betas - 1), c=np.log10(gaseous_masses + stellar_masses), s=8, cmap='nipy_spectral_r',
+                            marker='h')
         plot_tools.create_colorbar(axis00, sc, r'$\mathrm{log_{10}(M_{bar.})}$', 'horizontal')
         
         # Save the figure #

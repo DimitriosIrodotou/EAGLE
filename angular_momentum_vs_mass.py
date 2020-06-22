@@ -31,16 +31,16 @@ class AngularMomentumVsMass:
         """
         start_local_time = time.time()  # Start the local time.
         
-        stellar_masses = np.load(data_path + 'glx_stellar_masses.npy')
+        glx_stellar_masses = np.load(data_path + 'glx_stellar_masses.npy')
         disc_fractions_IT20 = np.load(data_path + 'glx_disc_fractions_IT20.npy')
-        stellar_angular_momenta = np.load(data_path + 'glx_stellar_angular_momenta.npy')
+        glx_stellar_angular_momenta = np.load(data_path + 'glx_stellar_angular_momenta.npy')
         print('Loaded data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
         # Plot the data #
         start_local_time = time.time()  # Start the local time.
         
-        self.plot(stellar_masses, disc_fractions_IT20, stellar_angular_momenta)
+        self.plot(glx_stellar_masses, disc_fractions_IT20, glx_stellar_angular_momenta)
         print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
@@ -48,42 +48,37 @@ class AngularMomentumVsMass:
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
-    def plot(self, stellar_masses, disc_fractions_IT20, stellar_angular_momenta):
+    def plot(self, glx_stellar_masses, disc_fractions_IT20, glx_stellar_angular_momenta):
         """
-        Plot star formation rate versus stellar mass colour-coded by disc to total ratio
-        :param stellar_masses: defined as the mass of all stellar particles within 30kpc from the most bound particle.
+        Plot galactic angular momentum versus stellar mass colour-coded by disc to total ratio
+        :param glx_stellar_masses: defined as the mass of all stellar particles within 30kpc from the most bound particle.
         :param disc_fractions_IT20: where the disc consists of particles whose angular momentum angular separation is 30deg from the densest pixel.
-        :param stellar_angular_momenta: defined as the sum of each stellar particle's angular momentum.
+        :param glx_stellar_angular_momenta: defined as the sum of each stellar particle's angular momentum.
         :return: None
         """
         # Generate the figure and define its parameters #
         plt.close()
         figure = plt.figure(figsize=(10, 7.5))
-        gs = gridspec.GridSpec(2, 1, wspace=0.0, hspace=0.0, height_ratios=[0.05, 1])
+        gs = gridspec.GridSpec(2, 1, wspace=0.0, hspace=0.05, height_ratios=[0.05, 1])
         axis00 = figure.add_subplot(gs[0, 0])
         axis10 = figure.add_subplot(gs[1, 0])
         
-        axis10.grid(True, which='both', axis='both')
-        axis10.set_xscale('log')
-        axis10.set_yscale('log')
-        axis10.set_ylim(1e0, 1e5)
-        axis10.set_xlim(1e9, 1e12)
-        axis10.set_xlabel(r'$\mathrm{log_{10}(M_{\bigstar}/M_{\odot})}$', size=16)
-        axis10.set_ylabel(r'$\mathrm{(|\vec{J}_{\bigstar}|/M_{\bigstar})/(kpc\;km\;s^{-1})}$', size=16)
-        axis10.tick_params(direction='out', which='both', top='on', right='on',  labelsize=16)
+        plot_tools.set_axis(axis10, xlim=[5e9, 1e12], ylim=[1e0, 1e5], xscale='log', yscale='log',
+                            xlabel=r'$\mathrm{log_{10}(M_{\bigstar}/M_{\odot})}$',
+                            ylabel=r'$\mathrm{(|\vec{J}_{\bigstar}|/M_{\bigstar})/(kpc\;km\;s^{-1})}$')
         
         bulge_fractions_IT20 = 1 - disc_fractions_IT20
-        spc_stellar_angular_momenta = np.linalg.norm(stellar_angular_momenta, axis=1) / stellar_masses
-        sc = axis10.scatter(stellar_masses, spc_stellar_angular_momenta, c=bulge_fractions_IT20, s=8, cmap='RdYlBu_r', marker='h')
+        spc_stellar_angular_momenta = np.linalg.norm(glx_stellar_angular_momenta, axis=1) / glx_stellar_masses
+        sc = axis10.scatter(glx_stellar_masses, spc_stellar_angular_momenta, c=bulge_fractions_IT20, s=8, cmap='seismic_r', marker='h')
         plot_tools.create_colorbar(axis00, sc, r'$\mathrm{B/T_{30\degree}}$', 'horizontal')
         
         # Read observational data from FR18 #
         FR18 = np.genfromtxt('./Obs_Data/FR18.csv', delimiter=',', names=['Mstar', 'jstar'])
         
         # Plot observational data from FR18 #
-        plt.plot(np.power(10, FR18['Mstar'][0:2]), np.power(10, FR18['jstar'][0:2]), color='blue', lw=3, linestyle='dashed',
+        plt.plot(np.power(10, FR18['Mstar'][0:2]), np.power(10, FR18['jstar'][0:2]), color='tab:red', lw=3, linestyle='dashed',
                  label=r'$\mathrm{Fall\; &\; Romanowsky\, 18:Discs}$', zorder=4)
-        plt.plot(np.power(10, FR18['Mstar'][2:4]), np.power(10, FR18['jstar'][2:4]), color='red', lw=3, linestyle='dashed',
+        plt.plot(np.power(10, FR18['Mstar'][2:4]), np.power(10, FR18['jstar'][2:4]), color='blue', lw=3, linestyle='dashed',
                  label=r'$\mathrm{Fall\; &\; Romanowsky\, 18:Bulges}$', zorder=4)
         
         # Save the figure #

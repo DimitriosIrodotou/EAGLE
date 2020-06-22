@@ -76,14 +76,13 @@ class DiscToTotalVsGalacticAttributes:
         
         axis12.set_xlim(1e-3, 1e0)
         axis10.set_xlim(1e9, 5e11)
-        cmap = matplotlib.cm.get_cmap('copper')
+        cmap = matplotlib.cm.get_cmap('CMRmap_r')
         axis10.set_ylabel(r'$\mathrm{D/T_{30\degree}}$', size=16)
         for axis in [axis10, axis11, axis12, axis13]:
             axis.set_ylim(0, 1)
             axis.set_xscale('log')
-            axis.set_facecolor(cmap(0))
             axis.grid(True, which='major', axis='both')
-            axis.tick_params(direction='out', which='both', top='on', right='on',  labelsize=16)
+            axis.tick_params(direction='out', which='both', top='on', right='on', labelsize=16)
         for axis in [axis11, axis12, axis13]:
             axis.set_yticklabels([])
         
@@ -97,13 +96,13 @@ class DiscToTotalVsGalacticAttributes:
                   r'$\mathrm{SFR/(M_{\odot}\;yr^{-1})}$']
         for axis, axiscbar, x_attribute, y_attribute, label in zip(axes, axescbar, x_attributes, y_attributes, labels):
             # Plot attributes #
-            hb = axis.hexbin(x_attribute, y_attribute, xscale='log', gridsize=100, label=r'$D/T_{\vec{J}_{b} = 0}$', cmap=cmap)
+            hb = axis.hexbin(x_attribute, y_attribute, xscale='log', gridsize=50, label=r'$D/T_{\vec{J}_{b} = 0}$', cmap=cmap)
             plot_tools.create_colorbar(axiscbar, hb, r'$\mathrm{Counts\;per\;hexbin}$', 'horizontal')
             
             # Plot median and 1-sigma lines #
-            x_value, median, shigh, slow = plot_tools.median_1sigma(x_attribute, disc_fractions_IT20, 0.17, log=True)
-            axis.plot(x_value, median, color='silver', linewidth=3, zorder=5)
-            axis.fill_between(x_value, shigh, slow, color='silver', alpha='0.3', zorder=5)
+            x_value, median, shigh, slow = plot_tools.median_1sigma(x_attribute, disc_fractions_IT20, 0.1, log=True)
+            axis.plot(x_value, median, color='black', linewidth=3, zorder=5)
+            axis.fill_between(x_value, shigh, slow, color='black', alpha='0.3', zorder=5)
             
             axis.set_xlabel(label, size=16)
         # Save the figure #
