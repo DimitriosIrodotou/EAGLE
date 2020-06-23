@@ -54,14 +54,14 @@ class RADec:
         
         if not args.l:
             # Extract particle and subhalo attributes and convert them to astronomical units #
-            self.stellar_data, self.subhalo_data = self.read_galaxies(simulation_path, tag)
+            self.stellar_data, self.subhalo_data, self.box_data = self.read_galaxies(simulation_path, tag)
             print('Read data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
             print('–––––––––––––––––––––––––––––––––––––––––––––')
             
             self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher than 1e8 Msun.
         
         # for group_number in list(set(self.subhalo_data_tmp['GroupNumber'])):  # Loop over all masked haloes.
-        for group_number in range(1, 26):  # Loop over all masked haloes.
+        for group_number in range(25, 26):  # Loop over all masked haloes.
             for subgroup_number in range(0, 1):  # Get centrals only.
                 if args.rs:  # Read and save data.
                     start_local_time = time.time()  # Start the local time.
@@ -117,6 +117,11 @@ class RADec:
         """
         
         # Load subhalo data in h-free physical CGS units #
+        box_data = {}
+        file_type = 'SUBFIND'
+        for attribute in ['HubbleParam', 'BoxSize']:
+            box_data[attribute] = E.read_header(file_type, simulation_path, tag, attribute)
+        
         subhalo_data = {}
         file_type = 'SUBFIND'
         for attribute in ['ApertureMeasurements/Mass/030kpc', 'CentreOfPotential', 'GroupNumber', 'SubGroupNumber']:
@@ -126,7 +131,7 @@ class RADec:
         stellar_data = {}
         particle_type = '4'
         file_type = 'PARTDATA'
-        for attribute in ['Coordinates', 'GroupNumber', 'Mass', 'ParticleBindingEnergy', 'SubGroupNumber', 'Velocity']:
+        for attribute in ['Coordinates', 'Mass', 'ParticleBindingEnergy', 'Velocity']:
             stellar_data[attribute] = E.read_array(file_type, simulation_path, tag, '/PartType' + particle_type + '/' + attribute, numThreads=8)
         
         # Convert attributes to astronomical units #
@@ -136,7 +141,7 @@ class RADec:
         subhalo_data['CentreOfPotential'] *= u.cm.to(u.kpc)
         subhalo_data['ApertureMeasurements/Mass/030kpc'] *= u.g.to(u.Msun)
         
-        return stellar_data, subhalo_data
+        return stellar_data, subhalo_data, box_data
     
     
     def mask_haloes(self):
@@ -167,9 +172,17 @@ class RADec:
         # Select the corresponding halo in order to get its centre of potential #
         halo_mask = np.where((self.subhalo_data_tmp['GroupNumber'] == group_number) & (self.subhalo_data_tmp['SubGroupNumber'] == subgroup_number))[0]
         
+        # Periodically wrap coordinates around centre #
+        boxsize = self.box_data['BoxSize'] * 1e3 / self.box_data['HubbleParam']
+        print(self.stellar_data['Coordinates'])
+        self.stellar_data['Coordinates'] = np.mod(
+            self.stellar_data['Coordinates'] - self.subhalo_data_tmp['CentreOfPotential'][halo_mask] + 0.5 * boxsize, boxsize) + \
+                                           self.subhalo_data_tmp['CentreOfPotential'][halo_mask] - 0.5 * boxsize
+        
         # Mask the data to select galaxies with a given GroupNumber and SubGroupNumber and particles inside a 30kpc sphere #
-        galaxy_mask = np.where(
-            np.linalg.norm(self.stellar_data['Coordinates'] - self.subhalo_data_tmp['CentreOfPotential'][halo_mask], axis=1) <= 30.0)  # kpc
+        galaxy_mask, = np.where(
+            (np.linalg.norm(self.stellar_data['Coordinates'] - self.subhalo_data_tmp['CentreOfPotential'][halo_mask], axis=1) <= 30.0))  # kpc
+        print(len(galaxy_mask))
         
         # Mask the temporary dictionary for each galaxy #
         stellar_data_tmp = {}
@@ -275,9 +288,9 @@ class RADec:
         lon_densest = (hp.healpix_to_lonlat([index_densest])[0].value + np.pi) % (2 * np.pi) - np.pi
         lat_densest = (hp.healpix_to_lonlat([index_densest])[1].value + np.pi / 2) % (2 * np.pi) - np.pi / 2
         axis00.annotate(r'Density maximum', xy=(lon_densest, lat_densest), xycoords='data', xytext=(0.78, 1.00), textcoords='axes fraction',
-                      arrowprops=dict(arrowstyle='-', color='black', connectionstyle='arc3,rad=0'))  # Position of the densest pixel.
+                        arrowprops=dict(arrowstyle='-', color='black', connectionstyle='arc3,rad=0'))  # Position of the densest pixel.
         axis00.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black', marker='X',
-                     zorder=5)  # Position of the galactic angular momentum.
+                       zorder=5)  # Position of the galactic angular momentum.
         
         # Sample a 360x180 grid in ra/dec #
         ra = np.linspace(-180.0, 180.0, num=360) * u.deg
@@ -312,7 +325,7 @@ class RADec:
                 lon_densest - np.radians(ra_grid.value)))  # In radians.
         
         axis11.scatter(angular_theta_from_densest[density_map.nonzero()] * np.divide(180.0, np.pi), density_map[density_map.nonzero()], c='black',
-                     s=10)  # In degrees.
+                       s=10)  # In degrees.
         axis11.axvline(x=30, c='blue', lw=3, linestyle='dashed', label='D/T= %.3f ' % disc_fraction_IT20)  # Vertical line at 30 degrees.
         axis11.axvspan(0, 30, facecolor='0.2', alpha=0.5)  # Draw a vertical span.
         
@@ -338,7 +351,7 @@ class RADec:
         angular_theta_from_X = np.arccos(np.sin(position_of_X[0, 1]) * np.sin(np.radians(dec_grid.value)) + np.cos(position_of_X[0, 1]) * np.cos(
             np.radians(dec_grid.value)) * np.cos(position_of_X[0, 0] - np.radians(ra_grid.value)))  # In radians.
         axis10.scatter(angular_theta_from_X[density_map.nonzero()] * np.divide(180.0, np.pi), density_map[density_map.nonzero()], c='black',
-                     s=10)  # In degrees.
+                       s=10)  # In degrees.
         axis10.axvline(x=90, c='red', lw=3, linestyle='dashed', label='D/T= %.3f ' % disc_fraction_00)  # Vertical line at 30 degrees.
         axis10.axvspan(90, 180, facecolor='0.2', alpha=0.5)  # Draw a vertical span.
         

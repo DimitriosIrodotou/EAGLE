@@ -95,9 +95,9 @@ def create_merger_tree(group_number, subgroup_number):
         Ref.SnapNum=27 \
         and REF.GalaxyID = %d \
         and AP.ApertureSize = 30 \
-        and SH.MassType_Star >= 5E8 \
+        and SH.MassType_Star >= 1E7 \
         and AP.GalaxyID = REF.GalaxyID \
-        and ((SH.SnapNum > REF.SnapNum and REF.GalaxyID between SH.GalaxyID and SH.TopLeafID) or (SH.SnapNum >= 26 and SH.GalaxyID between ' \
+        and ((SH.SnapNum > REF.SnapNum and REF.GalaxyID between SH.GalaxyID and SH.TopLeafID) or (SH.SnapNum >= 25 and SH.GalaxyID between ' \
             'REF.GalaxyID and REF.LastProgID)) \
     ORDER BY \
         SH.Redshift' % main_galaxy

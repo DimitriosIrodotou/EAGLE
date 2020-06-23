@@ -38,7 +38,7 @@ class MultipleDecomposition:
         :param tag: redshift directory.
         """
         
-        for group_number in range(3, 4):  # Loop over all masked haloes.
+        for group_number in range(2552, 2555):  # Loop over all masked haloes.
             for subgroup_number in range(0, 1):  # Get centrals only.
                 start_local_time = time.time()  # Start the local time.
                 

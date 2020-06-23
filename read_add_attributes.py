@@ -32,7 +32,8 @@ class ReadAttributes:
         
         p = 1  # Counter.
         # Extract particle and subhalo attributes and convert them to astronomical units #
-        self.stellar_data, self.gaseous_data, self.dark_matter_data, self.subhalo_data, self.FOF_data = self.read_attributes(simulation_path, tag)
+        self.box_data, self.stellar_data, self.gaseous_data, self.dark_matter_data, self.subhalo_data, self.FOF_data = self.read_attributes(
+            simulation_path, tag)
         print('Read data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
@@ -50,6 +51,7 @@ class ReadAttributes:
             stellar_data_tmp, gaseous_data_tmp, dark_matter_data_tmp, subhalo_data_tmp = self.mask_galaxies(group_number, subgroup_number)
             
             # Save data in numpy array #
+            np.save(data_path + 'box_data', self.box_data)
             np.save(data_path + 'FOF_data_tmps/FOF_data_tmp_' + str(group_number), self.FOF_data)
             np.save(data_path + 'subhalo_data_tmps/subhalo_data_tmp_' + str(group_number) + '_' + str(subgroup_number), subhalo_data_tmp)
             np.save(data_path + 'stellar_data_tmps/stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number), stellar_data_tmp)
@@ -75,7 +77,12 @@ class ReadAttributes:
         """
         
         # Load particle data in h-free physical CGS units #
-        stellar_data, gaseous_data, dark_matter_data = {}, {}, {}
+        box_data, stellar_data, gaseous_data, dark_matter_data = {}, {}, {}, {}
+        
+        file_type = 'SUBFIND'
+        for attribute in ['HubbleParam', 'BoxSize']:
+            box_data[attribute] = E.read_header(file_type, simulation_path, tag, attribute)
+        
         file_type = 'PARTDATA'
         particle_type = '4'
         for attribute in ['BirthDensity', 'Coordinates', 'GroupNumber', 'Mass', 'Metallicity', 'ParticleBindingEnergy', 'ParticleIDs',
@@ -124,7 +131,7 @@ class ReadAttributes:
         FOF_data['Group_M_Crit200'] *= u.g.to(u.Msun)
         FOF_data['Group_R_Crit200'] *= u.cm.to(u.kpc)
         
-        return stellar_data, gaseous_data, dark_matter_data, subhalo_data, FOF_data
+        return box_data, stellar_data, gaseous_data, dark_matter_data, subhalo_data, FOF_data
     
     
     def mask_haloes(self):
@@ -154,6 +161,12 @@ class ReadAttributes:
         
         # Select the corresponding halo in order to get its centre of potential #
         halo_mask, = np.where((self.subhalo_data_tmp['GroupNumber'] == group_number) & (self.subhalo_data_tmp['SubGroupNumber'] == subgroup_number))
+        
+        # Periodically wrap coordinates around centre #
+        box_side = self.box_data['BoxSize'] * 1e3 / self.box_data['HubbleParam']
+        self.stellar_data['Coordinates'] = np.mod(
+            self.stellar_data['Coordinates'] - self.subhalo_data_tmp['CentreOfPotential'][halo_mask] + 0.5 * box_side, box_side) + \
+                                           self.subhalo_data_tmp['CentreOfPotential'][halo_mask] - 0.5 * box_side
         
         # Mask the data to select galaxies with a given GroupNumber and SubGroupNumber and particles inside a 30kpc sphere #
         stellar_mask = np.where(
@@ -387,8 +400,8 @@ class AddAttributes:
         :return: c
         """
         
-        # c = MorphoKinematic.r_mass(stellar_data_tmp, 0.9)/ MorphoKinematic.r_mass(stellar_data_tmp, 0.5)
-        c = 5 * np.log10(MorphoKinematic.r_mass(stellar_data_tmp, 0.8) / MorphoKinematic.r_mass(stellar_data_tmp, 0.2))
+        c = MorphoKinematic.r_mass(stellar_data_tmp, 0.9) / MorphoKinematic.r_mass(stellar_data_tmp, 0.5)
+        # c = 5 * np.log10(MorphoKinematic.r_mass(stellar_data_tmp, 0.8) / MorphoKinematic.r_mass(stellar_data_tmp, 0.2))
         return c
     
     
@@ -607,7 +620,7 @@ class AppendAttributes:
             
             # Load data #
             subhalo_data_tmp = np.load(data_path + 'subhalo_data_tmps/subhalo_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy',
-                allow_pickle=True)
+                                       allow_pickle=True)
             subhalo_data_tmp = subhalo_data_tmp.item()
             
             stellar_data_tmp = np.load(data_path + 'stellar_data_tmps/stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy',

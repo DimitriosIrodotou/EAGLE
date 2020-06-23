@@ -33,7 +33,7 @@ class SpatialDistribution:
         :param tag: redshift directory.
         """
         
-        for group_number in range(1, 26):  # Loop over all masked haloes.
+        for group_number in range(204, 205):  # Loop over all masked haloes.
             for subgroup_number in range(0, 1):  # Get centrals only.
                 start_local_time = time.time()  # Start the local time.
                 

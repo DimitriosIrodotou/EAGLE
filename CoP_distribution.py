@@ -55,6 +55,13 @@ class CoPDistribution:
         :param CoPs: defined as the coordinates of the most bound particle (i.e., most negative binding energy).
         :return: None
         """
+        # Periodic wrap coordinates around centre.
+        boxsize = 67.77 * 1e3 / 0.6777  # In kpc.
+        
+        # Declare arrays to store the data.
+        distances = np.zeros([len(CoPs), len(CoPs)])
+        distances_flags = np.zeros(len(CoPs))
+        
         # Generate the figure and define its parameters #
         plt.close()
         figure = plt.figure(figsize=(10, 10))
@@ -62,15 +69,26 @@ class CoPDistribution:
         
         # Calculate the distances between all centres of potential #
         CoPs = np.linalg.norm(CoPs, axis=1)  # Reduce the dimension from 3D to 2D.
-        CoPs = np.sqrt(np.sum(CoPs ** 2, axis=1))
-        distances = np.zeros([len(CoPs), len(CoPs)])
+        CoPs = np.linalg.norm(CoPs, axis=1)
         
         for i in np.arange(0, len(CoPs), 1):
             for j in np.arange(i + 1, len(CoPs), 1):
-                distances[i, j] = np.abs(CoPs[i] - CoPs[j])
+                # distances[i, j] = np.abs(CoPs[i] - CoPs[j])
+                # distances[i, j] = min(abs(CoPs[i] - CoPs[j]),boxsize - abs(CoPs[i] - CoPs[j]))
+                distances[i, j] = np.mod(CoPs[i] - CoPs[j] + 0.5 * boxsize, boxsize) + CoPs[j] - 0.5 * boxsize
                 distances[j, i] = distances[i, j]
-        rows, cols = np.where(distances <= 30)
-        print(len(distances[rows]))
+        
+        for i in np.arange(0, len(CoPs), 1):
+            mask, = np.where((distances[i, :] > 0) & (distances[i, :] < 30))
+            if len(mask) == 0:
+                distances_flags[i] = 0
+            else:
+                distances_flags[i] = 1
+        
+        mask, = np.where(distances_flags == 0)
+        print(mask)
+        mask, = np.where(distances_flags == 1)
+        print(len(distances_flags[mask]))
         # sc = axis10.scatter(np.log10(glx_rotationals), np.log10(glx_stellar_masses), c=disc_fractions_IT20, s=10, cmap='seismic_r')
         # axis20.scatter(np.log10(disc_rotationals), np.log10(glx_stellar_masses), c='tab:blue', s=10, label=r'$\mathrm{Disc}$')
         # plot_tools.create_colorbar(axiscbar, sc, r'$\mathrm{D/T_{30\degree}}$', 'horizontal')
@@ -83,7 +101,7 @@ if __name__ == '__main__':
     tag = '027_z000p101'
     simulation_path = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
     plots_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/'  # Path to save plots.
-    data_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/'  # Path to save/load data.
+    data_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/tmp/'  # Path to save/load data.
     if not os.path.exists(plots_path):
         os.makedirs(plots_path)
     x = CoPDistribution(simulation_path, tag)
