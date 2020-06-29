@@ -44,7 +44,7 @@ class AngularMomentumVsMass:
         print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished AM_M for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished AngularMomentumVsMass for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
@@ -69,7 +69,7 @@ class AngularMomentumVsMass:
         
         bulge_fractions_IT20 = 1 - disc_fractions_IT20
         spc_stellar_angular_momenta = np.linalg.norm(glx_stellar_angular_momenta, axis=1) / glx_stellar_masses
-        sc = axis10.scatter(glx_stellar_masses, spc_stellar_angular_momenta, c=bulge_fractions_IT20, s=8, cmap='seismic_r', marker='h')
+        sc = axis10.scatter(glx_stellar_masses, spc_stellar_angular_momenta, c=bulge_fractions_IT20, s=8, cmap='seismic_r')
         plot_tools.create_colorbar(axis00, sc, r'$\mathrm{B/T_{30\degree}}$', 'horizontal')
         
         # Read observational data from FR18 #

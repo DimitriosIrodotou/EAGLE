@@ -44,7 +44,7 @@ class SFRVsMass:
         print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished SFR_M for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished SFRVsMass for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
@@ -71,7 +71,7 @@ class SFRVsMass:
         axis10.tick_params(direction='out', which='both', top='on', right='on',  labelsize=16)
         
         sc = axis10.scatter(np.log10(stellar_masses[glx_star_formation_rates > 0]), np.log10(glx_star_formation_rates[glx_star_formation_rates > 0]),
-                          c=disc_fractions_IT20[glx_star_formation_rates > 0], s=8, cmap='seismic_r', vmin=0, vmax=1, marker='h')
+                          c=disc_fractions_IT20[glx_star_formation_rates > 0], s=8, cmap='seismic_r', vmin=0, vmax=1)
         plot_tools.create_colorbar(axis00, sc, r'$\mathrm{D/T_{30\degree}}$', 'horizontal')
         
         # Plot median and 1-sigma lines #

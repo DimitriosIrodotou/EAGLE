@@ -11,8 +11,6 @@ matplotlib.use('Agg')
 import numpy as np
 import matplotlib.pyplot as plt
 
-from matplotlib import gridspec
-
 date = time.strftime('%d_%m_%y_%H%M')  # Date.
 start_global_time = time.time()  # Start the global time.
 warnings.filterwarnings('ignore', category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
@@ -33,13 +31,15 @@ class CoPDistribution:
         start_local_time = time.time()  # Start the local time.
         
         CoPs = np.load(data_path + 'CoPs.npy')
+        box_data = np.load(data_path + 'box_data.npy')
+        box_data = box_data.item()
         print('Loaded data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
         # Plot the data #
         start_local_time = time.time()  # Start the local time.
         
-        self.plot(CoPs)
+        self.plot(CoPs, box_data)
         print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
@@ -49,14 +49,14 @@ class CoPDistribution:
     
     
     @staticmethod
-    def plot(CoPs):
+    def plot(CoPs, box_data):
         """
         Plot the distribution of the centres of potential.
         :param CoPs: defined as the coordinates of the most bound particle (i.e., most negative binding energy).
+        :param box_data: data extracted from the header of SUBFIND.
         :return: None
         """
-        # Periodic wrap coordinates around centre.
-        boxsize = 67.77 * 1e3 / 0.6777  # In kpc.
+        box_side = box_data['BoxSize'] * 1e3 / box_data['HubbleParam']
         
         # Declare arrays to store the data.
         distances = np.zeros([len(CoPs), len(CoPs)])
@@ -73,9 +73,9 @@ class CoPDistribution:
         
         for i in np.arange(0, len(CoPs), 1):
             for j in np.arange(i + 1, len(CoPs), 1):
-                # distances[i, j] = np.abs(CoPs[i] - CoPs[j])
-                # distances[i, j] = min(abs(CoPs[i] - CoPs[j]),boxsize - abs(CoPs[i] - CoPs[j]))
-                distances[i, j] = np.mod(CoPs[i] - CoPs[j] + 0.5 * boxsize, boxsize) + CoPs[j] - 0.5 * boxsize
+                # Periodic wrap coordinates around centre before calculating distances #
+                CoPs[j] = np.mod(CoPs[j] - CoPs[i] + 0.5 * box_side, box_side) + CoPs[i] - 0.5 * box_side
+                distances[i, j] = np.abs(CoPs[i] - CoPs[j])
                 distances[j, i] = distances[i, j]
         
         for i in np.arange(0, len(CoPs), 1):
@@ -87,6 +87,7 @@ class CoPDistribution:
         
         mask, = np.where(distances_flags == 0)
         print(mask)
+        print(len(distances_flags[mask]))
         mask, = np.where(distances_flags == 1)
         print(len(distances_flags[mask]))
         # sc = axis10.scatter(np.log10(glx_rotationals), np.log10(glx_stellar_masses), c=disc_fractions_IT20, s=10, cmap='seismic_r')

@@ -59,7 +59,7 @@ class DeltaRVsDeltaTheta:
         the centre of potential normalised wrt the half-mass.
         :param delta_rs: from read_add_attributes.py.
         :param delta_thetas: from read_add_attributes.py.
-        :param disc_fractions_IT20: from read_add_attributes.py.
+        :param disc_fractions_IT20: where the disc consists of particles whose angular momentum angular separation is 30deg from the densest pixel.
         :return: None
         """
         # Generate the figure and define its parameters #

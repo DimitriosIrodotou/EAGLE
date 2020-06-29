@@ -17,7 +17,7 @@ start_global_time = time.time()  # Start the global time.
 warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
 
 
-class DiscToTotalVsMorphologicalParameters:
+class DiscToTotalVsVToSigma:
     """
     For all galaxies create: a disc to total ratio as a function of concentration index, kappa corotation, disc fraction and rotational over
     dispersion plot.
@@ -47,7 +47,7 @@ class DiscToTotalVsMorphologicalParameters:
         print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished DiscToTotalVsMorphologicalParameters for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (
+        print('Finished DiscToTotalVsVToSigma for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (
                 time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
@@ -64,48 +64,36 @@ class DiscToTotalVsMorphologicalParameters:
         """
         # Generate the figure and define its parameters #
         plt.close()
-        figure = plt.figure(figsize=(20, 7.5))
-        gs = gridspec.GridSpec(2, 4, wspace=0.0, hspace=0.0, height_ratios=[0.05, 1])
+        figure = plt.figure(figsize=(10, 7.5))
+        gs = gridspec.GridSpec(2, 1, wspace=0.0, hspace=0.0, height_ratios=[0.05, 1])
         axis00 = figure.add_subplot(gs[0, 0])
-        axis01 = figure.add_subplot(gs[0, 1])
-        axis02 = figure.add_subplot(gs[0, 2])
-        axis03 = figure.add_subplot(gs[0, 3])
         axis10 = figure.add_subplot(gs[1, 0])
-        axis11 = figure.add_subplot(gs[1, 1])
-        axis12 = figure.add_subplot(gs[1, 2])
-        axis13 = figure.add_subplot(gs[1, 3])
         
-        axis10.set_xlim(0, 9)
-        axis10.set_ylabel(r'$\mathrm{D/T_{30\degree}}$', size=16)
-        cmap = matplotlib.cm.get_cmap('copper')
-        for axis in [axis10, axis11, axis12, axis13]:
-            axis.set_ylim(0, 1)
-            axis.set_facecolor(cmap(0))
-            axis.grid(True, which='both', axis='both')
-            axis.tick_params(direction='out', which='both', top='on', right='on', labelsize=16)
-        for axis in [axis11, axis12, axis13]:
-            axis.set_yticklabels([])
+        # axis10.set_xlim(0, 9)
+        cmap = matplotlib.cm.get_cmap('nipy_spectral_r')
+        # for axis in [axis10, axis11, axis12, axis13]:
+        #     axis.set_ylim(0, 1)
+        #     axis.set_facecolor(cmap(0))
+        #     axis.grid(True, which='both', axis='both')
+        #     axis.tick_params(direction='out', which='both', top='on', right='on', labelsize=16)
+        # for axis in [axis11, axis12, axis13]:
+        #     axis.set_yticklabels([])
         
-        axes = [axis10, axis11, axis12, axis13]
-        axescbar = [axis00, axis01, axis02, axis03]
-        thresholds = [2.50, 0.40, 0.50, 1.00]
-        x_attributes = [concentration_indices, kappas_corotation, disc_fractions, rotationals_over_dispersions]
-        labels = [r'$\mathrm{Concentration\;index}$', r'$\mathrm{\kappa_{co}}$', r'$\mathrm{D/T_{\vec{J}_{b}=0}}$', r'$\mathrm{V_{rot}/\sigma}$']
-        for axis, axiscbar, x_attribute, label, threshold in zip(axes, axescbar, x_attributes, labels, thresholds):
-            # Plot attributes #
-            hb = axis.hexbin(x_attribute, disc_fractions_IT20, gridsize=100, label=r'$D/T_{\vec{J}_{b} = 0}$', cmap=cmap)
-            plot_tools.create_colorbar(axiscbar, hb, r'$\mathrm{Counts\;per\;hexbin}$', 'horizontal')
+        plot_tools.set_axis(axis10, xlabel=r'$\mathrm{V_{rot}/\sigma}$', ylabel=r'$\mathrm{D/T_{30\degree}}$')
+        glx_as = np.load(data_path + 'glx_as.npy')
+        hb = axis10.scatter(rotationals_over_dispersions, disc_fractions_IT20, c=glx_as, s=5,label=r'$D/T_{\vec{J}_{b} = 0}$', cmap=cmap)
+        plot_tools.create_colorbar(axis00, hb, r'$\mathrm{Counts\;per\;hexbin}$', 'horizontal')
             
             # Plot median and 1-sigma lines #
-            x_value, median, shigh, slow = plot_tools.median_1sigma(x_attribute, disc_fractions_IT20, 0.09, log=False)
-            axis.plot(x_value, median, color='silver', linewidth=3, zorder=5)
-            axis.fill_between(x_value, shigh, slow, color='silver', alpha='0.3', zorder=5)
-            
-            axis.axvline(x=threshold, c='tab:red')  # Plot threshold lines.
-            
-            axis.set_xlabel(label, size=16)
+            # x_value, median, shigh, slow = plot_tools.median_1sigma(x_attribute, disc_fractions_IT20, 0.09, log=False)
+            # axis.plot(x_value, median, color='silver', linewidth=3, zorder=5)
+            # axis.fill_between(x_value, shigh, slow, color='silver', alpha='0.3', zorder=5)
+            #
+            # axis.axvline(x=threshold, c='tab:red')  # Plot threshold lines.
+            #
+            # axis.set_xlabel(label, size=16)
         # Save the figure #
-        plt.savefig(plots_path + 'DTT_MP' + '-' + date + '.png', bbox_inches='tight')
+        plt.savefig(plots_path + 'DTT_VTS' + '-' + date + '.png', bbox_inches='tight')
         return None
 
 
@@ -114,4 +102,4 @@ if __name__ == '__main__':
     simulation_path = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
     plots_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/'  # Path to save plots.
     data_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/'  # Path to save/load data.
-    x = DiscToTotalVsMorphologicalParameters(simulation_path, tag)
+    x = DiscToTotalVsVToSigma(simulation_path, tag)

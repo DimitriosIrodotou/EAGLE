@@ -161,7 +161,7 @@ class DiscToTotalProbabilityDensityFunction:
     def plot(masses, subgroup_numbers, disc_fractions_IT20):
         """
         A method to plot a HEALPix histogram.
-        :param disc_fractions_IT20: from mask_galaxies.
+        :param disc_fractions_IT20: where the disc consists of particles whose angular momentum angular separation is 30deg from the densest pixel.
         :return: None
         """
         

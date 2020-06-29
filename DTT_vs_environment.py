@@ -44,7 +44,8 @@ class DTTVsEnvironment:
         print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished DTT_E for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished DTTVsEnvironment for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (
+                time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
@@ -76,7 +77,7 @@ class DTTVsEnvironment:
             axis.set_ylim(0, 1)
             axis.set_facecolor(cmap(0))
             axis.grid(True, which='major', axis='both')
-            axis.tick_params(direction='out', which='both', top='on', right='on',  labelsize=16)
+            axis.tick_params(direction='out', which='both', top='on', right='on', labelsize=16)
         for axis in [axis11, axis12, axis13]:
             axis.set_yticklabels([])
         

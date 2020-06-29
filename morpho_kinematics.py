@@ -29,18 +29,18 @@ class MorphoKinematic:
     
     
     @staticmethod
-    def kinematic_diagnostics(coordinates, masses, velocities, particlebindingenergy):
+    def kinematic_diagnostics(coordinates, masses, velocities, binding_energies):
         """
         Calculate various kinematics parameters
         :param coordinates: Coordinates of particles.
         :param masses: Masses of particles.
         :param velocities: Velocities of particles.
-        :param particlebindingenergy: Specific binding energies of particles.
+        :param binding_energies: Specific binding energies of particles.
         :return: kappa, disc_fraction, circularity, rotational_over_dispersion, vrots, rotational_velocity, sigma_0, delta
         """
         
         # Group the attributes of the particles #
-        prc_attributes = np.vstack([coordinates.T, masses, velocities.T, particlebindingenergy]).T
+        prc_attributes = np.vstack([coordinates.T, masses, velocities.T, binding_energies]).T
         prc_distances = np.linalg.norm(prc_attributes[:, :3], axis=1)
         glx_mass = np.sum(prc_attributes[:, 3])
         
@@ -50,7 +50,7 @@ class MorphoKinematic:
         glx_angular_momentum_magnitude = np.linalg.norm(glx_angular_momentum)
         
         # Calculate cylindrical quantities #
-        zaxis = (glx_angular_momentum / glx_angular_momentum_magnitude)  # Unit vector pointing along the glx_angular_momentum direction.
+        zaxis = glx_angular_momentum / glx_angular_momentum_magnitude  # Unit vector pointing along the glx_angular_momentum direction.
         zheight = np.sum(zaxis * prc_attributes[:, :3], axis=1)  # Projection of the coordinate vectors on the unit vector.
         cylposition = prc_attributes[:, :3] - zheight[:, np.newaxis] * [zaxis]
         cyldistances = np.sqrt(prc_distances ** 2 - zheight ** 2)
@@ -86,31 +86,19 @@ class MorphoKinematic:
     
     
     @staticmethod
-    def morphological_diagnostics(coordinates, masses, velocities, aperture=0.03, CoMvelocity=True, reduced_structure=True):
+    def morphological_diagnostics(coordinates, masses, velocities, aperture=0.03, reduced_structure=True):
         """
-                Calculate the morphological diagnostics through the (reduced or not) inertia tensor.
+        Calculate the morphological diagnostics through the (reduced or not) inertia tensor.
 
         Returns the morphological diagnostics for the input particles.
-
-        Parameters
-        ----------
-        ----------
         masses : array_like of dtype float, shape (n, )
             Particles masses (in unit of masses M)
         velocities : array_like of dtype float, shape (n, 3)
             Particles coordinates (in unit of velocity V) such that velocities[:,0] = Vx,
             velocities[:,1] = Vy & velocities[:,2] = Vz
-        aperture : float, optional
-            Aperture (in unit of length L) for the computation. Default is 0.03 L
-        CoMvelocity : bool, optional
-            Boolean to allow the centering of velocities by the considered particles
-            centre-of-masses velocity. Default to True
         reduced_structure : bool, optional
             Boolean to allow the computation to adopt the iterative reduced form of the
             inertia tensor. Default to True
-
-        Returns
-        -------
         ellip : float
             The ellipticity parameter 1-c/a.
         triax : float
@@ -123,29 +111,24 @@ class MorphoKinematic:
         :param coordinates: Coordinates of the particles.
         :param masses: Masses of particles.
         :param velocities:
-        :param aperture:
-        :param CoMvelocity:
         :param reduced_structure:
         :return:
         """
-        
+
+        # Group the attributes of the particles #
         particlesall = np.vstack([coordinates.T, masses, velocities.T]).T
-        # Calculate prc_distances
         distancesall = np.linalg.norm(particlesall[:, :3], axis=1)
+        
         # Restrict particles
         extract = (distancesall < aperture)
         particles = particlesall[extract].copy()
         prc_distances = distancesall[extract].copy()
         glx_mass = np.sum(particles[:, 3])
-        # Calculate kinematic diagnostics
-        if CoMvelocity:
-            # Calculate CoM velocty, correct
-            dvVmass = np.nan_to_num(np.sum(particles[:, 3][:, np.newaxis] * particles[:, 4:7], axis=0) / glx_mass)
-            particlesall[:, 4:7] -= dvVmass
-            particles[:, 4:7] -= dvVmass
+        
         # Calculate glx_angular_momentum
         prc_s_angular_momentum = np.cross(particlesall[:, :3], particlesall[:, 4:7])
         glx_angular_momentum = np.sum(particles[:, 3][:, np.newaxis] * prc_s_angular_momentum[extract], axis=0)
+        
         # Calculate morphological diagnostics
         s = 1
         q = 1
@@ -155,21 +138,27 @@ class MorphoKinematic:
             particles = particlesall[extract].copy()
             Rsph = Rsphall[extract]
             Rsph /= np.median(Rsph)
+            
             # Calculate structure tensor
             structure = np.sum(
                 (particles[:, 3] / Rsph ** 2)[:, np.newaxis, np.newaxis] * (np.matmul(particles[:, :3, np.newaxis], particles[:, np.newaxis, :3])),
                 axis=0) / np.sum(particles[:, 3] / Rsph ** 2)
+            
             # Diagonalise structure tensor
             eigval, eigvec = linalg.eigh(structure)
+            
             # Get structure direct oriented orthonormal base
             eigvec[:, 2] *= np.round(np.sum(np.cross(eigvec[:, 0], eigvec[:, 1]) * eigvec[:, 2]))
+            
             # Return minor axe
             structmainaxe = eigvec[:, np.argmin(eigval)].copy()
+            
             # Permute base and align Y axis with minor axis in glx_angular_momentum direction
             sign = int(np.sign(np.sum(glx_angular_momentum * structmainaxe) + np.finfo(float).tiny))
             structmainaxe *= sign
             temp = np.array([1, sign, 1]) * (eigvec[:, (np.argmin(eigval) + np.array([(3 + sign) / 2, 0, (3 - sign) / 2])) % 3])
             eigval = eigval[(np.argmin(eigval) + np.array([(3 + sign) / 2, 0, (3 - sign) / 2])) % 3]
+            
             # Permute base to align Z axis with major axis
             foo = (np.argmax(eigval) / 2) * 2
             temp = np.array([(-1) ** (1 + foo / 2), 1, 1]) * (temp[:, [2 - foo, 1, foo]])
@@ -186,7 +175,7 @@ class MorphoKinematic:
         triax = (1 - eigval[0] / eigval[2]) / (1 - eigval[1] / eigval[2])
         Transform = Transform[..., [2, 0, 1], :]  # so that transform[0] = major, transform[1] = inter, transform[2] = minor
         abc = np.sqrt(eigval[[2, 0, 1]])
-        # Return
+        
         return ellip, triax, Transform, abc
     
     

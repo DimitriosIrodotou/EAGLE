@@ -85,7 +85,7 @@ class ReadAttributes:
         
         file_type = 'PARTDATA'
         particle_type = '4'
-        for attribute in ['BirthDensity', 'Coordinates', 'GroupNumber', 'Mass', 'Metallicity', 'ParticleBindingEnergy', 'ParticleIDs',
+        for attribute in ['BirthDensity', 'Coordinates', 'GroupNumber', 'InitialMass', 'Mass', 'Metallicity', 'ParticleBindingEnergy', 'ParticleIDs',
                           'StellarFormationTime', 'SubGroupNumber', 'Velocity']:
             stellar_data[attribute] = E.read_array(file_type, simulation_path, tag, '/PartType' + particle_type + '/' + attribute, numThreads=8)
         
@@ -113,6 +113,7 @@ class ReadAttributes:
         # Convert attributes to astronomical units #
         stellar_data['Mass'] *= u.g.to(u.Msun)
         stellar_data['Velocity'] *= u.cm.to(u.km)  # per second.
+        stellar_data['InitialMass'] *= u.g.to(u.Msun)
         stellar_data['Coordinates'] *= u.cm.to(u.kpc)
         stellar_data['BirthDensity'] *= u.g.to(u.Msun) / u.cm.to(u.kpc) ** 3
         
@@ -596,17 +597,20 @@ class AppendAttributes:
         """
         
         # Initialise arrays to store the data #
-        glx_stellar_angular_momenta, glx_gaseous_angular_momenta, glx_stellar_masses, glx_gaseous_masses, glx_concentration_indices, \
-        glx_kappas_corotation, glx_disc_fractions_IT20, glx_disc_fractions, disc_metallicities, bulge_metallicities, \
-        glx_rotationals_over_dispersions, group_numbers, subgroup_numbers, glx_star_formation_rates, glx_Sersic_indices, glx_scale_lengths, \
-        glx_effective_radii, glx_disk_fraction_profiles, disc_betas, bulge_betas, glx_n_particles, glx_star_formings, glx_non_star_formings, \
-        glx_fitting_flags, glx_delta_thetas, glx_delta_rs, disc_rotationals, disc_sigma_0s, disc_birth_densities, bulge_rotationals, \
-        bulge_sigma_0s, bulge_birth_densities, glx_deltas, glx_sigma_0s, glx_rotationals, glx_dark_matter_masses, CoPs = [], [], [], [], [], [], \
-                                                                                                                         [], [], [], [], [], [], \
-                                                                                                                         [], [], [], [], [], [], \
-                                                                                                                         [], [], [], [], [], [], \
-                                                                                                                         [], [], [], [], [], [], \
-                                                                                                                         [], [], [], [], [], [], []
+        group_numbers, subgroup_numbers, CoPs = [], [], []
+        
+        glx_stellar_angular_momenta, glx_stellar_masses, glx_concentration_indices, glx_kappas_corotation, glx_disc_fractions_IT20, \
+        glx_disc_fractions, glx_rotationals_over_dispersions, glx_Sersic_indices, glx_scale_lengths, glx_effective_radii, \
+        glx_disk_fraction_profiles, glx_n_particles, glx_fitting_flags, glx_delta_thetas, glx_delta_rs, glx_deltas, glx_sigma_0s, glx_rotationals, \
+        glx_as = [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []
+        
+        glx_gaseous_angular_momenta, glx_gaseous_masses, glx_star_formings, glx_non_star_formings, glx_star_formation_rates = [], [], [], [], []
+        
+        dark_matter_masses = []
+        
+        disc_metallicities, bulge_metallicities, disc_betas, bulge_betas, disc_rotationals, bulge_rotationals, disc_sigma_0s, bulge_sigma_0s, \
+        disc_birth_densities, bulge_birth_densities, disc_deltas, bulge_deltas, disc_as, bulge_as,disc_stellar_angular_momenta,bulge_stellar_angular_momenta = [], [], [], [], [], [], [], [], [], [], [], [],\
+                                                                                                    [], [],[],[]
         
         # Extract particle and subhalo attributes and convert them to astronomical units #
         self.subhalo_data = self.read_attributes(simulation_path, tag)
@@ -619,151 +623,177 @@ class AppendAttributes:
             start_local_time = time.time()  # Start the local time.
             
             # Load data #
-            subhalo_data_tmp = np.load(data_path + 'subhalo_data_tmps/subhalo_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy',
-                                       allow_pickle=True)
-            subhalo_data_tmp = subhalo_data_tmp.item()
+            # subhalo_data_tmp = np.load(data_path + 'subhalo_data_tmps/subhalo_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy',
+            #                            allow_pickle=True)
+            # subhalo_data_tmp = subhalo_data_tmp.item()
             
             stellar_data_tmp = np.load(data_path + 'stellar_data_tmps/stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy',
                                        allow_pickle=True)
             stellar_data_tmp = stellar_data_tmp.item()
             
-            gaseous_data_tmp = np.load(data_path + 'gaseous_data_tmps/gaseous_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy',
-                                       allow_pickle=True)
-            gaseous_data_tmp = gaseous_data_tmp.item()
+            # gaseous_data_tmp = np.load(data_path + 'gaseous_data_tmps/gaseous_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy',
+            #                            allow_pickle=True)
+            # gaseous_data_tmp = gaseous_data_tmp.item()
             
-            dark_matter_data_tmp = np.load(
-                data_path + 'dark_matter_data_tmps/dark_matter_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy',
-                allow_pickle=True)
-            dark_matter_data_tmp = dark_matter_data_tmp.item()
+            # dark_matter_data_tmp = np.load(
+            #     data_path + 'dark_matter_data_tmps/dark_matter_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy',
+            #     allow_pickle=True)
+            # dark_matter_data_tmp = dark_matter_data_tmp.item()
             
             # Calculate galactic attributes #
             prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
                                                                                       stellar_data_tmp['Velocity'])  # In Msun kpc km s^-1.
-            glx_stellar_angular_momentum = np.sum(prc_angular_momentum, axis=0)
+            # glx_stellar_angular_momentum = np.sum(prc_angular_momentum, axis=0)
             
-            prc_angular_momentum = gaseous_data_tmp['Mass'][:, np.newaxis] * np.cross(gaseous_data_tmp['Coordinates'],
-                                                                                      gaseous_data_tmp['Velocity'])  # In Msun kpc km s^-1.
+            # prc_angular_momentum = gaseous_data_tmp['Mass'][:, np.newaxis] * np.cross(gaseous_data_tmp['Coordinates'],
+            #                                                                           gaseous_data_tmp['Velocity'])  # In Msun kpc km s^-1.
             
-            disc_fraction_IT20 = np.sum(stellar_data_tmp['Mass'][stellar_data_tmp['disc_mask_IT20']]) / np.sum(stellar_data_tmp['Mass'])
+            # disc_fraction_IT20 = np.sum(stellar_data_tmp['Mass'][stellar_data_tmp['disc_mask_IT20']]) / np.sum(stellar_data_tmp['Mass'])
             
-            glx_gaseous_angular_momentum = np.sum(prc_angular_momentum, axis=0)
+            # glx_gaseous_angular_momentum = np.sum(prc_angular_momentum, axis=0)
             
             # Calculate component attributes #
             for i, mask in enumerate([stellar_data_tmp['disc_mask_IT20'], stellar_data_tmp['bulge_mask_IT20']]):
-                component_mass = np.sum(stellar_data_tmp['Mass'][mask])
-                metals = np.divide(stellar_data_tmp['Metallicity'][mask] * stellar_data_tmp['Mass'][mask], component_mass)
-                velocity_sqred = stellar_data_tmp['velocity_sqred'][mask]
-                velocity_r_sqred = stellar_data_tmp['velocity_r_sqred'][mask]
-                kappa, disc_fraction, circularity, rotational_over_dispersion, vrots, rotational_velocity, sigma_0, \
-                delta = MorphoKinematic.kinematic_diagnostics(
-                    stellar_data_tmp['Coordinates'][mask], stellar_data_tmp['Mass'][mask], stellar_data_tmp['Velocity'][mask],
-                    stellar_data_tmp['ParticleBindingEnergy'][mask])
-                birth_density = stellar_data_tmp['BirthDensity'][mask]
+                component_stellar_angular_momentum = np.sum(prc_angular_momentum[mask], axis=0)
+                # component_mass = np.sum(stellar_data_tmp['Mass'][mask])
+                # metals = np.divide(stellar_data_tmp['Metallicity'][mask] * stellar_data_tmp['Mass'][mask], component_mass)
+                # velocity_sqred = stellar_data_tmp['velocity_sqred'][mask]
+                # velocity_r_sqred = stellar_data_tmp['velocity_r_sqred'][mask]
+                # kappa, disc_fraction, circularity, rotational_over_dispersion, vrots, rotational_velocity, sigma_0, \
+                # delta = MorphoKinematic.kinematic_diagnostics(
+                #     stellar_data_tmp['Coordinates'][mask], stellar_data_tmp['Mass'][mask], stellar_data_tmp['Velocity'][mask],
+                #     stellar_data_tmp['ParticleBindingEnergy'][mask])
+                # birth_density = stellar_data_tmp['BirthDensity'][mask]
+                # birth_stellar_formation_time = stellar_data_tmp['StellarFormationTime'][mask]
+                # birth_mass = stellar_data_tmp['InitialMass'][mask]
                 
                 if i == 0:
-                    stellar_data_tmp['disc_beta'] = 1 - np.divide(np.mean(velocity_sqred) - np.mean(velocity_r_sqred), 2 * np.mean(velocity_r_sqred))
-                    stellar_data_tmp['disc_metallicity'] = np.sum(metals) / 0.0134  # In solar metallicity.
-                    stellar_data_tmp['disc_rotational'] = rotational_velocity  # In km s^-1.
-                    stellar_data_tmp['disc_sigma_0'] = sigma_0  # In km s^-1.
-                    stellar_data_tmp['disc_birth_density'] = birth_density  # In Msun kpc^-3.
+                    # stellar_data_tmp['disc_beta'] = 1 - np.divide(np.mean(velocity_sqred) - np.mean(velocity_r_sqred), 2 * np.mean(velocity_r_sqred))
+                    # stellar_data_tmp['disc_metallicity'] = np.sum(metals) / 0.0134  # In solar metallicity.
+                    # stellar_data_tmp['disc_rotational'] = rotational_velocity  # In km s^-1.
+                    # stellar_data_tmp['disc_sigma_0'] = sigma_0  # In km s^-1.
+                    # stellar_data_tmp['disc_delta'] = delta  # In km s^-1.
+                    # stellar_data_tmp['disc_birth_density'] = birth_density  # In Msun kpc^-3.
+                    # stellar_data_tmp['disc_a'] = np.mean(birth_stellar_formation_time)  # Expansion factor at birth.
+                    # stellar_data_tmp['disc_a'] = np.average(birth_stellar_formation_time, weights=birth_mass,axis=0)  # Expansion factor at birth.
+                    stellar_data_tmp['disc_stellar_angular_momentum'] = component_stellar_angular_momentum  # In Msun kpc km s^-1.
                 else:
-                    stellar_data_tmp['bulge_beta'] = 1 - np.divide(np.mean(velocity_sqred) - np.mean(velocity_r_sqred), 2 * np.mean(velocity_r_sqred))
-                    stellar_data_tmp['bulge_metallicity'] = np.sum(metals) / 0.0134  # In solar metallicity.
-                    stellar_data_tmp['bulge_rotational'] = rotational_velocity  # In km s^-1.
-                    stellar_data_tmp['bulge_sigma_0'] = sigma_0  # In km s^-1.
-                    stellar_data_tmp['bulge_birth_density'] = birth_density  # In Msun kpc^-3.
+                    # stellar_data_tmp['bulge_beta'] = 1 - np.divide(np.mean(velocity_sqred) - np.mean(velocity_r_sqred), 2 * np.mean(velocity_r_sqred))
+                    # stellar_data_tmp['bulge_metallicity'] = np.sum(metals) / 0.0134  # In solar metallicity.
+                    # stellar_data_tmp['bulge_rotational'] = rotational_velocity  # In km s^-1.
+                    # stellar_data_tmp['bulge_sigma_0'] = sigma_0  # In km s^-1.
+                    # stellar_data_tmp['bulge_delta'] = delta  # In km s^-1.
+                    # stellar_data_tmp['bulge_birth_density'] = birth_density  # In Msun kpc^-3.
+                    # stellar_data_tmp['bulge_a'] = np.mean(birth_stellar_formation_time)  # Expansion factor at birth.
+                    # stellar_data_tmp['bulge_a'] = np.average(birth_stellar_formation_time, weights=birth_mass,axis=0)  # Expansion factor at birth.
+                    stellar_data_tmp['bulge_stellar_angular_momentum'] = component_stellar_angular_momentum  # In Msun kpc km s^-1.
             
             # Append halo attributes into single arrays #
-            group_numbers.append(group_number)
-            subgroup_numbers.append(subgroup_number)
-            CoPs.append(subhalo_data_tmp['CentreOfPotential'])
+            # group_numbers.append(group_number)
+            # subgroup_numbers.append(subgroup_number)
+            # CoPs.append(subhalo_data_tmp['CentreOfPotential'])
             
             # Append galactic attributes into single arrays #
-            glx_deltas.append(stellar_data_tmp['delta'])
-            glx_sigma_0s.append(stellar_data_tmp['sigma_0'])
-            glx_delta_rs.append(stellar_data_tmp['delta_r'])
-            glx_Sersic_indices.append(stellar_data_tmp['n'])
-            glx_scale_lengths.append(stellar_data_tmp['R_d'])
-            glx_disc_fractions_IT20.append(disc_fraction_IT20)
-            glx_n_particles.append(len(stellar_data_tmp['Mass']))
-            glx_effective_radii.append(stellar_data_tmp['R_eff'])
-            glx_concentration_indices.append(stellar_data_tmp['c'])
-            glx_delta_thetas.append(stellar_data_tmp['delta_theta'])
-            glx_fitting_flags.append(stellar_data_tmp['fitting_flag'])
-            glx_stellar_masses.append(np.sum(stellar_data_tmp['Mass']))
-            glx_disc_fractions.append(stellar_data_tmp['disc_fraction'])
-            glx_rotationals.append(stellar_data_tmp['rotational_velocity'])
-            glx_stellar_angular_momenta.append(glx_stellar_angular_momentum)
-            glx_kappas_corotation.append(stellar_data_tmp['kappa_corotation'])
-            glx_disk_fraction_profiles.append(stellar_data_tmp['disk_fraction_profile'])
-            glx_rotationals_over_dispersions.append(stellar_data_tmp['rotational_over_dispersion'])
+            # glx_deltas.append(stellar_data_tmp['delta'])
+            # glx_delta_rs.append(stellar_data_tmp['delta_r'])
+            # glx_sigma_0s.append(stellar_data_tmp['sigma_0'])
+            # glx_Sersic_indices.append(stellar_data_tmp['n'])
+            # glx_scale_lengths.append(stellar_data_tmp['R_d'])
+            # glx_disc_fractions_IT20.append(disc_fraction_IT20)
+            # glx_n_particles.append(len(stellar_data_tmp['Mass']))
+            # glx_effective_radii.append(stellar_data_tmp['R_eff'])
+            # glx_as.append(np.mean(stellar_data_tmp['StellarFormationTime']))
+            # glx_concentration_indices.append(stellar_data_tmp['c'])
+            # glx_delta_thetas.append(stellar_data_tmp['delta_theta'])
+            # glx_fitting_flags.append(stellar_data_tmp['fitting_flag'])
+            # glx_stellar_masses.append(np.sum(stellar_data_tmp['Mass']))
+            # glx_disc_fractions.append(stellar_data_tmp['disc_fraction'])
+            # glx_rotationals.append(stellar_data_tmp['rotational_velocity'])
+            # glx_stellar_angular_momenta.append(glx_stellar_angular_momentum)
+            # glx_kappas_corotation.append(stellar_data_tmp['kappa_corotation'])
+            # glx_disk_fraction_profiles.append(stellar_data_tmp['disk_fraction_profile'])
+            # glx_rotationals_over_dispersions.append(stellar_data_tmp['rotational_over_dispersion'])
             
-            glx_gaseous_masses.append(np.sum(gaseous_data_tmp['Mass']))
-            glx_gaseous_angular_momenta.append(glx_gaseous_angular_momentum)
-            glx_star_formation_rates.append(np.sum(gaseous_data_tmp['StarFormationRate']))
-            glx_star_formings.append(np.sum(gaseous_data_tmp['Mass'][gaseous_data_tmp['star_forming_mask']]))
-            glx_non_star_formings.append(np.sum(gaseous_data_tmp['Mass'][gaseous_data_tmp['non_star_forming_mask']]))
+            # glx_gaseous_masses.append(np.sum(gaseous_data_tmp['Mass']))
+            # glx_gaseous_angular_momenta.append(glx_gaseous_angular_momentum)
+            # glx_star_formation_rates.append(np.sum(gaseous_data_tmp['StarFormationRate']))
+            # glx_star_formings.append(np.sum(gaseous_data_tmp['Mass'][gaseous_data_tmp['star_forming_mask']]))
+            # glx_non_star_formings.append(np.sum(gaseous_data_tmp['Mass'][gaseous_data_tmp['non_star_forming_mask']]))
             
-            glx_dark_matter_masses.append(np.sum(dark_matter_data_tmp['Mass']))
+            # dark_matter_masses.append(np.sum(dark_matter_data_tmp['Mass']))
             
             # Append component attributes into single arrays #
-            disc_betas.append(stellar_data_tmp['disc_beta'])
-            bulge_betas.append(stellar_data_tmp['bulge_beta'])
-            disc_sigma_0s.append(stellar_data_tmp['disc_sigma_0'])
-            bulge_sigma_0s.append(stellar_data_tmp['bulge_sigma_0'])
-            disc_rotationals.append(stellar_data_tmp['disc_rotational'])
-            bulge_rotationals.append(stellar_data_tmp['bulge_rotational'])
-            disc_metallicities.append(stellar_data_tmp['disc_metallicity'])
-            bulge_metallicities.append(stellar_data_tmp['bulge_metallicity'])
-            disc_birth_densities.append(stellar_data_tmp['disc_birth_density'])
-            bulge_birth_densities.append(stellar_data_tmp['bulge_birth_density'])
+            # disc_as.append(stellar_data_tmp['disc_a'])
+            disc_stellar_angular_momenta.append(stellar_data_tmp['disc_stellar_angular_momentum'])
+            bulge_stellar_angular_momenta.append(stellar_data_tmp['bulge_stellar_angular_momentum'])
+            # bulge_as.append(stellar_data_tmp['bulge_a'])
+            # disc_betas.append(stellar_data_tmp['disc_beta'])
+            # bulge_betas.append(stellar_data_tmp['bulge_beta'])
+            # disc_deltas.append(stellar_data_tmp['disc_delta'])
+            # bulge_deltas.append(stellar_data_tmp['bulge_delta'])
+            # disc_sigma_0s.append(stellar_data_tmp['disc_sigma_0'])
+            # bulge_sigma_0s.append(stellar_data_tmp['bulge_sigma_0'])
+            # disc_rotationals.append(stellar_data_tmp['disc_rotational'])
+            # bulge_rotationals.append(stellar_data_tmp['bulge_rotational'])
+            # disc_metallicities.append(stellar_data_tmp['disc_metallicity'])
+            # bulge_metallicities.append(stellar_data_tmp['bulge_metallicity'])
+            # disc_birth_densities.append(stellar_data_tmp['disc_birth_density'])
+            # bulge_birth_densities.append(stellar_data_tmp['bulge_birth_density'])
             
             print(
                 'Masked and saved data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (time.time() - start_local_time))
             print('–––––––––––––––––––––––––––––––––––––––––––––')
         
         # Save data in numpy array #
-        np.save(data_path + 'CoPs', CoPs)
-        np.save(data_path + 'group_numbers', group_numbers)
-        np.save(data_path + 'subgroup_numbers', subgroup_numbers)
+        # np.save(data_path + 'CoPs', CoPs)
+        # np.save(data_path + 'group_numbers', group_numbers)
+        # np.save(data_path + 'subgroup_numbers', subgroup_numbers)
         
-        np.save(data_path + 'glx_deltas', glx_deltas)
-        np.save(data_path + 'glx_delta_rs', glx_delta_rs)
-        np.save(data_path + 'glx_sigma_0s', glx_sigma_0s)
-        np.save(data_path + 'glx_rotationals', glx_rotationals)
-        np.save(data_path + 'glx_n_particles', glx_n_particles)
-        np.save(data_path + 'glx_delta_thetas', glx_delta_thetas)
-        np.save(data_path + 'glx_fitting_flags', glx_fitting_flags)
-        np.save(data_path + 'glx_scale_lengths', glx_scale_lengths)
-        np.save(data_path + 'glx_stellar_masses', glx_stellar_masses)
-        np.save(data_path + 'glx_disc_fractions', glx_disc_fractions)
-        np.save(data_path + 'glx_Sersic_indices', glx_Sersic_indices)
-        np.save(data_path + 'glx_effective_radii', glx_effective_radii)
-        np.save(data_path + 'glx_kappas_corotation', glx_kappas_corotation)
-        np.save(data_path + 'glx_disc_fractions_IT20', glx_disc_fractions_IT20)
-        np.save(data_path + 'glx_star_formation_rates', glx_star_formation_rates)
-        np.save(data_path + 'glx_concentration_indices', glx_concentration_indices)
-        np.save(data_path + 'glx_disk_fraction_profiles', glx_disk_fraction_profiles)
-        np.save(data_path + 'glx_stellar_angular_momenta', glx_stellar_angular_momenta)
-        np.save(data_path + 'glx_rotationals_over_dispersions', glx_rotationals_over_dispersions)
+        # np.save(data_path + 'glx_as', glx_as)
+        # np.save(data_path + 'glx_deltas', glx_deltas)
+        # np.save(data_path + 'glx_delta_rs', glx_delta_rs)
+        # np.save(data_path + 'glx_sigma_0s', glx_sigma_0s)
+        # np.save(data_path + 'glx_rotationals', glx_rotationals)
+        # np.save(data_path + 'glx_n_particles', glx_n_particles)
+        # np.save(data_path + 'glx_delta_thetas', glx_delta_thetas)
+        # np.save(data_path + 'glx_fitting_flags', glx_fitting_flags)
+        # np.save(data_path + 'glx_scale_lengths', glx_scale_lengths)
+        # np.save(data_path + 'glx_stellar_masses', glx_stellar_masses)
+        # np.save(data_path + 'glx_disc_fractions', glx_disc_fractions)
+        # np.save(data_path + 'glx_Sersic_indices', glx_Sersic_indices)
+        # np.save(data_path + 'glx_effective_radii', glx_effective_radii)
+        # np.save(data_path + 'glx_kappas_corotation', glx_kappas_corotation)
+        # np.save(data_path + 'glx_disc_fractions_IT20', glx_disc_fractions_IT20)
+        # np.save(data_path + 'glx_concentration_indices', glx_concentration_indices)
+        # np.save(data_path + 'glx_disk_fraction_profiles', glx_disk_fraction_profiles)
+        # np.save(data_path + 'glx_stellar_angular_momenta', glx_stellar_angular_momenta)
+        # np.save(data_path + 'glx_rotationals_over_dispersions', glx_rotationals_over_dispersions)
+        #
+        # np.save(data_path + 'glx_star_forming', glx_star_formings)
+        # np.save(data_path + 'glx_gaseous_masses', glx_gaseous_masses)
+        # np.save(data_path + 'glx_non_star_forming', glx_non_star_formings)
+        # np.save(data_path + 'glx_star_formation_rates', glx_star_formation_rates)
+        # np.save(data_path + 'glx_gaseous_angular_momenta', glx_gaseous_angular_momenta)
+        #
+        # np.save(data_path + 'dark_matter_masses', dark_matter_masses)
         
-        np.save(data_path + 'glx_star_forming', glx_star_formings)
-        np.save(data_path + 'glx_gaseous_masses', glx_gaseous_masses)
-        np.save(data_path + 'glx_non_star_forming', glx_non_star_formings)
-        np.save(data_path + 'glx_gaseous_angular_momenta', glx_gaseous_angular_momenta)
+        # np.save(data_path + 'disc_as', disc_as)
+        # np.save(data_path + 'bulge_as', bulge_as)
+        # np.save(data_path + 'disc_betas', disc_betas)
+        # np.save(data_path + 'bulge_betas', bulge_betas)
+        # np.save(data_path + 'disc_deltas', disc_deltas)
+        # np.save(data_path + 'bulge_deltas', bulge_deltas)
+        # np.save(data_path + 'disc_sigma_0s', disc_sigma_0s)
+        # np.save(data_path + 'bulge_sigma_0s', bulge_sigma_0s)
+        # np.save(data_path + 'disc_rotationals', disc_rotationals)
+        # np.save(data_path + 'bulge_rotationals', bulge_rotationals)
+        # np.save(data_path + 'disc_metallicities', disc_metallicities)
+        # np.save(data_path + 'bulge_metallicities', bulge_metallicities)
+        # np.save(data_path + 'disc_birth_densities', disc_birth_densities)
+        # np.save(data_path + 'bulge_birth_densities', bulge_birth_densities)
+        np.save(data_path + 'disc_stellar_angular_momenta', disc_stellar_angular_momenta)
+        np.save(data_path + 'bulge_stellar_angular_momenta', bulge_stellar_angular_momenta)
         
-        np.save(data_path + 'glx_dark_matter_masses', glx_dark_matter_masses)
-        
-        np.save(data_path + 'disc_betas', disc_betas)
-        np.save(data_path + 'bulge_betas', bulge_betas)
-        np.save(data_path + 'disc_sigma_0s', disc_sigma_0s)
-        np.save(data_path + 'bulge_sigma_0s', bulge_sigma_0s)
-        np.save(data_path + 'disc_rotationals', disc_rotationals)
-        np.save(data_path + 'bulge_rotationals', bulge_rotationals)
-        np.save(data_path + 'disc_metallicities', disc_metallicities)
-        np.save(data_path + 'bulge_metallicities', bulge_metallicities)
-        np.save(data_path + 'disc_birth_densities', disc_birth_densities)
-        np.save(data_path + 'bulge_birth_densities', bulge_birth_densities)
         print('Finished AppendAttributes for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (
             time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')

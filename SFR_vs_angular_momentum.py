@@ -45,7 +45,7 @@ class SFRVsAngularMomentum:
         print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished SFR_AM for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished SFRVsAngularMomentum for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
@@ -74,7 +74,7 @@ class SFRVsAngularMomentum:
         spc_star_formation_rates = star_formation_rates / stellar_masses
         sc = axis10.scatter(np.log10(spc_angular_momenta[spc_star_formation_rates > 0]),
                           np.log10(spc_star_formation_rates[spc_star_formation_rates > 0]), c=disc_fractions_IT20[spc_star_formation_rates > 0], s=8,
-                          cmap='seismic_r', vmin=0, vmax=1, marker='h')
+                          cmap='seismic_r', vmin=0, vmax=1)
         plot_tools.create_colorbar(axis00, sc, r'$\mathrm{D/T_{30\degree}}$', 'horizontal')
         
         # Plot median and 1-sigma lines #
