@@ -76,7 +76,7 @@ class TullyFisherFaberJackson:
         """
         # Generate the figure and define its parameters #
         plt.close()
-        figure = plt.figure(figsize=(10, 10))
+        figure, axis = plt.subplots(1, figsize=(10, 10))
         gs = gridspec.GridSpec(3, 2, wspace=0.05, hspace=0.05, height_ratios=[0.05, 1, 1])
         axiscbar = figure.add_subplot(gs[0, :])
         axis10 = figure.add_subplot(gs[1, 0])

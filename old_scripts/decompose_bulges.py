@@ -38,7 +38,7 @@ class DecomposeBulges:
         import matplotlib.pyplot as plt
         
         plt.close()
-        plt.figure(0, figsize=(20, 22.5))
+        figure, axis = plt.subplots(1, figsize=(20, 22.5))
         count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][energy_mask, 0], stellar_data_tmp['Coordinates'][energy_mask, 1],
                                                bins=500, range=[[-30, 30], [-30, 30]])
         plots_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/SP/'  # Path to save plots.

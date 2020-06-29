@@ -45,7 +45,7 @@ class RADec:
     def plot():
         # Generate the figure and define its parameters #
         plt.close()
-        figure = plt.figure(0, figsize=(10, 7.5))
+        figure, axis = plt.subplots(1, figsize=(10, 7.5))
         
         gs = gridspec.GridSpec(1, 1)
         axis00 = figure.add_subplot(gs[0, 0], projection='mollweide')

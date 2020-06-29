@@ -46,7 +46,7 @@ def generate_plot(properties, x, y, xscale, yscale, xlim=None, ylim=None, title=
 
     # Close previous figures and create a new one #
     plt.close()
-    figure = plt.figure(0, figsize=(10, 7.5))
+    figure, axis = plt.subplots(1, figsize=(10, 7.5))
     plt.tick_params(direction='in', which='both', top='on', right='on')
 
     # Set the axes scales #

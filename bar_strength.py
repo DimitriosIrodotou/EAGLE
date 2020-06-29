@@ -113,7 +113,7 @@ class BarStrength:
         
         # Generate the figure and define its parameters #
         plt.close()
-        plt.figure(0, figsize=(10, 7.5))
+        figure, axis = plt.subplots(1, figsize=(10, 7.5))
         
         plt.grid(True, which='both', axis='both')
         plt.xlim(0.0, 10.0)

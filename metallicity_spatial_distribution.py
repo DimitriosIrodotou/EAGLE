@@ -188,7 +188,7 @@ class MetallicitySpatialDistribution:
         """
         # Generate the figure and define its parameters #
         plt.close()
-        figure = plt.figure(0, figsize=(20, 15))
+        figure, axis = plt.subplots(1, figsize=(20, 15))
         
         gs = gridspec.GridSpec(3, 2, hspace=0.07, wspace=0.0, height_ratios=[0.05, 1, 1])
         axiscbar = figure.add_subplot(gs[0, :])

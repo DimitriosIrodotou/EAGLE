@@ -46,7 +46,7 @@ class ComponentBeta:
         print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished CB for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished ComponentBeta for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
@@ -61,7 +61,7 @@ class ComponentBeta:
         """
         # Generate the figure and define its parameters #
         plt.close()
-        figure = plt.figure(figsize=(20, 7.5))
+        figure, axis = plt.subplots(1, figsize=(20, 7.5))
         gs = gridspec.GridSpec(2, 2, wspace=0.0, hspace=0.0, height_ratios=[0.05, 1])
         axis00 = figure.add_subplot(gs[0, :])
         axis10 = figure.add_subplot(gs[1, 0])
@@ -79,6 +79,10 @@ class ComponentBeta:
         axis11.yaxis.set_label_position("right")
         axis10.set_ylabel(r'$\mathrm{exp(\beta_{bulge}-1)}$', size=16)
         axis11.set_ylabel(r'$\mathrm{exp(\beta_{disc}-1)}$', size=16)
+        
+        glx_deltas = np.load(data_path + 'glx_deltas.npy')
+        disc_deltas = np.load(data_path + 'disc_deltas.npy')
+        bulge_deltas = np.load(data_path + 'bulge_deltas.npy')
         
         axis10.scatter(disc_fractions_IT20, np.exp(bulge_betas - 1), c=np.log10(gaseous_masses + stellar_masses), s=8, cmap='nipy_spectral_r',
                        marker='h')

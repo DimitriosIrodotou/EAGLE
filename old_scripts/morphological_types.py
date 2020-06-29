@@ -42,7 +42,7 @@ class MorphologicalTypes:
         print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished MT for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished MorphologicalTypes for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
@@ -55,7 +55,7 @@ class MorphologicalTypes:
         """
         # Generate the figure and define its parameters #
         plt.close()
-        figure = plt.figure(figsize=(10, 7.5))
+        figure, axis = plt.subplots(1, figsize=(10, 7.5))
         
         plt.grid(True, which='both', axis='both')
         # plt.xscale('log')
@@ -64,7 +64,7 @@ class MorphologicalTypes:
         # ax10.set_xlim(1e9, 1e12)
         # ax10.set_xlabel(r'$\mathrm{log_{10}(M_{\bigstar}/M_{\odot})}$', size=16)
         # ax10.set_ylabel(r'$\mathrm{(|\vec{J}_{\odot}|/M_{\odot})/(kpc\;km\;s^{-1})}$', size=16)
-        # ax10.tick_params(direction='out', which='both', top='on', right='on', left='on', labelsize=16)
+        # ax10.tick_params(direction='out', which='both', top='on', right='on',  labelsize=16)
         
         bulge_fractions_IT20 = 1 - disc_fractions_IT20
         stellar_masses = np.log10(stellar_masses) + np.log10(0.673)

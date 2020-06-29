@@ -222,7 +222,7 @@ class RADec:
         
         # Generate the figure and define its parameters #
         plt.close()
-        figure = plt.figure(0, figsize=(20, 22.5))
+        figure, axis = plt.subplots(1, figsize=(20, 22.5))
         
         gs = gridspec.GridSpec(3, 2)
         axis00 = figure.add_subplot(gs[0, 0], projection='mollweide')

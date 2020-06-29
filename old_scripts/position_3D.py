@@ -15,7 +15,6 @@ import eagle_IO.eagle_IO.eagle_IO as E
 
 from matplotlib import gridspec
 from matplotlib import animation
-from mpl_toolkits.mplot3d import axes3d
 from morpho_kinematics import MorphoKinematic
 
 # Create a parser and add argument to read data #
@@ -66,8 +65,8 @@ class Position3D:
                     np.save(data_path + 'group_number_' + str(group_number), group_number)
                     np.save(data_path + 'subgroup_number_' + str(group_number), subgroup_number)
                     np.save(data_path + 'stellar_data_tmp_' + str(group_number), stellar_data_tmp)
-                    print('Masked and saved data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
-                        round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
+                    print('Masked and saved data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (
+                            time.time() - start_local_time) + ' (' + str(round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
                     p += 1
                 
@@ -75,8 +74,8 @@ class Position3D:
                     start_local_time = time.time()  # Start the local time.
                     
                     stellar_data_tmp = self.mask_galaxies(group_number, subgroup_number)  # Mask the data
-                    print('Masked data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (time.time() - start_local_time) + ' (' + str(
-                        round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
+                    print('Masked data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (
+                            time.time() - start_local_time) + ' (' + str(round(100 * p / len(set(self.subhalo_data_tmp['GroupNumber'])), 1)) + '%)')
                     print('–––––––––––––––––––––––––––––––––––––––––––––')
                     p += 1
                 
@@ -98,7 +97,8 @@ class Position3D:
                 print('Plotted data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (time.time() - start_local_time))
                 print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished Position3D for ' + re.split('EAGLE/|/data', simulation_path)[2] + ' in %.4s s' % (time.time() - start_global_time))  # Print total time.
+        print('Finished Position3D for ' + re.split('EAGLE/|/data', simulation_path)[2] + ' in %.4s s' % (
+                time.time() - start_global_time))  # Print total time.
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
@@ -152,8 +152,8 @@ class Position3D:
     def mask_galaxies(self, group_number, subgroup_number):
         """
         Mask galaxies and normalise data.
-        :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber']))
-        :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
+        :param group_number: from read_add_attributes.py.
+        :param subgroup_number: from read_add_attributes.py.
         :return: stellar_data_tmp
         """
         
@@ -180,8 +180,8 @@ class Position3D:
         """
         A method to plot a rotating 3D scatter.
         :param stellar_data_tmp: temporary data
-        :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber']))
-        :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
+        :param group_number: from read_add_attributes.py.
+        :param subgroup_number: from read_add_attributes.py.
         :return: None
         """
         
@@ -192,7 +192,7 @@ class Position3D:
         
         # Generate the figure and define its parameters #
         plt.close()
-        figure = plt.figure(0, figsize=(20, 15))
+        figure, axis = plt.subplots(1, figsize=(20, 15))
         gs = gridspec.GridSpec(2, 1)
         axupper = plt.subplot(gs[0, 0], projection='3d')
         axlower = plt.subplot(gs[1, 0], projection='3d')
@@ -223,11 +223,9 @@ class Position3D:
             Create the 3D scatter of the positions of the particles.
             :return: figure
             """
-            kappa, discfrac, circularity, vrotsig, vrots, delta = MorphoKinematic.kinematic_diagnostics(stellar_data_tmp['Coordinates'],
-                                                                                                             stellar_data_tmp['Mass'],
-                                                                                                             stellar_data_tmp['Velocity'],
-                                                                                                             stellar_data_tmp[
-                                                                                                                 'ParticleBindingEnergy'])
+            kappa, disc_fraction, circularity, rotational_over_dispersion, vrots, rotational_velocity, sigma_0, \
+            delta = MorphoKinematic.kinematic_diagnostics(
+                stellar_data_tmp['Coordinates'], stellar_data_tmp['Mass'], stellar_data_tmp['Velocity'], stellar_data_tmp['ParticleBindingEnergy'])
             color = []
             for i in range(len(stellar_data_tmp['Mass'])):
                 if vrots[i] < 0.0:
@@ -260,7 +258,8 @@ class Position3D:
         
         # Save the animation #
         # plt.title('z ~ ' + re.split('_z0|p000', tag)[1])
-        anim.save(plots_path + str(group_number) + str(subgroup_number) + '-' + 'P3D' + '-' + date + '.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
+        anim.save(plots_path + str(group_number) + str(subgroup_number) + '-' + 'P3D' + '-' + date + '.mp4', fps=30,
+                  extra_args=['-vcodec', 'libx264'])
         return None
 
 

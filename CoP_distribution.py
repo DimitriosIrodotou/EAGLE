@@ -64,7 +64,7 @@ class CoPDistribution:
         
         # Generate the figure and define its parameters #
         plt.close()
-        figure = plt.figure(figsize=(10, 10))
+        figure, axis = plt.subplots(1, figsize=(10, 10))
         # plot_tools.set_axis(axis10, xlim=[0.5, 3.1], ylim=[9.5, 12.1], ylabel=r'$\mathrm{log_{10}(M_{\bigstar}/M_{\odot})}$', aspect=None)
         
         # Calculate the distances between all centres of potential #

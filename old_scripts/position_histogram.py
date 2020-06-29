@@ -152,8 +152,8 @@ class PositionHistogram:
     def mask_galaxies(self, group_number, subgroup_number):
         """
         Mask galaxies and normalise data.
-        :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber']))
-        :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
+        :param group_number: from read_add_attributes.py.
+        :param subgroup_number: from read_add_attributes.py.
         :return: stellar_data_tmp
         """
         
@@ -180,8 +180,8 @@ class PositionHistogram:
         """
         A method to plot a hexbin histogram.
         :param stellar_data_tmp: temporary data
-        :param group_number: from list(set(self.subhalo_data_tmp['GroupNumber']))
-        :param subgroup_number: from list(set(self.subhalo_data_tmp['SubGroupNumber']))
+        :param group_number: from read_add_attributes.py.
+        :param subgroup_number: from read_add_attributes.py.
         :return: None
         """
         
@@ -192,7 +192,7 @@ class PositionHistogram:
         
         # Generate the figures #
         plt.close()
-        plt.figure(0, figsize=(20, 7.5))
+        figure, axis = plt.subplots(1, figsize=(20, 7.5))
         
         gs = gridspec.GridSpec(2, 3, height_ratios=(0.03, 1))
         gs.update(hspace=0.4, wspace=0.3)

@@ -131,7 +131,7 @@ class RADecDistribution:
         """
         # Generate the figure and define its parameters #
         plt.close()
-        figure = plt.figure(figsize=(10, 7.5))
+        figure, axis = plt.subplots(1, figsize=(10, 7.5))
         axis = figure.add_subplot(projection='mollweide')
         
         plt.xlabel('RA ($\degree$)')

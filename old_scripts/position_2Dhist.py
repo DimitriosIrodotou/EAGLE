@@ -79,7 +79,7 @@ class PositionHistogram:
         """
 
         plt.close()
-        plt.figure()
+        figure, axis = plt.subplots()
 
         # Plot.
         plt.hist(self.stars['Coordinates'], c='red', s=3, edgecolor='none')

@@ -57,7 +57,7 @@ class DiscToTotalVsBaryons:
         """
         # Generate the figure and define its parameters #
         plt.close()
-        figure = plt.figure(figsize=(10, 7.5))
+        figure, axis = plt.subplots(1, figsize=(10, 7.5))
         # gs = gridspec.GridSpec(2, 1, wspace=0.0, hspace=0.0, height_ratios=[0.05, 1])
         # axcbar = figure.add_subplot(gs[0, 0])
         # ax10 = figure.add_subplot(gs[1, 0])
@@ -68,7 +68,7 @@ class DiscToTotalVsBaryons:
         plt.grid(True, which='major', axis='both')
         plt.ylabel(r'$\mathrm{D/T_{30\degree}}$', size=16)
         plt.xlabel(r'$\mathrm{M_{\bigstar}}$', size=16)
-        plt.tick_params(direction='out', which='both', top='on', right='on', left='on', labelsize=16)
+        plt.tick_params(direction='out', which='both', top='on', right='on',  labelsize=16)
         
         # cmap = matplotlib.cm.get_cmap('copper')
         colors = iter(matplotlib.cm.rainbow(np.linspace(0, 1, 10)))
@@ -82,7 +82,7 @@ class DiscToTotalVsBaryons:
             # plt.fill_between(x_value, shigh, slow, color=s_m.to_rgba(i), alpha='0.5', zorder=5)
             # plot_tools.create_colorbar(axcbar, pl, r'$\mathrm{Counts\;per\;hexbin}$', 'horizontal')
         
-        # Save the figure. #
+        # Save the figure #
         plt.savefig(plots_path + 'DTT_B' + '-' + date + '.png', bbox_inches='tight')
         return None
 

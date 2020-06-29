@@ -35,7 +35,7 @@ class PhaseDiagram:
 
     def plot(self):
         """ Plot Temperature--Density relation. """
-        plt.figure()
+        figure, axis = plt.subplots()
 
         # Plot currently star forming gas red.
         mask = np.where(self.gas['StarFormationRate'] > 0)

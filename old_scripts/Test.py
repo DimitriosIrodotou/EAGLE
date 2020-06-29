@@ -29,7 +29,7 @@ sns.set_context('notebook', font_scale=1.6)
 
 # Generate the figure and define its parameters #
 plt.close()
-figure = plt.figure(0, figsize=(20, 15))
+figure, axis = plt.subplots(1, figsize=(20, 15))
 
 gs = gridspec.GridSpec(2, 2)
 ax00 = plt.subplot(gs[0, 0], projection="mollweide")
@@ -37,9 +37,9 @@ ax01 = plt.subplot(gs[0, 1])
 ax10 = plt.subplot(gs[1, 0])
 ax11 = plt.subplot(gs[1, 1])
 
-ax00.grid(True)
-ax10.grid(True)
-ax01.grid(True)
+ax00.grid(True, which='both', axis='both')
+ax10.grid(True, which='both', axis='both')
+ax01.grid(True, which='both', axis='both')
 ax00.set_xlabel('RA ($\degree$)')
 ax00.set_ylabel('Dec ($\degree$)')
 ax10.set_ylabel('Particles per hexbin')

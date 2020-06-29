@@ -17,9 +17,9 @@ start_global_time = time.time()  # Start the global time.
 warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
 
 
-class AngularMomentumVsMass:
+class ComponentAngularMomentum:
     """
-    For all galaxies create: angular momentum versus stellar mass colour-coded by disc to total ratio.
+    For all galaxies create: a angular momentum versus stellar mass colour-coded by disc to total ratio plot.
     """
     
     
@@ -34,21 +34,24 @@ class AngularMomentumVsMass:
         glx_stellar_masses = np.load(data_path + 'glx_stellar_masses.npy')
         disc_fractions_IT20 = np.load(data_path + 'glx_disc_fractions_IT20.npy')
         glx_stellar_angular_momenta = np.load(data_path + 'glx_stellar_angular_momenta.npy')
+        disc_stellar_angular_momenta = np.load(data_path + 'disc_stellar_angular_momenta.npy')
+        bulge_stellar_angular_momenta = np.load(data_path + 'bulge_stellar_angular_momenta.npy')
         print('Loaded data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
         # Plot the data #
         start_local_time = time.time()  # Start the local time.
         
-        self.plot(glx_stellar_masses, disc_fractions_IT20, glx_stellar_angular_momenta)
+        self.plot(glx_stellar_masses, disc_fractions_IT20, glx_stellar_angular_momenta, disc_stellar_angular_momenta, bulge_stellar_angular_momenta)
         print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
-        print('Finished AngularMomentumVsMass for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished ComponentAngularMomentum for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (
+            time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
-    def plot(self, glx_stellar_masses, disc_fractions_IT20, glx_stellar_angular_momenta):
+    def plot(self, glx_stellar_masses, disc_fractions_IT20, glx_stellar_angular_momenta, disc_stellar_angular_momenta, bulge_stellar_angular_momenta):
         """
         Plot galactic angular momentum versus stellar mass colour-coded by disc to total ratio
         :param glx_stellar_masses: defined as the mass of all stellar particles within 30kpc from the most bound particle.
@@ -59,30 +62,26 @@ class AngularMomentumVsMass:
         # Generate the figure and define its parameters #
         plt.close()
         figure, axis = plt.subplots(1, figsize=(10, 7.5))
-        gs = gridspec.GridSpec(2, 1, wspace=0.0, hspace=0.05, height_ratios=[0.05, 1])
-        axis00 = figure.add_subplot(gs[0, 0])
-        axis10 = figure.add_subplot(gs[1, 0])
         
-        plot_tools.set_axis(axis10, xlim=[5e9, 1e12], ylim=[1e0, 1e5], xscale='log', yscale='log',
-                            xlabel=r'$\mathrm{log_{10}(M_{\bigstar}/M_{\odot})}$',
-                            ylabel=r'$\mathrm{(|\vec{J}_{\bigstar}|/M_{\bigstar})/(kpc\;km\;s^{-1})}$')
+        plot_tools.set_axis(axis, xlim=[5e9, 1e12], xscale='log', yscale='log', xlabel=r'$\mathrm{log_{10}(M_{\bigstar}/M_{\odot})}$',
+                            ylabel=r'$\mathrm{(|\vec{J}_{comp}|/M_{\bigstar})/(kpc\;km\;s^{-1})}$', aspect=None)
         
-        bulge_fractions_IT20 = 1 - disc_fractions_IT20
-        spc_stellar_angular_momenta = np.linalg.norm(glx_stellar_angular_momenta, axis=1) / glx_stellar_masses
-        sc = axis10.scatter(glx_stellar_masses, spc_stellar_angular_momenta, c=bulge_fractions_IT20, s=8, cmap='seismic_r')
-        plot_tools.create_colorbar(axis00, sc, r'$\mathrm{B/T_{30\degree}}$', 'horizontal')
+        spc_disc_angular_momenta = np.divide(np.linalg.norm(disc_stellar_angular_momenta, axis=1), disc_fractions_IT20 * glx_stellar_masses)
+        spc_bulge_angular_momenta = np.divide(np.linalg.norm(bulge_stellar_angular_momenta, axis=1), (1 - disc_fractions_IT20) * glx_stellar_masses)
+        plt.scatter(glx_stellar_masses, spc_disc_angular_momenta, c='tab:blue', s=8)
+        plt.scatter(glx_stellar_masses, spc_bulge_angular_momenta, c='tab:red', s=8)
         
         # Read observational data from FR18 #
-        FR18 = np.genfromtxt('./Obs_Data/FR18.csv', delimiter=',', names=['Mstar', 'jstar'])
+        # FR18 = np.genfromtxt('./Obs_Data/FR18.csv', delimiter=',', names=['Mstar', 'jstar'])
         
         # Plot observational data from FR18 #
-        plt.plot(np.power(10, FR18['Mstar'][0:2]), np.power(10, FR18['jstar'][0:2]), color='tab:red', lw=3, linestyle='dashed',
-                 label=r'$\mathrm{Fall\; &\; Romanowsky\, 18:Discs}$', zorder=4)
-        plt.plot(np.power(10, FR18['Mstar'][2:4]), np.power(10, FR18['jstar'][2:4]), color='blue', lw=3, linestyle='dashed',
-                 label=r'$\mathrm{Fall\; &\; Romanowsky\, 18:Bulges}$', zorder=4)
+        # plt.plot(np.power(10, FR18['Mstar'][0:2]), np.power(10, FR18['jstar'][0:2]), color='tab:red', lw=3, linestyle='dashed',
+        #          label=r'$\mathrm{Fall\; &\; Romanowsky\, 18:Discs}$', zorder=4)
+        # plt.plot(np.power(10, FR18['Mstar'][2:4]), np.power(10, FR18['jstar'][2:4]), color='blue', lw=3, linestyle='dashed',
+        #          label=r'$\mathrm{Fall\; &\; Romanowsky\, 18:Bulges}$', zorder=4)
         
         # Save the figure #
-        plt.savefig(plots_path + 'AM_M' + '-' + date + '.png', bbox_inches='tight')
+        plt.savefig(plots_path + 'CAM' + '-' + date + '.png', bbox_inches='tight')
         return None
 
 
@@ -91,4 +90,4 @@ if __name__ == '__main__':
     simulation_path = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
     plots_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/'  # Path to save plots.
     data_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/'  # Path to save/load data.
-    x = AngularMomentumVsMass(simulation_path, tag)
+    x = ComponentAngularMomentum(simulation_path, tag)

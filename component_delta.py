@@ -61,7 +61,7 @@ class ComponentDelta:
         """
         # Generate the figure and define its parameters #
         plt.close()
-        figure = plt.figure(figsize=(20, 7.5))
+        figure, axis = plt.subplots(1, figsize=(20, 7.5))
         gs = gridspec.GridSpec(2, 2, wspace=0.0, hspace=0.0, height_ratios=[0.05, 1])
         axis00 = figure.add_subplot(gs[0, :])
         axis10 = figure.add_subplot(gs[1, 0])
