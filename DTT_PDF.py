@@ -167,7 +167,7 @@ class DiscToTotalProbabilityDensityFunction:
         
         # Generate the figure and define its parameters #
         plt.close()
-        figure, axis = plt.subplots(1, figsize=(20, 15))
+        figure = plt.figure(figsize=(20, 15))
         
         gs = gridspec.GridSpec(2, 2)
         axis00 = figure.add_subplot(gs[0, 0])
@@ -189,7 +189,7 @@ class DiscToTotalProbabilityDensityFunction:
         bulge_fraction = 1 - disc_fractions_IT20
         
         # Plots BBT19 bar's midpoints #
-        BBT19 = np.genfromtxt('./Obs_Data/BBT19.csv', delimiter=',', names=['BT', 'f'])
+        BBT19 = np.genfromtxt('./observational_data/BBT19.csv', delimiter=',', names=['BT', 'f'])
         axis00.scatter(BBT19['BT'], BBT19['f'], color='red', s=3, marker='_', zorder=2, label="$\mathrm{Bluck+19}$")
         
         # Weight each bin by its contribution to the total number of values and create a histogram #

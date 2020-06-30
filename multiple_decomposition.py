@@ -73,7 +73,7 @@ class MultipleDecomposition:
         """
         # Generate the figure and define its parameters #
         plt.close()
-        figure, axis = plt.subplots(1, figsize=(16, 9))
+        figure = plt.figure(figsize=(16, 9))
         
         gs = gridspec.GridSpec(2, 3)
         axis00 = figure.add_subplot(gs[0, 0], projection='mollweide')

@@ -10,8 +10,6 @@ import numpy as np
 import matplotlib.cbook
 import matplotlib.pyplot as plt
 
-from matplotlib import gridspec
-
 date = time.strftime('%d_%m_%y_%H%M')  # Date.
 start_global_time = time.time()  # Start the global time.
 warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
@@ -63,24 +61,27 @@ class ComponentAngularMomentum:
         plt.close()
         figure, axis = plt.subplots(1, figsize=(10, 7.5))
         
-        plot_tools.set_axis(axis, xlim=[5e9, 1e12], xscale='log', yscale='log', xlabel=r'$\mathrm{log_{10}(M_{\bigstar}/M_{\odot})}$',
-                            ylabel=r'$\mathrm{(|\vec{J}_{comp}|/M_{\bigstar})/(kpc\;km\;s^{-1})}$', aspect=None)
+        plot_tools.set_axis(axis, xlim=[5e9, 1e12], ylim=[1e0, 1e6], xscale='log', yscale='log',
+                            xlabel=r'$\mathrm{log_{10}(M_{\bigstar,comp}/M_{\odot})}$',
+                            ylabel=r'$\mathrm{(|\vec{J}_{\bigstar,comp}|/M_{\bigstar, comp})/(kpc\;km\;s^{-1})}$', aspect=None, which='major')
         
         spc_disc_angular_momenta = np.divide(np.linalg.norm(disc_stellar_angular_momenta, axis=1), disc_fractions_IT20 * glx_stellar_masses)
         spc_bulge_angular_momenta = np.divide(np.linalg.norm(bulge_stellar_angular_momenta, axis=1), (1 - disc_fractions_IT20) * glx_stellar_masses)
-        plt.scatter(glx_stellar_masses, spc_disc_angular_momenta, c='tab:blue', s=8)
-        plt.scatter(glx_stellar_masses, spc_bulge_angular_momenta, c='tab:red', s=8)
+        plt.scatter(disc_fractions_IT20 * glx_stellar_masses, spc_disc_angular_momenta, c='tab:blue', s=8)
+        plt.scatter((1 - disc_fractions_IT20) * glx_stellar_masses, spc_bulge_angular_momenta, c='tab:red', s=8)
         
-        # Read observational data from FR18 #
-        # FR18 = np.genfromtxt('./Obs_Data/FR18.csv', delimiter=',', names=['Mstar', 'jstar'])
+        # Read observational data from FR13 and OG14 #
+        FR13_D = np.genfromtxt('./observational_data/FR_1305.1626/Figure2_D.csv', delimiter=',', names=['Md', 'jd'])
+        FR13_E = np.genfromtxt('./observational_data/FR_1305.1626/Figure2_E.csv', delimiter=',', names=['Mb', 'jb'])
         
-        # Plot observational data from FR18 #
-        # plt.plot(np.power(10, FR18['Mstar'][0:2]), np.power(10, FR18['jstar'][0:2]), color='tab:red', lw=3, linestyle='dashed',
-        #          label=r'$\mathrm{Fall\; &\; Romanowsky\, 18:Discs}$', zorder=4)
-        # plt.plot(np.power(10, FR18['Mstar'][2:4]), np.power(10, FR18['jstar'][2:4]), color='blue', lw=3, linestyle='dashed',
-        #          label=r'$\mathrm{Fall\; &\; Romanowsky\, 18:Bulges}$', zorder=4)
+        # Plot observational data from FR13 and OG14 #
+        plt.scatter(np.power(10, FR13_D['Md']), np.power(10, FR13_D['jd']), edgecolor='black', color='blue', s=50, marker='s',
+                    label=r'$\mathrm{Fall\; &\; Romanowsky\, 13:Discs}$', zorder=4)
+        plt.scatter(np.power(10, FR13_E['Mb']), np.power(10, FR13_E['jb']), edgecolor='black', color='red', s=50, marker='s',
+                    label=r'$\mathrm{Fall\; &\; Romanowsky\, 13:Bulges}$', zorder=4)
         
-        # Save the figure #
+        # Create the legend and save the figure #
+        plt.legend(loc='upper right', fontsize=12, frameon=False, numpoints=1)
         plt.savefig(plots_path + 'CAM' + '-' + date + '.png', bbox_inches='tight')
         return None
 

@@ -48,7 +48,7 @@ class DiscToTotalVsVToSigma:
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
         print('Finished DiscToTotalVsVToSigma for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (
-                time.time() - start_global_time))
+            time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
@@ -64,7 +64,7 @@ class DiscToTotalVsVToSigma:
         """
         # Generate the figure and define its parameters #
         plt.close()
-        figure, axis = plt.subplots(1, figsize=(10, 7.5))
+        figure = plt.figure(figsize=(10, 7.5))
         gs = gridspec.GridSpec(2, 1, wspace=0.0, hspace=0.0, height_ratios=[0.05, 1])
         axis00 = figure.add_subplot(gs[0, 0])
         axis10 = figure.add_subplot(gs[1, 0])
@@ -79,19 +79,19 @@ class DiscToTotalVsVToSigma:
         # for axis in [axis11, axis12, axis13]:
         #     axis.set_yticklabels([])
         
-        plot_tools.set_axis(axis10, xlabel=r'$\mathrm{V_{rot}/\sigma}$', ylabel=r'$\mathrm{D/T_{30\degree}}$')
+        plot_tools.set_axis(axis10, xlabel=r'$\mathrm{V_{rot}/\sigma}$', ylabel=r'$\mathrm{D/T_{30\degree}}$', aspect=None)
         glx_as = np.load(data_path + 'glx_as.npy')
-        hb = axis10.scatter(rotationals_over_dispersions, disc_fractions_IT20, c=glx_as, s=5,label=r'$D/T_{\vec{J}_{b} = 0}$', cmap=cmap)
+        hb = axis10.scatter(rotationals_over_dispersions, disc_fractions_IT20, c=glx_as, s=5, label=r'$D/T_{\vec{J}_{b} = 0}$', cmap=cmap)
         plot_tools.create_colorbar(axis00, hb, r'$\mathrm{Counts\;per\;hexbin}$', 'horizontal')
-            
-            # Plot median and 1-sigma lines #
-            # x_value, median, shigh, slow = plot_tools.median_1sigma(x_attribute, disc_fractions_IT20, 0.09, log=False)
-            # axis.plot(x_value, median, color='silver', linewidth=3, zorder=5)
-            # axis.fill_between(x_value, shigh, slow, color='silver', alpha='0.3', zorder=5)
-            #
-            # axis.axvline(x=threshold, c='tab:red')  # Plot threshold lines.
-            #
-            # axis.set_xlabel(label, size=16)
+        
+        # Plot median and 1-sigma lines #
+        # x_value, median, shigh, slow = plot_tools.median_1sigma(x_attribute, disc_fractions_IT20, 0.09, log=False)
+        # axis.plot(x_value, median, color='silver', linewidth=3, zorder=5)
+        # axis.fill_between(x_value, shigh, slow, color='silver', alpha='0.3', zorder=5)
+        #
+        # axis.axvline(x=threshold, c='tab:red')  # Plot threshold lines.
+        #
+        # axis.set_xlabel(label, size=16)
         # Save the figure #
         plt.savefig(plots_path + 'DTT_VTS' + '-' + date + '.png', bbox_inches='tight')
         return None

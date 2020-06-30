@@ -56,7 +56,7 @@ def create_colorbar(axis, plot, label, orientation='vertical', size=16):
     return None
 
 
-def set_axis(axis, xlim=None, ylim=None, xscale=None, yscale=None, xlabel=None, ylabel=None, aspect='equal', size=16):
+def set_axis(axis, xlim=None, ylim=None, xscale=None, yscale=None, xlabel=None, ylabel=None, aspect='equal', which='both', size=16):
     """
     Set axis parameters.
     :param axis: name of the axis.
@@ -67,6 +67,7 @@ def set_axis(axis, xlim=None, ylim=None, xscale=None, yscale=None, xlabel=None, 
     :param xlabel: x axis label.
     :param ylabel: y axis label.
     :param aspect: aspect of the axis scaling.
+    :param which: major, minor or both for grid and ticks.
     :param size: text size.
     :return:
     """
@@ -95,7 +96,7 @@ def set_axis(axis, xlim=None, ylim=None, xscale=None, yscale=None, xlabel=None, 
     # Set grid and tick parameters #
     if aspect is not None:
         axis.set_aspect('equal')
-    axis.grid(True, which='both', axis='both', color='gray', linestyle='-')
-    axis.tick_params(direction='out', which='both', top='on', right='on', labelsize=size)
+    axis.grid(True, which=which, axis='both', color='gray', linestyle='-')
+    axis.tick_params(direction='out', which=which, top='on', right='on', labelsize=size)
     
     return None

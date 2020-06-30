@@ -2,7 +2,6 @@ import os
 import re
 import time
 import warnings
-import matplotlib
 import plot_tools
 import matplotlib.cbook
 
@@ -76,7 +75,7 @@ class TullyFisherFaberJackson:
         """
         # Generate the figure and define its parameters #
         plt.close()
-        figure, axis = plt.subplots(1, figsize=(10, 10))
+        figure = plt.figure(figsize=(10, 10))
         gs = gridspec.GridSpec(3, 2, wspace=0.05, hspace=0.05, height_ratios=[0.05, 1, 1])
         axiscbar = figure.add_subplot(gs[0, :])
         axis10 = figure.add_subplot(gs[1, 0])
@@ -101,23 +100,23 @@ class TullyFisherFaberJackson:
         axis21.scatter(np.log10(np.sqrt(1 - bulge_deltas) * bulge_sigma_0s), np.log10(glx_stellar_masses), c='tab:red', s=10)
         
         # Read and plot observational data from AZF08, TEA11 and OCB20 #
-        AZF08 = np.genfromtxt('./Obs_Data/AZF08.csv', delimiter=',', names=['x', 'y'])
-        TEA11 = np.genfromtxt('./Obs_Data/TEA11.csv', delimiter=',', names=['x', 'y'])
-        OCB20_TF_DD = np.genfromtxt('./Obs_Data/OCB20_TF_DD.csv', delimiter=',', names=['x', 'y'])
-        OCB20_TF_discs = np.genfromtxt('./Obs_Data/OCB20_TF_discs.csv', delimiter=',', names=['x', 'y'])
-        OCB20_TF_bulges = np.genfromtxt('./Obs_Data/OCB20_TF_bulges.csv', delimiter=',', names=['x', 'y'])
-        OCB20_FJ_BD = np.genfromtxt('./Obs_Data/OCB20_FJ_BD.csv', delimiter=',', names=['x', 'y'])
-        OCB20_FJ_discs = np.genfromtxt('./Obs_Data/OCB20_FJ_discs.csv', delimiter=',', names=['x', 'y'])
-        OCB20_FJ_bulges = np.genfromtxt('./Obs_Data/OCB20_FJ_bulges.csv', delimiter=',', names=['x', 'y'])
-
-        # axis10.scatter(AZF08['y'], AZF08['x'], color='lime', s=15, zorder=2, label=r'$\mathrm{Avila-Reese+08}$')
-        # axis10.scatter(TEA11['x'], TEA11['y'], color='cyan', s=15, marker='s', zorder=2, label=r'$\mathrm{Torres-Flores+11}$')
-        axis10.plot(OCB20_TF_DD['x'], OCB20_TF_DD['y'], color='cyan', zorder=2, label=r'$\mathrm{Oh+20:\;B/T<0.2}$')
-        axis20.plot(OCB20_TF_discs['x'], OCB20_TF_discs['y'], color='cyan', zorder=2)
-        axis20.plot(OCB20_TF_bulges['x'], OCB20_TF_bulges['y'], color='orange', zorder=2)
-        axis11.plot(OCB20_FJ_BD['x'], OCB20_FJ_BD['y'], color='orange', zorder=2, label=r'$\mathrm{Oh+20:\;B/T>0.8}$')
-        axis21.plot(OCB20_FJ_discs['x'], OCB20_FJ_discs['y'], color='cyan', zorder=2, label=r'$\mathrm{Oh+20:\;discs}$')
-        axis21.plot(OCB20_FJ_bulges['x'], OCB20_FJ_bulges['y'], color='orange', zorder=2, label=r'$\mathrm{Oh+20:\;bulges}$')
+        AZF08 = np.genfromtxt('./observational_data/AZF08.csv', delimiter=',', names=['Vrot', 'Mstar'])
+        TEA11 = np.genfromtxt('./observational_data/TEA11.csv', delimiter=',', names=['Vrot', 'Mstar'])
+        OCB20_TF_DD = np.genfromtxt('./observational_data/OCB20_TF_DD.csv', delimiter=',', names=['Vrot', 'Mstar'])
+        OCB20_TF_discs = np.genfromtxt('./observational_data/OCB20_TF_discs.csv', delimiter=',', names=['Vrot', 'Mstar'])
+        OCB20_TF_bulges = np.genfromtxt('./observational_data/OCB20_TF_bulges.csv', delimiter=',', names=['Vrot', 'Mstar'])
+        OCB20_FJ_BD = np.genfromtxt('./observational_data/OCB20_FJ_BD.csv', delimiter=',', names=['sigma', 'Mstar'])
+        OCB20_FJ_discs = np.genfromtxt('./observational_data/OCB20_FJ_discs.csv', delimiter=',', names=['sigma', 'Mstar'])
+        OCB20_FJ_bulges = np.genfromtxt('./observational_data/OCB20_FJ_bulges.csv', delimiter=',', names=['sigma', 'Mstar'])
+        
+        # axis10.scatter(AZF08['Mstar'], AZF08['Vrot'], color='lime', s=15, zorder=2, label=r'$\mathrm{Avila-Reese+08}$')
+        # axis10.scatter(TEA11['Vrot'], TEA11['Mstar'], color='cyan', s=15, marker='s', zorder=2, label=r'$\mathrm{Torres-Flores+11}$')
+        axis10.plot(OCB20_TF_DD['Vrot'], OCB20_TF_DD['Mstar'], color='cyan', zorder=2, label=r'$\mathrm{Oh+20:\;B/T<0.2}$')
+        axis20.plot(OCB20_TF_discs['Vrot'], OCB20_TF_discs['Mstar'], color='cyan', zorder=2)
+        axis20.plot(OCB20_TF_bulges['Vrot'], OCB20_TF_bulges['Mstar'], color='orange', zorder=2)
+        axis11.plot(OCB20_FJ_BD['sigma'], OCB20_FJ_BD['Mstar'], color='orange', zorder=2, label=r'$\mathrm{Oh+20:\;B/T>0.8}$')
+        axis21.plot(OCB20_FJ_discs['sigma'], OCB20_FJ_discs['Mstar'], color='cyan', zorder=2, label=r'$\mathrm{Oh+20:\;discs}$')
+        axis21.plot(OCB20_FJ_bulges['sigma'], OCB20_FJ_bulges['Mstar'], color='orange', zorder=2, label=r'$\mathrm{Oh+20:\;bulges}$')
         
         # Create the legend and save the figure #
         for axis in [axis10, axis11, axis20, axis21]:
