@@ -30,7 +30,7 @@ class RotateCoordinates:
         coordinates = np.matmul(Ryz, stellar_data_tmp['Coordinates'][..., None]).squeeze()
         velocities = np.matmul(Ryz, stellar_data_tmp['Velocity'][..., None]).squeeze()
         
-        # Calculate the angular momentum for each particle and for the galaxy and the unit vector parallel to the galactic angular momentum vector #
+        # Recalculate the angular momentum for each particle and for the galaxy and the unit vector parallel to the galactic angular momentum vector #
         prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(coordinates, velocities)  # In Msun kpc km s^-1.
         glx_angular_momentum = np.sum(prc_angular_momentum, axis=0)  # In Msun kpc km s^-1.
         glx_unit_vector = glx_angular_momentum / np.linalg.norm(glx_angular_momentum)
