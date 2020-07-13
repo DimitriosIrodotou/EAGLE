@@ -17,7 +17,7 @@ warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # I
 
 class ComponentAngularMomentum:
     """
-    For all galaxies create: a angular momentum versus stellar mass colour-coded by disc to total ratio plot.
+    For all components create: a angular momentum versus stellar mass colour-coded by disc to total ratio plot.
     """
     
     
@@ -27,6 +27,7 @@ class ComponentAngularMomentum:
         :param simulation_path: simulation directory.
         :param tag: redshift directory.
         """
+        # Load the data #
         start_local_time = time.time()  # Start the local time.
         
         glx_stellar_masses = np.load(data_path + 'glx_stellar_masses.npy')
@@ -49,24 +50,28 @@ class ComponentAngularMomentum:
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
-    def plot(self, glx_stellar_masses, disc_fractions_IT20, glx_stellar_angular_momenta, disc_stellar_angular_momenta, bulge_stellar_angular_momenta):
+    @staticmethod
+    def plot(glx_stellar_masses, disc_fractions_IT20, glx_stellar_angular_momenta, disc_stellar_angular_momenta, bulge_stellar_angular_momenta):
         """
-        Plot galactic angular momentum versus stellar mass colour-coded by disc to total ratio
+        Plot the component angular momentum versus stellar mass colour-coded by disc to total ratio.
         :param glx_stellar_masses: defined as the mass of all stellar particles within 30kpc from the most bound particle.
         :param disc_fractions_IT20: where the disc consists of particles whose angular momentum angular separation is 30deg from the densest pixel.
         :param glx_stellar_angular_momenta: defined as the sum of each stellar particle's angular momentum.
+        :param disc_stellar_angular_momenta: defined as the sum of each disc particle's angular momentum.
+        :param bulge_stellar_angular_momenta: defined as the sum of each bulge particle's angular momentum.
         :return: None
         """
         # Generate the figure and define its parameters #
-        plt.close()
         figure, axis = plt.subplots(1, figsize=(10, 7.5))
-        
         plot_tools.set_axis(axis, xlim=[5e9, 1e12], ylim=[1e0, 1e6], xscale='log', yscale='log',
                             xlabel=r'$\mathrm{log_{10}(M_{\bigstar,comp}/M_{\odot})}$',
                             ylabel=r'$\mathrm{(|\vec{J}_{\bigstar,comp}|/M_{\bigstar, comp})/(kpc\;km\;s^{-1})}$', aspect=None, which='major')
         
+        # Calculate component specific angular momentum #
         spc_disc_angular_momenta = np.divide(np.linalg.norm(disc_stellar_angular_momenta, axis=1), disc_fractions_IT20 * glx_stellar_masses)
         spc_bulge_angular_momenta = np.divide(np.linalg.norm(bulge_stellar_angular_momenta, axis=1), (1 - disc_fractions_IT20) * glx_stellar_masses)
+        
+        # Plot galactic angular momentum versus stellar mass colour-coded by disc to total ratio #
         plt.scatter(disc_fractions_IT20 * glx_stellar_masses, spc_disc_angular_momenta, c='tab:blue', s=8)
         plt.scatter((1 - disc_fractions_IT20) * glx_stellar_masses, spc_bulge_angular_momenta, c='tab:red', s=8)
         
@@ -80,9 +85,10 @@ class ComponentAngularMomentum:
         plt.scatter(np.power(10, FR13_E['Mb']), np.power(10, FR13_E['jb']), edgecolor='black', color='red', s=50, marker='s',
                     label=r'$\mathrm{Fall\; &\; Romanowsky\, 13:Bulges}$', zorder=4)
         
-        # Create the legend and save the figure #
+        # Create the legend, save and close the figure #
         plt.legend(loc='upper right', fontsize=12, frameon=False, numpoints=1)
         plt.savefig(plots_path + 'CAM' + '-' + date + '.png', bbox_inches='tight')
+        plt.close()
         return None
 
 

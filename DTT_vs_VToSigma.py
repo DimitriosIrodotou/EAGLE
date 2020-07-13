@@ -85,7 +85,7 @@ class DiscToTotalVsVToSigma:
         plot_tools.create_colorbar(axis00, hb, r'$\mathrm{Counts\;per\;hexbin}$', 'horizontal')
         
         # Plot median and 1-sigma lines #
-        # x_value, median, shigh, slow = plot_tools.median_1sigma(x_attribute, disc_fractions_IT20, 0.09, log=False)
+        # x_value, median, shigh, slow = plot_tools.binned_median_1sigma(x_attribute, disc_fractions_IT20, 0.09, log=False)
         # axis.plot(x_value, median, color='silver', linewidth=3, zorder=5)
         # axis.fill_between(x_value, shigh, slow, color='silver', alpha='0.3', zorder=5)
         #

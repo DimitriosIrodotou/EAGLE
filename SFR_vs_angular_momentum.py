@@ -78,7 +78,7 @@ class SFRVsAngularMomentum:
         plot_tools.create_colorbar(axis00, sc, r'$\mathrm{D/T_{30\degree}}$', 'horizontal')
         
         # Plot median and 1-sigma lines #
-        x_value, median, shigh, slow = plot_tools.median_1sigma(np.log10(spc_angular_momenta[spc_star_formation_rates > 0]),
+        x_value, median, shigh, slow = plot_tools.binned_median_1sigma(np.log10(spc_angular_momenta[spc_star_formation_rates > 0]),
                                                                 np.log10(spc_star_formation_rates[spc_star_formation_rates > 0]), 0.1, log=False)
         axis10.plot(x_value, median, color='black', linewidth=5, zorder=5)
         axis10.fill_between(x_value, shigh, slow, color='black', alpha='0.5', zorder=5)
