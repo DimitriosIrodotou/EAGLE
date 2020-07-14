@@ -19,7 +19,7 @@ warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # I
 
 class ComponentDelta:
     """
-    For all components create: a delta versus DTT colour-coded by galaxy's delta plot.
+    For all components create: a component delta as a function of disc to total ratio colour-coded by galaxy's delta plot.
     """
     
     
@@ -54,7 +54,7 @@ class ComponentDelta:
     @staticmethod
     def plot(glx_deltas, disc_deltas, bulge_deltas, disc_fractions_IT20):
         """
-        Plot the component delta versus DTT colour-coded by galaxy's delta.
+        Plot the component delta as a function of disc to total ratio colour-coded by galaxy's delta.
         :param glx_deltas: defined as the anisotropy parameter for the whole galaxy.
         :param disc_deltas: defined as the anisotropy parameter for the disc component.
         :param bulge_deltas: defined as the anisotropy parameter for the bulge component.
@@ -74,7 +74,7 @@ class ComponentDelta:
         axis10.set_ylabel(r'$\mathrm{exp(\delta_{bulge}-1)}$', size=16)
         axis11.set_ylabel(r'$\mathrm{exp(\delta_{disc}-1)}$', size=16)
         
-        # Plot the component delta versus DTT colour-coded by galaxy's delta #
+        # Plot the component delta as a function of disc to total ratio colour-coded by galaxy's delta #
         axis10.scatter(disc_fractions_IT20, np.exp(bulge_deltas - 1), c=np.exp(glx_deltas - 1), s=8, vmin=0, vmax=1, cmap='magma')
         sc = axis11.scatter(disc_fractions_IT20, np.exp(disc_deltas - 1), c=np.exp(glx_deltas - 1), s=8, vmin=0, vmax=1, cmap='magma')
         plot_tools.create_colorbar(axis00, sc, r'$\mathrm{exp(\delta_{gal}-1)}$', 'horizontal')

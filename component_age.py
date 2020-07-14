@@ -19,7 +19,7 @@ warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # I
 
 class ComponentAge:
     """
-    For all components create: an average birth scale factor versus galaxy mass colour-coded by disc to total ratio plot.
+    For all components create: a component average birth scale factor as a function of galaxy mass colour-coded by disc to total ratio plot.
     """
     
     
@@ -50,10 +50,11 @@ class ComponentAge:
             time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
+    
     @staticmethod
     def plot(disc_as, bulge_as, glx_stellar_masses, glx_disc_fractions_IT20):
         """
-        Plot the average component birth scale factor versus galaxy mass colour-coded by disc to total ratio.
+        Plot the component average birth scale factor as a function of galaxy mass colour-coded by disc to total ratio.
         :param disc_as: defined as the mean birth scale factor for the disc component.
         :param bulge_as: defined as the mean birth scale factor for the bulge component.
         :param glx_stellar_masses: defined as the mass of all stellar particles within 30kpc from the most bound particle.
@@ -74,14 +75,14 @@ class ComponentAge:
         axis10.set_ylabel(r'$\mathrm{\overline{\alpha_{bulge}}}$', size=16)
         axis11.set_ylabel(r'$\mathrm{\overline{\alpha_{disc}}}$', size=16)
         
-        # Plot the average birth scale factor versus galaxy mass colour-coded by disc to total ratio #
+        # Plot the average birth scale factor as a function of galaxy mass colour-coded by disc to total ratio #
         axis10.scatter(glx_stellar_masses, bulge_as, c=glx_disc_fractions_IT20, s=8, cmap='seismic_r')
         sc = axis11.scatter(glx_stellar_masses, disc_as, c=glx_disc_fractions_IT20, s=8, cmap='seismic_r')
         plot_tools.create_colorbar(axiscbar, sc, r'$\mathrm{D/T_{30\degree}}$', 'horizontal')
         
         # Plot median and 1-sigma lines #
         for component, axis in zip([bulge_as, disc_as], [axis10, axis11]):
-            x_value, median, shigh, slow = plot_tools.median_1sigma(glx_stellar_masses, component, 0.1, log=True)
+            x_value, median, shigh, slow = plot_tools.binned_median_1sigma(glx_stellar_masses, component, bin_type='equal_width', n_bins=25, log=True)
             axis.plot(x_value, median, color='black', linewidth=3, zorder=5)
             axis.fill_between(x_value, shigh, slow, color='black', alpha='0.5', zorder=5)
         

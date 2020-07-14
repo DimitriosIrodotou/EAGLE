@@ -19,7 +19,7 @@ warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # I
 
 class SFRVsMass:
     """
-    For all galaxies create: star formation rate versus stellar mass colour-coded by disc to total ratio.
+    For all galaxies create: star formation rate as a function of stellar mass colour-coded by disc to total ratio.
     """
     
     
@@ -50,7 +50,7 @@ class SFRVsMass:
     
     def plot(self, stellar_masses, disc_fractions_IT20, glx_star_formation_rates):
         """
-        Plot star formation rate versus stellar mass colour-coded by disc to total ratio
+        Plot star formation rate as a function of stellar mass colour-coded by disc to total ratio
         :param stellar_masses: defined as the mass of all stellar particles within 30kpc from the most bound particle.
         :param disc_fractions_IT20: where the disc consists of particles whose angular momentum angular separation is 30deg from the densest pixel.
         :param glx_star_formation_rates: defined as the star formation rate of all gaseous particles within 30kpc from the most bound particle.

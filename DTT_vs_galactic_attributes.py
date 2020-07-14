@@ -97,11 +97,11 @@ class DiscToTotalVsGalacticAttributes:
                   r'$\mathrm{SFR/(M_{\odot}\;yr^{-1})}$']
         for axis, axiscbar, x_attribute, y_attribute, label in zip(axes, axescbar, x_attributes, y_attributes, labels):
             # Plot attributes #
-            hb = axis.hexbin(x_attribute, y_attribute, xscale='log', gridsize=50, label=r'$D/T_{\vec{J}_{b} = 0}$', cmap='CMRmap_r')
+            hb = axis.hexbin(x_attribute, y_attribute, xscale='log', gridsize=50, cmap='CMRmap_r')
             plot_tools.create_colorbar(axiscbar, hb, r'$\mathrm{Counts\;per\;hexbin}$', 'horizontal')
             
             # Plot median and 1-sigma lines #
-            x_value, median, shigh, slow = plot_tools.binned_median_1sigma(x_attribute, y_attributes,bin_type= 'equal_width', n_bins=10, log=True)
+            x_value, median, shigh, slow = plot_tools.binned_median_1sigma(x_attribute, y_attributes, bin_type='equal_width', n_bins=10, log=True)
             axis.plot(x_value, median, color='black', linewidth=3, zorder=5)
             axis.fill_between(x_value, shigh, slow, color='black', alpha='0.3', zorder=5)
             

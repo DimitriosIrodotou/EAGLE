@@ -17,7 +17,7 @@ warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # I
 
 class ComponentAngularMomentum:
     """
-    For all components create: a angular momentum versus stellar mass colour-coded by disc to total ratio plot.
+    For all components create: a component angular momentum as a function of stellar mass colour-coded by disc to total ratio plot.
     """
     
     
@@ -53,7 +53,7 @@ class ComponentAngularMomentum:
     @staticmethod
     def plot(glx_stellar_masses, disc_fractions_IT20, glx_stellar_angular_momenta, disc_stellar_angular_momenta, bulge_stellar_angular_momenta):
         """
-        Plot the component angular momentum versus stellar mass colour-coded by disc to total ratio.
+        Plot the component angular momentum as a function of stellar mass colour-coded by disc to total ratio.
         :param glx_stellar_masses: defined as the mass of all stellar particles within 30kpc from the most bound particle.
         :param disc_fractions_IT20: where the disc consists of particles whose angular momentum angular separation is 30deg from the densest pixel.
         :param glx_stellar_angular_momenta: defined as the sum of each stellar particle's angular momentum.
@@ -71,7 +71,7 @@ class ComponentAngularMomentum:
         spc_disc_angular_momenta = np.divide(np.linalg.norm(disc_stellar_angular_momenta, axis=1), disc_fractions_IT20 * glx_stellar_masses)
         spc_bulge_angular_momenta = np.divide(np.linalg.norm(bulge_stellar_angular_momenta, axis=1), (1 - disc_fractions_IT20) * glx_stellar_masses)
         
-        # Plot galactic angular momentum versus stellar mass colour-coded by disc to total ratio #
+        # Plot galactic angular momentum as a function of stellar mass colour-coded by disc to total ratio #
         plt.scatter(disc_fractions_IT20 * glx_stellar_masses, spc_disc_angular_momenta, c='tab:blue', s=8)
         plt.scatter((1 - disc_fractions_IT20) * glx_stellar_masses, spc_bulge_angular_momenta, c='tab:red', s=8)
         

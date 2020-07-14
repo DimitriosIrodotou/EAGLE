@@ -19,7 +19,7 @@ warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # I
 
 class ComponentMZR:
     """
-    For all components create: a disc and bulge metallicity-mass relation colour-coded by DTT plot.
+    For all components create: a component metallicity-mass relation colour-coded by disc to total ratio plot.
     """
     
     
@@ -66,8 +66,7 @@ class ComponentMZR:
         figure = plt.figure(figsize=(20, 7.5))
         gs = gridspec.GridSpec(2, 2, wspace=0.0, hspace=0.0, height_ratios=[0.05, 1])
         axis00 = figure.add_subplot(gs[0, :])
-        axis10 = figure.add_subplot(gs[1, 0])
-        axis11 = figure.add_subplot(gs[1, 1])
+        axis10, axis11 = figure.add_subplot(gs[1, 0]), figure.add_subplot(gs[1, 1])
         
         for axis in [axis10, axis11]:
             plot_tools.set_axis(axis, xlim=[1e9, 6e11], ylim=[1e-1, 1e1], xscale='log', yscale='log', xlabel=r'$\mathrm{M_{\bigstar}/M_{\odot}}$',
@@ -77,7 +76,7 @@ class ComponentMZR:
         axis10.set_ylabel(r'$\mathrm{Z_{bulge}/Z_{\odot}}$', size=16)
         axis11.set_ylabel(r'$\mathrm{Z_{disc}/Z_{\odot}}$', size=16)
         
-        # Plot the component metallicity-mass relation colour-coded by DTT #
+        # Plot the component metallicity-mass relation colour-coded by disc to total ratio #
         axis10.scatter(stellar_masses, bulge_metallicities, c=glx_disc_fractions_IT20, s=8, cmap='seismic_r', vmin=0, vmax=1)
         sc = axis11.scatter(stellar_masses, disc_metallicities, c=glx_disc_fractions_IT20, s=8, cmap='seismic_r', vmin=0, vmax=1)
         plot_tools.create_colorbar(axis00, sc, r'$\mathrm{D/T_{30\degree}}$', 'horizontal')
