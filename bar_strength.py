@@ -90,7 +90,7 @@ class BarStrength:
         plt.plot(r_m, a2, label='Bar strength: %.2f' % max(a2))  # Plot the bar strength radial profile.
         
         # Create the legends and save and close the figure #
-        plt.legend(loc='upper left', fontsize=16, frameon=False, scatterpoints=3)
+        plt.legend(loc='upper left', fontsize=12, frameon=False, scatterpoints=3)
         plt.savefig(plots_path + str(group_number) + '_' + str(subgroup_number) + '-' + 'BS' + '-' + date + '.png', bbox_inches='tight')
         plt.close()
         return None

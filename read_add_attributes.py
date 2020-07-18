@@ -45,12 +45,12 @@ class ReadAttributes:
         subgroup_numbers = np.array_split(list(self.subhalo_data_tmp['SubGroupNumber']), 30)
         
         for group_number, subgroup_number in zip(group_numbers[job_number],
-                                                 subgroup_numbers[job_number]):  # Loop over all masked haloes and sub-haloes.
+            subgroup_numbers[job_number]):  # Loop over all masked haloes and sub-haloes.
             start_local_time = time.time()  # Start the local time.
             
             # Mask galaxies and normalise data #
             stellar_data_tmp, gaseous_data_tmp, blackhole_data_tmp, dark_matter_data_tmp, subhalo_data_tmp = self.mask_galaxies(group_number,
-                                                                                                                                subgroup_number)
+                subgroup_number)
             
             # Save data in numpy array #
             np.save(data_path + 'box_data', self.box_data)
@@ -118,22 +118,22 @@ class ReadAttributes:
         
         # Convert attributes to astronomical units #
         stellar_data['Mass'] *= u.g.to(u.Msun)
-        stellar_data['Velocity'] *= u.cm.to(u.km)  # per second.
+        stellar_data['Velocity'] *= u.cm.to(u.km)  # s^-1.
         stellar_data['InitialMass'] *= u.g.to(u.Msun)
         stellar_data['Coordinates'] *= u.cm.to(u.kpc)
         stellar_data['BirthDensity'] *= u.g.to(u.Msun) / u.cm.to(u.kpc) ** 3
         
         gaseous_data['Mass'] *= u.g.to(u.Msun)
-        gaseous_data['Velocity'] *= u.cm.to(u.km)  # per second.
+        gaseous_data['Velocity'] *= u.cm.to(u.km)  # s^-1.
         gaseous_data['Coordinates'] *= u.cm.to(u.kpc)
         gaseous_data['StarFormationRate'] *= u.g.to(u.Msun) / u.second.to(u.year)
         
         blackhole_data['BH_Mass'] *= u.g.to(u.Msun)
-        blackhole_data['Velocity'] *= u.cm.to(u.km)  # per second.
+        blackhole_data['Velocity'] *= u.cm.to(u.km)  # s^-1.
         blackhole_data['Coordinates'] *= u.cm.to(u.kpc)
         
         dark_matter_data['Coordinates'] *= u.cm.to(u.kpc)
-        dark_matter_data['Velocity'] *= u.cm.to(u.km)  # per second.
+        dark_matter_data['Velocity'] *= u.cm.to(u.km)  # s^-1.
         dark_matter_data['Mass'] = self.dark_matter_mass(simulation_path, tag) * u.g.to(u.Msun)
         
         subhalo_data['CentreOfPotential'] *= u.cm.to(u.kpc)
@@ -212,11 +212,6 @@ class ReadAttributes:
         prc_velocities = np.vstack(
             [stellar_data_tmp['Velocity'], gaseous_data_tmp['Velocity'], blackhole_data_tmp['Velocity'], dark_matter_data_tmp['Velocity']])
         CoM_velocity = np.divide(np.sum(prc_masses[:, np.newaxis] * prc_velocities, axis=0), np.sum(prc_masses, axis=0))  # In km s^-1.
-        # CoM_velocity2 = np.divide(np.sum(stellar_data_tmp['Mass'][:, np.newaxis] * stellar_data_tmp['Velocity'], axis=0) + np.sum(
-        #     gaseous_data_tmp['Mass'][:, np.newaxis] * gaseous_data_tmp['Velocity'], axis=0) + np.sum(
-        #     dark_matter_data_tmp['Mass'][:, np.newaxis] * dark_matter_data_tmp['Velocity'], axis=0),
-        #                           np.sum(stellar_data_tmp['Mass'], axis=0) + np.sum(gaseous_data_tmp['Mass'], axis=0) + np.sum(
-        #                               dark_matter_data_tmp['Mass'], axis=0))  # In km s^-1.
         
         for data in [stellar_data_tmp, gaseous_data_tmp, blackhole_data_tmp, dark_matter_data_tmp]:
             data['Velocity'] = data['Velocity'] - CoM_velocity
@@ -275,15 +270,15 @@ class AddAttributes:
         subgroup_numbers = np.array_split(list(self.subhalo_data_tmp['SubGroupNumber']), 30)
         
         for group_number, subgroup_number in zip(group_numbers[job_number],
-                                                 subgroup_numbers[job_number]):  # Loop over all masked haloes and sub-haloes.
+            subgroup_numbers[job_number]):  # Loop over all masked haloes and sub-haloes.
             # Load the data #
             start_local_time = time.time()  # Start the local time.
             
             stellar_data_tmp = np.load(data_path + 'stellar_data_tmps/stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy',
-                                       allow_pickle=True)
+                allow_pickle=True)
             stellar_data_tmp = stellar_data_tmp.item()
             gaseous_data_tmp = np.load(data_path + 'gaseous_data_tmps/gaseous_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy',
-                                       allow_pickle=True)
+                allow_pickle=True)
             gaseous_data_tmp = gaseous_data_tmp.item()
             dark_matter_data_tmp = np.load(
                 data_path + 'dark_matter_data_tmps/dark_matter_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy',
@@ -303,7 +298,7 @@ class AddAttributes:
             stellar_data_tmp['n'], stellar_data_tmp['R_d'], stellar_data_tmp['R_eff'], stellar_data_tmp['disk_fraction_profile'], stellar_data_tmp[
                 'fitting_flag'] = self.profile_fitting(stellar_data_tmp)
             prc_stellar_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
-                                                                                              stellar_data_tmp['Velocity'])  # In Msun kpc km s^-1.
+                stellar_data_tmp['Velocity'])  # In Msun kpc km s^-1.
             stellar_data_tmp['glx_stellar_angular_momentum'] = np.sum(prc_stellar_angular_momentum, axis=0)
             stellar_data_tmp['disc_fraction_IT20'] = np.sum(stellar_data_tmp['Mass'][stellar_data_tmp['disc_mask_IT20']]) / np.sum(
                 stellar_data_tmp['Mass'])
@@ -311,7 +306,7 @@ class AddAttributes:
             gaseous_data_tmp['star_forming_mask'] = np.where(gaseous_data_tmp['StarFormationRate'] > 0.0)
             gaseous_data_tmp['non_star_forming_mask'] = np.where(gaseous_data_tmp['StarFormationRate'] == 0.0)
             prc_gaseous_angular_momentum = gaseous_data_tmp['Mass'][:, np.newaxis] * np.cross(gaseous_data_tmp['Coordinates'],
-                                                                                              gaseous_data_tmp['Velocity'])  # In Msun kpc km s^-1.
+                gaseous_data_tmp['Velocity'])  # In Msun kpc km s^-1.
             gaseous_data_tmp['glx_gaseous_angular_momentum'] = np.sum(prc_gaseous_angular_momentum, axis=0)
             
             # Calculate component attributes #
@@ -333,7 +328,6 @@ class AddAttributes:
                 kappa, disc_fraction, circularity, rotational_over_dispersion, vrots, rotational_velocity, sigma_0, \
                 delta = MorphoKinematic.kinematic_diagnostics(
                     component_coordinates, component_masses, component_velocities, component_energies)
-                
                 prc_spherical_radius = np.sqrt(np.sum(component_coordinates ** 2, axis=1))
                 spacial_mask, = np.where(prc_spherical_radius < MorphoKinematic.r_mass(stellar_data_tmp, 0.5))
                 kappa_re, disc_fraction_re, circularity_re, rotational_over_dispersion_re, vrots_re, rotational_velocity_re, sigma_0_re, \
@@ -354,7 +348,7 @@ class AddAttributes:
                     stellar_data_tmp['disc_beta'] = 1 - np.divide(np.mean(component_velocity_sqred) - np.mean(component_velocity_r_sqred),
                                                                   2 * np.mean(component_velocity_r_sqred))
                     stellar_data_tmp['disc_weighted_a'] = np.average(component_birth_stellar_formation_time, weights=component_birth_mass,
-                                                                     axis=0)  # Expansion factor at birth.
+                        axis=0)  # Expansion factor at birth.
                 else:
                     stellar_data_tmp['bulge_delta'] = delta  # In km s^-1.
                     stellar_data_tmp['bulge_sigma_0'] = sigma_0  # In km s^-1.
@@ -368,7 +362,7 @@ class AddAttributes:
                     stellar_data_tmp['bulge_beta'] = 1 - np.divide(np.mean(component_velocity_sqred) - np.mean(component_velocity_r_sqred),
                                                                    2 * np.mean(component_velocity_r_sqred))
                     stellar_data_tmp['bulge_weighted_a'] = np.average(component_birth_stellar_formation_time, weights=component_birth_mass,
-                                                                      axis=0)  # Expansion factor at birth.
+                        axis=0)  # Expansion factor at birth.
             
             # Save data in numpy array #
             np.save(data_path + 'stellar_data_tmps/stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number), stellar_data_tmp)
@@ -427,7 +421,7 @@ class AddAttributes:
         """
         # Calculate the angular momentum for each particle and for the galaxy and the unit vector parallel to the galactic angular momentum vector #
         prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
-                                                                                  stellar_data_tmp['Velocity'])  # In Msun kpc km s^-1.
+            stellar_data_tmp['Velocity'])  # In Msun kpc km s^-1.
         glx_stellar_angular_momentum = np.sum(prc_angular_momentum, axis=0)
         glx_unit_vector = glx_stellar_angular_momentum / np.linalg.norm(glx_stellar_angular_momentum)
         
@@ -533,7 +527,7 @@ class AddAttributes:
         # Calculate u^2 and u_r^2 #
         velocity_sqred = np.sum(stellar_data_tmp['Velocity'] * stellar_data_tmp['Velocity'], axis=1)
         velocity_r_sqred = np.divide(np.sum(stellar_data_tmp['Velocity'] * stellar_data_tmp['Coordinates'], axis=1) ** 2,
-                                     np.sum(stellar_data_tmp['Coordinates'] * stellar_data_tmp['Coordinates'], axis=1))
+            np.sum(stellar_data_tmp['Coordinates'] * stellar_data_tmp['Coordinates'], axis=1))
         
         return velocity_sqred, velocity_r_sqred
     
@@ -674,16 +668,13 @@ class AppendAttributes:
         """
         # Initialise arrays to store the data #
         group_numbers, subgroup_numbers, CoPs = [], [], []
-        
         glx_stellar_angular_momenta, glx_stellar_masses, glx_concentration_indices, glx_kappas_corotation, glx_disc_fractions_IT20, \
         glx_disc_fractions, glx_rotationals_over_dispersions, glx_Sersic_indices, glx_scale_lengths, glx_effective_radii, \
         glx_disk_fraction_profiles, glx_n_particles, glx_fitting_flags, glx_delta_thetas, glx_delta_rs, glx_deltas, glx_sigma_0s, glx_rotationals, \
         glx_as, glx_CoP_flags = [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []
-        
         glx_gaseous_angular_momenta, glx_gaseous_masses, glx_star_formings, glx_non_star_formings, glx_star_formation_rates = [], [], [], [], []
-        
+        bh_masses = []
         dark_matter_masses = []
-        
         disc_metallicities, bulge_metallicities, disc_betas, bulge_betas, disc_rotationals, bulge_rotationals, disc_sigma_0s, bulge_sigma_0s, \
         disc_birth_densities, bulge_birth_densities, disc_deltas, bulge_deltas, disc_as, bulge_as, disc_stellar_angular_momenta, \
         bulge_stellar_angular_momenta, disc_weighted_as, bulge_weighted_as = [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []
@@ -695,34 +686,28 @@ class AppendAttributes:
         
         self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher than 5e9 Msun.
         for group_number, subgroup_number in zip(list(self.subhalo_data_tmp['GroupNumber']),
-                                                 list(self.subhalo_data_tmp['SubGroupNumber'])):  # Loop over all masked haloes and sub-haloes.
+            list(self.subhalo_data_tmp['SubGroupNumber'])):  # Loop over all masked haloes and sub-haloes.
             start_local_time = time.time()  # Start the local time.
             
             # Load the data #
             subhalo_data_tmp = np.load(data_path + 'subhalo_data_tmps/subhalo_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy',
-                                       allow_pickle=True)
+                allow_pickle=True)
             subhalo_data_tmp = subhalo_data_tmp.item()
             stellar_data_tmp = np.load(data_path + 'stellar_data_tmps/stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy',
-                                       allow_pickle=True)
+                allow_pickle=True)
             stellar_data_tmp = stellar_data_tmp.item()
             gaseous_data_tmp = np.load(data_path + 'gaseous_data_tmps/gaseous_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy',
-                                       allow_pickle=True)
+                allow_pickle=True)
             gaseous_data_tmp = gaseous_data_tmp.item()
             blackhole_data_tmp = np.load(
                 data_path + 'blackhole_data_tmps/blackhole_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy', allow_pickle=True)
-            # TODO: add BH data
             blackhole_data_tmp = blackhole_data_tmp.item()
             dark_matter_data_tmp = np.load(
                 data_path + 'dark_matter_data_tmps/dark_matter_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy',
                 allow_pickle=True)
             dark_matter_data_tmp = dark_matter_data_tmp.item()
-            # TODO: add COP flags properly
-            box_data_tmp = np.load(data_path + 'box_data.npy')
-            box_data_tmp = box_data_tmp.item()
-            stellar_data_tmp['CoP_flag'] = self.CoP_flag(CoPs, box_data_tmp)
-            glx_CoP_flags.append(stellar_data_tmp['CoP_flag'])
             
-            # Append halo attributes into single arrays #
+            # Append (sub)halo attributes into single arrays #
             group_numbers.append(group_number)
             subgroup_numbers.append(subgroup_number)
             CoPs.append(subhalo_data_tmp['CentreOfPotential'])
@@ -754,12 +739,12 @@ class AppendAttributes:
             glx_star_formings.append(np.sum(gaseous_data_tmp['Mass'][gaseous_data_tmp['star_forming_mask']]))
             glx_non_star_formings.append(np.sum(gaseous_data_tmp['Mass'][gaseous_data_tmp['non_star_forming_mask']]))
             
+            bh_masses.append(np.sum(blackhole_data_tmp['BH_Mass'], axis=0))
+            
             dark_matter_masses.append(np.sum(dark_matter_data_tmp['Mass']))
             
             # Append component attributes into single arrays #
             disc_as.append(stellar_data_tmp['disc_a'])
-            disc_stellar_angular_momenta.append(stellar_data_tmp['disc_stellar_angular_momentum'])
-            bulge_stellar_angular_momenta.append(stellar_data_tmp['bulge_stellar_angular_momentum'])
             bulge_as.append(stellar_data_tmp['bulge_a'])
             disc_betas.append(stellar_data_tmp['disc_beta'])
             bulge_betas.append(stellar_data_tmp['bulge_beta'])
@@ -775,13 +760,19 @@ class AppendAttributes:
             bulge_metallicities.append(stellar_data_tmp['bulge_metallicity'])
             disc_birth_densities.append(stellar_data_tmp['disc_birth_density'])
             bulge_birth_densities.append(stellar_data_tmp['bulge_birth_density'])
+            disc_stellar_angular_momenta.append(stellar_data_tmp['disc_stellar_angular_momentum'])
+            bulge_stellar_angular_momenta.append(stellar_data_tmp['bulge_stellar_angular_momentum'])
             
             print(
                 'Masked and saved data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (time.time() - start_local_time))
             print('–––––––––––––––––––––––––––––––––––––––––––––')
-
+        
         # Save data in numpy array #
+        box_data_tmp = np.load(data_path + 'box_data.npy')
+        box_data_tmp = box_data_tmp.item()
+        CoP_flags = self.CoP_flag(CoPs, box_data_tmp)
         np.save(data_path + 'CoPs', CoPs)
+        np.save(data_path + 'CoP_flags', CoP_flags)
         np.save(data_path + 'group_numbers', group_numbers)
         np.save(data_path + 'subgroup_numbers', subgroup_numbers)
         
@@ -810,6 +801,8 @@ class AppendAttributes:
         np.save(data_path + 'glx_non_star_forming', glx_non_star_formings)
         np.save(data_path + 'glx_star_formation_rates', glx_star_formation_rates)
         np.save(data_path + 'glx_gaseous_angular_momenta', glx_gaseous_angular_momenta)
+        
+        np.save(data_path + 'bh_masses', bh_masses)
         
         np.save(data_path + 'dark_matter_masses', dark_matter_masses)
         

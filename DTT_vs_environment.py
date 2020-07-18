@@ -107,15 +107,15 @@ class DTTVsEnvironment:
             # Plot median and 1-sigma lines #
             x_value, median, shigh, slow = plot_tools.binned_median_1sigma(x_attribute, glx_disc_fractions_IT20, bin_type='equal_width', n_bins=25,
                                                                            log=False)
-            axis.plot(x_value, median, color='black', linewidth=3, zorder=5)
-            axis.fill_between(x_value, shigh, slow, color='black', alpha='0.3', zorder=5)
+            axis.plot(x_value, median, color='black', linewidth=3)
+            axis.fill_between(x_value, shigh, slow, color='black', alpha='0.3')
             axis.set_xlabel(label, size=16)
         
         # Plot the disc to total ratio as a function of number of satellites #
         unique_elements, counts_elements = np.unique(group_numbers, return_counts=True)
         for i in range(len(unique_elements)):
             mask, = np.where((subgroup_numbers == 0) & (group_numbers == unique_elements[i]))
-            if len(mask) > 0:
+            if len(mask) > 0:  # Avoid rogue satellites.
                 axis13.scatter(counts_elements[i], glx_disc_fractions_IT20[mask], color='black')
                 axis13.set_xscale('log')
         
@@ -128,7 +128,7 @@ class DTTVsEnvironment:
             axis10.set_xlabel(r'$\mathrm{PDF}$', size=16)
         
         # Save and close the figure #
-        axis10.legend(loc='upper center', fontsize=16, frameon=False, scatterpoints=3)
+        axis10.legend(loc='upper center', fontsize=12, frameon=False, scatterpoints=3)
         plt.savefig(plots_path + 'DTT_E' + '-' + date + '.png', bbox_inches='tight')
         plt.close()
         return None

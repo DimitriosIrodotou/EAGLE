@@ -98,7 +98,7 @@ class CircularVelocityCurve:
             plt.plot(sorted_prc_spherical_radius, circular_velocity, label=label)  # Plot the circular velocity curve.
         
         # Create the legend, save and close the figure #
-        plt.legend(loc='upper right', fontsize=16, frameon=False, numpoints=1)
+        plt.legend(loc='upper right', fontsize=12, frameon=False, numpoints=1)
         plt.savefig(plots_path + str(group_number) + '_' + str(subgroup_number) + '-' + 'CVC' + '-' + date + '.png', bbox_inches='tight')
         plt.close()
         return None

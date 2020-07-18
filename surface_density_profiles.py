@@ -171,7 +171,7 @@ class SurfaceDensityProfiles:
             surface = np.pi * (edges[1:] ** 2 - edges[:-1] ** 2)
             sden = mass / surface
             
-            plt.errorbar(centers, sden, yerr=0.1 * sden, c=color, marker='.', linestyle="None", elinewidth=1, capsize=2, capthick=1, zorder=3,
+            plt.errorbar(centers, sden, yerr=0.1 * sden, c=color, marker='.', linestyle="None", elinewidth=1, capsize=2, capthick=1,
                          label=label)
             
             try:
@@ -205,7 +205,7 @@ class SurfaceDensityProfiles:
         surface = np.pi * (edges[1:] ** 2 - edges[:-1] ** 2)
         sden = mass / surface
         
-        plt.errorbar(centers, sden, yerr=0.1 * sden, c='k', marker='.', linestyle="None", elinewidth=1, capsize=2, capthick=1, zorder=3,
+        plt.errorbar(centers, sden, yerr=0.1 * sden, c='k', marker='.', linestyle="None", elinewidth=1, capsize=2, capthick=1,
                      label='Total')
         
         try:
@@ -226,7 +226,7 @@ class SurfaceDensityProfiles:
                     size=16)
         
         # Create the legend and save the figure #
-        plt.legend(loc='upper right', fontsize=16, frameon=False, numpoints=1)
+        plt.legend(loc='upper right', fontsize=12, frameon=False, numpoints=1)
         plt.savefig(plots_path + str(group_number) + '_' + str(subgroup_number) + '-' + 'SDP' + '-' + date + '.png', bbox_inches='tight')
         return None
 

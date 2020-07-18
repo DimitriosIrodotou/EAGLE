@@ -77,8 +77,8 @@ class SFRVsMass:
         # Plot median and 1-sigma lines #
         x_value, median, shigh, slow = plot_tools.binned_median_1sigma(np.log10(stellar_masses[glx_star_formation_rates > 0]),
                                                                 np.log10(glx_star_formation_rates[glx_star_formation_rates > 0]), 0.1, log=False)
-        axis10.plot(x_value, median, color='black', linewidth=5, zorder=5)
-        axis10.fill_between(x_value, shigh, slow, color='black', alpha='0.5', zorder=5)
+        axis10.plot(x_value, median, color='black', linewidth=5)
+        axis10.fill_between(x_value, shigh, slow, color='black', alpha='0.5')
         
         # Save the figure #
         plt.savefig(plots_path + 'SFR_M' + '-' + date + '.png', bbox_inches='tight')

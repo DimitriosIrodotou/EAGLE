@@ -86,8 +86,8 @@ class ComponentDelta:
             axis.axhline(y=np.exp(-np.inf - 1), c='tab:blue', lw=3, linestyle='dashed', label=r'$\mathrm{\delta=-inf}$')
         
         # Create the legends, save and close the figure #
-        axis10.legend(loc='upper center', ncol=3, fontsize=16, frameon=False)
-        axis11.legend(loc='upper center', ncol=3, fontsize=16, frameon=False)
+        axis10.legend(loc='upper center', ncol=3, fontsize=12, frameon=False)
+        axis11.legend(loc='upper center', ncol=3, fontsize=12, frameon=False)
         plt.savefig(plots_path + 'CD' + '-' + date + '.png', bbox_inches='tight')
         plt.close()
         return None
