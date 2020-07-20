@@ -17,12 +17,12 @@ start_global_time = time.time()  # Start the global time.
 warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
 
 
-class ComponentDelta:
+class ComponentDeltaVsDTT:
     """
     For all components create: a component delta as a function of disc to total ratio colour-coded by galaxy's delta plot.
     """
-    
-    
+
+
     def __init__(self, simulation_path, tag):
         """
         A constructor method for the class.
@@ -31,34 +31,34 @@ class ComponentDelta:
         """
         # Load the data #
         start_local_time = time.time()  # Start the local time.
-        
+
         glx_deltas = np.load(data_path + 'glx_deltas.npy')
         disc_deltas = np.load(data_path + 'disc_deltas.npy')
         bulge_deltas = np.load(data_path + 'bulge_deltas.npy')
-        disc_fractions_IT20 = np.load(data_path + 'glx_disc_fractions_IT20.npy')
+        glx_disc_fractions_IT20 = np.load(data_path + 'glx_disc_fractions_IT20.npy')
         print('Loaded data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
-        
+
         # Plot the data #
         start_local_time = time.time()  # Start the local time.
-        
-        self.plot(glx_deltas, disc_deltas, bulge_deltas, disc_fractions_IT20)
+
+        self.plot(glx_deltas, disc_deltas, bulge_deltas, glx_disc_fractions_IT20)
         print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
-        
-        print('Finished ComponentDelta for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (
+
+        print('Finished ComponentDeltaVsDTT for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (
             time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
-    
-    
+
+
     @staticmethod
-    def plot(glx_deltas, disc_deltas, bulge_deltas, disc_fractions_IT20):
+    def plot(glx_deltas, disc_deltas, bulge_deltas, glx_disc_fractions_IT20):
         """
         Plot the component delta as a function of disc to total ratio colour-coded by galaxy's delta.
         :param glx_deltas: defined as the anisotropy parameter for the whole galaxy.
         :param disc_deltas: defined as the anisotropy parameter for the disc component.
         :param bulge_deltas: defined as the anisotropy parameter for the bulge component.
-        :param disc_fractions_IT20: where the disc consists of particles whose angular momentum angular separation is 30deg from the densest pixel.
+        :param glx_disc_fractions_IT20: where the disc consists of particles whose angular momentum angular separation is 30deg from the densest pixel.
         :return: None
         """
         # Generate the figure and define its parameters #
@@ -66,29 +66,29 @@ class ComponentDelta:
         gs = gridspec.GridSpec(2, 2, wspace=0.0, hspace=0.0, height_ratios=[0.05, 1])
         axis00 = figure.add_subplot(gs[0, :])
         axis10, axis11 = figure.add_subplot(gs[1, 0]), figure.add_subplot(gs[1, 1])
-        
+
         for axis in [axis10, axis11]:
-            plot_tools.set_axis(axis, ylim=[-0.1, 1.1], yscale='linear', xlabel=r'$\mathrm{D/T_{30\degree}}$', aspect=None)
+            plot_tools.set_axis(axis, ylim=[-0.1, 1.1], xlabel=r'$\mathrm{D/T_{30\degree}}$', aspect=None)
         axis11.yaxis.tick_right()
         axis11.yaxis.set_label_position("right")
         axis10.set_ylabel(r'$\mathrm{exp(\delta_{bulge}-1)}$', size=16)
         axis11.set_ylabel(r'$\mathrm{exp(\delta_{disc}-1)}$', size=16)
-        
+
         # Plot the component delta as a function of disc to total ratio colour-coded by galaxy's delta #
-        axis10.scatter(disc_fractions_IT20, np.exp(bulge_deltas - 1), c=np.exp(glx_deltas - 1), s=8, vmin=0, vmax=1, cmap='magma')
-        sc = axis11.scatter(disc_fractions_IT20, np.exp(disc_deltas - 1), c=np.exp(glx_deltas - 1), s=8, vmin=0, vmax=1, cmap='magma')
+        axis10.scatter(glx_disc_fractions_IT20, np.exp(bulge_deltas - 1), c=np.exp(glx_deltas - 1), s=8, vmin=0, vmax=1, cmap='magma')
+        sc = axis11.scatter(glx_disc_fractions_IT20, np.exp(disc_deltas - 1), c=np.exp(glx_deltas - 1), s=8, vmin=0, vmax=1, cmap='magma')
         plot_tools.create_colorbar(axis00, sc, r'$\mathrm{exp(\delta_{gal}-1)}$', 'horizontal')
-        
+
         # Plot horizontal lines for different delta values #
         for axis in [axis10, axis11]:
             axis.axhline(y=np.exp(0 - 1), c='black', lw=3, linestyle='dashed', label=r'$\mathrm{\delta=0}$')
             axis.axhline(y=np.exp(1 - 1), c='tab:red', lw=3, linestyle='dashed', label=r'$\mathrm{\delta=1}$')
             axis.axhline(y=np.exp(-np.inf - 1), c='tab:blue', lw=3, linestyle='dashed', label=r'$\mathrm{\delta=-inf}$')
-        
+
         # Create the legends, save and close the figure #
         axis10.legend(loc='upper center', ncol=3, fontsize=12, frameon=False)
         axis11.legend(loc='upper center', ncol=3, fontsize=12, frameon=False)
-        plt.savefig(plots_path + 'CD' + '-' + date + '.png', bbox_inches='tight')
+        plt.savefig(plots_path + 'C_D_DTT' + '-' + date + '.png', bbox_inches='tight')
         plt.close()
         return None
 
@@ -98,4 +98,4 @@ if __name__ == '__main__':
     simulation_path = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
     plots_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/'  # Path to save plots.
     data_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/'  # Path to save/load data.
-    x = ComponentDelta(simulation_path, tag)
+    x = ComponentDeltaVsDTT(simulation_path, tag)

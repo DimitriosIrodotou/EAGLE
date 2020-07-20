@@ -210,20 +210,22 @@ def binned_median_1sigma(x_data, y_data, bin_type, n_bins, log=False):
         return x_value, median, shigh, slow
 
 
-def create_colorbar(axis, plot, label, orientation='vertical', size=16):
+def create_colorbar(axis, plot, label, orientation='vertical', top=True, ticks=None, size=16):
     """
     Generate a colorbar.
     :param axis: colorbar axis.
     :param plot: corresponding plot.
     :param label: colorbar label.
+    :param top: move ticks and labels on top of the colorbar.
+    :param ticks: array of ticks.
     :param orientation: colorbar orientation.
     :return: None
     """
-    cbar = plt.colorbar(plot, cax=axis, orientation=orientation)
+    cbar = plt.colorbar(plot, cax=axis, ticks=ticks, orientation=orientation)
     cbar.set_label(label, size=size)
     axis.tick_params(direction='out', which='both', right='on', labelsize=size)
 
-    if orientation == 'horizontal':
+    if top is True:
         axis.xaxis.tick_top()
         axis.xaxis.set_label_position("top")
         axis.tick_params(direction='out', which='both', top='on', labelsize=size)

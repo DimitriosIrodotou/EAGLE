@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 from scipy.special import gamma
 from astropy_healpix import HEALPix
 from scipy.optimize import curve_fit
-from rotate_galaxies import RotateCoordinates
+from plot_tools import RotateCoordinates
 
 date = time.strftime('%d_%m_%y_%H%M')  # Date.
 start_global_time = time.time()  # Start the global time.

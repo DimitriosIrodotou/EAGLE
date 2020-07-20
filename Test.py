@@ -18,7 +18,7 @@ import eagle_IO.eagle_IO.eagle_IO as E
 
 from matplotlib import gridspec
 from astropy_healpix import HEALPix
-from rotate_galaxies import RotateCoordinates
+from plot_tools import RotateCoordinates
 from morpho_kinematics import MorphoKinematic
 
 # Create a parser and add argument to read data #

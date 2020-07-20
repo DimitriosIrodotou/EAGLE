@@ -81,20 +81,15 @@ class AngularMomentumVsMass:
 
         # Read observational data from OG13 and FR18 #
         OG13 = np.genfromtxt('./observational_data/OG_1312.4543/Figure7_stars.csv', delimiter=',', names=['Mstar', 'jstar'])
-        FR18 = np.genfromtxt('./observational_data/FR_1808.02525/Figure1_FR.csv', delimiter=',', names=['Mstar', 'jstar'])
         FR18_table1 = np.genfromtxt('./observational_data/FR_1808.02525/Table1.txt', delimiter='\t', names=['Mstar', 'jstar', 'BTT'])
 
         # Plot observational data from OG13 and FR18 #
         axis10.scatter(np.power(10, OG13['Mstar']), np.power(10, OG13['jstar']), edgecolor='black', color='cyan', s=50, marker='^',
-            label=r'$\mathrm{OG13}$')
-        axis10.plot(np.power(10, FR18['Mstar'][0:2]), np.power(10, FR18['jstar'][0:2]), color='blue', lw=3, linestyle='dashed',
-            label=r'$\mathrm{FR18:Discs}$')
-        axis10.plot(np.power(10, FR18['Mstar'][2:4]), np.power(10, FR18['jstar'][2:4]), color='red', lw=3, linestyle='dashed',
-            label=r'$\mathrm{FR18:Bulges}$')
+            label=r'$\mathrm{OG14}$', zorder=5)
         sc2 = axis10.scatter(np.power(10, FR18_table1['Mstar']), np.power(10, FR18_table1['jstar']), edgecolor='black', cmap='seismic_r',
             c=1 - FR18_table1['BTT'], marker='*', s=150, vmin=0, vmax=1)
-        axiscbar = inset_axes(axis10, width='30%', height='3%', loc='lower right')
-        plot_tools.create_colorbar(axiscbar, sc2, r'$\mathrm{FR18:D/T}$', 'horizontal', size=12)
+        axiscbar = inset_axes(axis10, width='30%', height='3%', loc='upper center')
+        plot_tools.create_colorbar(axiscbar, sc2, r'$\mathrm{FR18:D/T}$', 'horizontal', top=False, ticks=[0, 0.5, 1], size=12)
 
         # Create the legend, save and close the figure #
         axis10.legend(loc='upper right', fontsize=12, frameon=False, numpoints=1)

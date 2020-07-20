@@ -71,9 +71,10 @@ class ComponentAgeMetallicityVsMass:
         gs = gridspec.GridSpec(2, 1, hspace=0.0)
         axis00 = figure.add_subplot(gs[0, 0])
         axis10 = figure.add_subplot(gs[1, 0])
-        plot_tools.set_axis(axis00, xlim=[1e8, 6e11], ylim=[0.1, 1], xscale='log', ylabel=r'$\mathrm{\overline{\alpha_{comp}}}$', aspect=None)
+        plot_tools.set_axis(axis00, xlim=[1e8, 6e11], ylim=[0.1, 1], xscale='log', ylabel=r'$\mathrm{\overline{\alpha_{comp}}}$', which='major',
+            aspect=None)
         plot_tools.set_axis(axis10, xlim=[1e8, 6e11], ylim=[0, 4.5], xscale='log', xlabel=r'$\mathrm{M_{comp}/M_{\odot}}$',
-            ylabel=r'$\mathrm{Z_{comp}/Z_{\odot}}$', aspect=None)
+            ylabel=r'$\mathrm{Z_{comp}/Z_{\odot}}$', which='major', aspect=None)
         axis00.set_xticklabels([])
 
         # Plot the average birth scale factor as a function of galaxy mass colour-coded by disc to total ratio #
@@ -85,7 +86,7 @@ class ComponentAgeMetallicityVsMass:
             x_value, median, shigh, slow = plot_tools.binned_median_1sigma(ratio * glx_stellar_masses, component, bin_type='equal_width', n_bins=25,
                 log=True)
             axis00.plot(x_value, median, color='black', linewidth=3)
-            axis00.fill_between(x_value, shigh, slow, color='black', alpha='0.5')
+            axis00.fill_between(x_value, shigh, slow, color='black', alpha='0.3')
 
         # Plot the component metallicity-mass relation colour-coded by disc to total ratio #
         d = axis10.scatter(glx_disc_fractions_IT20 * glx_stellar_masses, disc_metallicities, c='tab:blue', s=8)
@@ -96,12 +97,12 @@ class ComponentAgeMetallicityVsMass:
             x_value, median, shigh, slow = plot_tools.binned_median_1sigma(ratio * glx_stellar_masses, component, bin_type='equal_width', n_bins=25,
                 log=True)
             median, = axis10.plot(x_value, median, color='black', linewidth=3)
-            axis10.fill_between(x_value, shigh, slow, color='black', alpha='0.5')
-            fill, = plt.fill(np.NaN, np.NaN, color='black', alpha=0.5)
+            axis10.fill_between(x_value, shigh, slow, color='black', alpha='0.3')
+            fill, = plt.fill(np.NaN, np.NaN, color='black', alpha=0.3)
 
         # Create a legend, save and close the figure #
         axis10.legend([d, b, median, fill],
-            [r'$\mathrm{Discs}$', r'$\mathrm{Spheroids}$', r'$\mathrm{Median}$', r'$\mathrm{16^{th}-84^{th}\,\%ile}$'], frameon=False, fontsize=12,
+            [r'$\mathrm{Discs}$', r'$\mathrm{Spheroids}$', r'$\mathrm{Median}$', r'$\mathrm{16^{th}-84^{th}\;\%ile}$'], frameon=False, fontsize=12,
             loc='upper center', ncol=4)
         plt.savefig(plots_path + 'C_A_M_M' + '-' + date + '.png', bbox_inches='tight')
         plt.close()

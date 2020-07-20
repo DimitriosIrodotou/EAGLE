@@ -12,7 +12,7 @@ import astropy.units as u
 import matplotlib.pyplot as plt
 
 from astropy_healpix import HEALPix
-from rotate_galaxies import RotateCoordinates
+from plot_tools import RotateCoordinates
 
 date = time.strftime('%d_%m_%y_%H%M')  # Date.
 start_global_time = time.time()  # Start the global time.
