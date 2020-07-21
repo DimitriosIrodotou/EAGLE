@@ -43,9 +43,10 @@ class MergerTree:
         print('Finished MergerTree for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (
             time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
-    
-    
-    def plot(self, group_number, subgroup_number):
+
+
+    @staticmethod
+    def plot(group_number, subgroup_number):
         """
         Plot a merger tree.
         :param group_number: from read_add_attributes.py.

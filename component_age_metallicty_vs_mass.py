@@ -33,10 +33,10 @@ class ComponentAgeMetallicityVsMass:
         start_local_time = time.time()  # Start the local time.
 
         disc_weighted_as = np.load(data_path + 'disc_weighted_as.npy')
-        bulge_weighted_as = np.load(data_path + 'bulge_weighted_as.npy')
+        spheroid_weighted_as = np.load(data_path + 'spheroid_weighted_as.npy')
         glx_stellar_masses = np.load(data_path + 'glx_stellar_masses.npy')
         disc_metallicities = np.load(data_path + 'disc_metallicities.npy')
-        bulge_metallicities = np.load(data_path + 'bulge_metallicities.npy')
+        spheroid_metallicities = np.load(data_path + 'spheroid_metallicities.npy')
         glx_disc_fractions_IT20 = np.load(data_path + 'glx_disc_fractions_IT20.npy')
         print('Loaded data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
@@ -44,7 +44,7 @@ class ComponentAgeMetallicityVsMass:
         # Plot the data #
         start_local_time = time.time()  # Start the local time.
 
-        self.plot(disc_weighted_as, bulge_weighted_as, glx_stellar_masses, disc_metallicities, bulge_metallicities, glx_disc_fractions_IT20)
+        self.plot(disc_weighted_as, spheroid_weighted_as, glx_stellar_masses, disc_metallicities, spheroid_metallicities, glx_disc_fractions_IT20)
         print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
 
@@ -54,14 +54,14 @@ class ComponentAgeMetallicityVsMass:
 
 
     @staticmethod
-    def plot(disc_weighted_as, bulge_weighted_as, glx_stellar_masses, disc_metallicities, bulge_metallicities, glx_disc_fractions_IT20):
+    def plot(disc_weighted_as, spheroid_weighted_as, glx_stellar_masses, disc_metallicities, spheroid_metallicities, glx_disc_fractions_IT20):
         """
         Plot the component average birth scale factor as a function of galaxy mass colour-coded by disc to total ratio.
         :param disc_weighted_as: defined as the mean birth scale factor for the disc component.
-        :param bulge_weighted_as: defined as the birth-mass weighted mean birth scale factor for the bulge component.
+        :param spheroid_weighted_as: defined as the birth-mass weighted mean birth scale factor for the spheroid component.
         :param glx_stellar_masses: defined as the mass of all stellar particles within 30kpc from the most bound particle.
         :param disc_metallicities: defined as the mass-weighted sum of each disc particle's metallicity.
-        :param bulge_metallicities: defined as the mass-weighted sum of each bulge particle's metallicity.
+        :param spheroid_metallicities: defined as the mass-weighted sum of each spheroid particle's metallicity.
         :param glx_disc_fractions_IT20: where the disc consists of particles whose angular momentum angular separation is 30deg from the densest
         pixel.
         :return: None
@@ -79,10 +79,10 @@ class ComponentAgeMetallicityVsMass:
 
         # Plot the average birth scale factor as a function of galaxy mass colour-coded by disc to total ratio #
         axis00.scatter(glx_disc_fractions_IT20 * glx_stellar_masses, disc_weighted_as, c='tab:blue', s=8, cmap='seismic_r')
-        axis00.scatter((1 - glx_disc_fractions_IT20) * glx_stellar_masses, bulge_weighted_as, c='tab:red', s=8, cmap='seismic_r')
+        axis00.scatter((1 - glx_disc_fractions_IT20) * glx_stellar_masses, spheroid_weighted_as, c='tab:red', s=8, cmap='seismic_r')
 
         # Plot median and 1-sigma lines #
-        for component, ratio in zip([disc_weighted_as, bulge_weighted_as], [glx_disc_fractions_IT20, 1 - glx_disc_fractions_IT20]):
+        for component, ratio in zip([disc_weighted_as, spheroid_weighted_as], [glx_disc_fractions_IT20, 1 - glx_disc_fractions_IT20]):
             x_value, median, shigh, slow = plot_tools.binned_median_1sigma(ratio * glx_stellar_masses, component, bin_type='equal_width', n_bins=25,
                 log=True)
             axis00.plot(x_value, median, color='black', linewidth=3)
@@ -90,10 +90,10 @@ class ComponentAgeMetallicityVsMass:
 
         # Plot the component metallicity-mass relation colour-coded by disc to total ratio #
         d = axis10.scatter(glx_disc_fractions_IT20 * glx_stellar_masses, disc_metallicities, c='tab:blue', s=8)
-        b = axis10.scatter((1 - glx_disc_fractions_IT20) * glx_stellar_masses, bulge_metallicities, c='tab:red', s=8)
+        b = axis10.scatter((1 - glx_disc_fractions_IT20) * glx_stellar_masses, spheroid_metallicities, c='tab:red', s=8)
 
         # Plot median and 1-sigma lines #
-        for component, ratio in zip([disc_metallicities, bulge_metallicities], [glx_disc_fractions_IT20, 1 - glx_disc_fractions_IT20]):
+        for component, ratio in zip([disc_metallicities, spheroid_metallicities], [glx_disc_fractions_IT20, 1 - glx_disc_fractions_IT20]):
             x_value, median, shigh, slow = plot_tools.binned_median_1sigma(ratio * glx_stellar_masses, component, bin_type='equal_width', n_bins=25,
                 log=True)
             median, = axis10.plot(x_value, median, color='black', linewidth=3)

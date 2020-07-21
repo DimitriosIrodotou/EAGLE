@@ -63,7 +63,7 @@ class MorphoKinematic:
         Mvrot2 = np.sum((prc_attributes[:, 3] * vrots ** 2)[vrots > 0])
         kappa = Mvrot2 / np.sum(prc_attributes[:, 3] * (np.linalg.norm(prc_attributes[:, 4:7], axis=1)) ** 2)
         
-        # Calculate disc-to-total masses fraction estimated from the counter-rotating bulge #
+        # Calculate disc-to-total masses fraction estimated from the counter-rotating spheroid #
         disc_fraction = 1 - 2 * np.sum(prc_attributes[vrots <= 0, 3]) / glx_mass
         
         # Calculate the mean orbital circularity #

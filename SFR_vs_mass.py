@@ -46,9 +46,10 @@ class SFRVsMass:
         
         print('Finished SFRVsMass for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
-    
-    
-    def plot(self, stellar_masses, disc_fractions_IT20, glx_star_formation_rates):
+
+
+    @staticmethod
+    def plot(stellar_masses, disc_fractions_IT20, glx_star_formation_rates):
         """
         Plot star formation rate as a function of stellar mass colour-coded by disc to total ratio
         :param stellar_masses: defined as the mass of all stellar particles within 30kpc from the most bound particle.

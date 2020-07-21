@@ -72,7 +72,7 @@ class CircularVelocityCurve:
         
         # Calculate the spherical distance of each galaxy particle and sort their masses and velocities based on that #
         data = stellar_data_tmp, gaseous_data_tmp
-        labels = r'$\mathrm{Stars}$', r'$\mathrm{Gas}$', r'$\mathrm{Dark\;matter}$', r'$\mathrm{Disc}$', r'$\mathrm{Bulge}$'
+        labels = r'$\mathrm{Stars}$', r'$\mathrm{Gas}$', r'$\mathrm{Dark\;matter}$', r'$\mathrm{Disc}$', r'$\mathrm{Spheroid}$'
         for data, label in zip(data, labels):
             prc_spherical_radius = np.sqrt(np.sum(data['Coordinates'] ** 2, axis=1))
             sort = np.argsort(prc_spherical_radius)
@@ -85,8 +85,8 @@ class CircularVelocityCurve:
         
         # Calculate the spherical distance of each component particle and sort their masses and velocities based on that #
         data = stellar_data_tmp, stellar_data_tmp
-        labels = r'$\mathrm{Disc}$', r'$\mathrm{Bulge}$'
-        masks = stellar_data_tmp['disc_mask_IT20'], stellar_data_tmp['bulge_mask_IT20']
+        labels = r'$\mathrm{Disc}$', r'$\mathrm{Spheroid}$'
+        masks = stellar_data_tmp['disc_mask_IT20'], stellar_data_tmp['spheroid_mask_IT20']
         for data, label, mask in zip(data, labels, masks):
             prc_spherical_radius = np.sqrt(np.sum(data['Coordinates'][mask] ** 2, axis=1))
             sort = np.argsort(prc_spherical_radius)

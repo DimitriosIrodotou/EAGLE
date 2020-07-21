@@ -34,7 +34,7 @@ class ComponentDeltaVsDTT:
 
         glx_deltas = np.load(data_path + 'glx_deltas.npy')
         disc_deltas = np.load(data_path + 'disc_deltas.npy')
-        bulge_deltas = np.load(data_path + 'bulge_deltas.npy')
+        spheroid_deltas = np.load(data_path + 'spheroid_deltas.npy')
         glx_disc_fractions_IT20 = np.load(data_path + 'glx_disc_fractions_IT20.npy')
         print('Loaded data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
@@ -42,7 +42,7 @@ class ComponentDeltaVsDTT:
         # Plot the data #
         start_local_time = time.time()  # Start the local time.
 
-        self.plot(glx_deltas, disc_deltas, bulge_deltas, glx_disc_fractions_IT20)
+        self.plot(glx_deltas, disc_deltas, spheroid_deltas, glx_disc_fractions_IT20)
         print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
 
@@ -52,12 +52,12 @@ class ComponentDeltaVsDTT:
 
 
     @staticmethod
-    def plot(glx_deltas, disc_deltas, bulge_deltas, glx_disc_fractions_IT20):
+    def plot(glx_deltas, disc_deltas, spheroid_deltas, glx_disc_fractions_IT20):
         """
         Plot the component delta as a function of disc to total ratio colour-coded by galaxy's delta.
         :param glx_deltas: defined as the anisotropy parameter for the whole galaxy.
         :param disc_deltas: defined as the anisotropy parameter for the disc component.
-        :param bulge_deltas: defined as the anisotropy parameter for the bulge component.
+        :param spheroid_deltas: defined as the anisotropy parameter for the spheroid component.
         :param glx_disc_fractions_IT20: where the disc consists of particles whose angular momentum angular separation is 30deg from the densest pixel.
         :return: None
         """
@@ -71,11 +71,11 @@ class ComponentDeltaVsDTT:
             plot_tools.set_axis(axis, ylim=[-0.1, 1.1], xlabel=r'$\mathrm{D/T_{30\degree}}$', aspect=None)
         axis11.yaxis.tick_right()
         axis11.yaxis.set_label_position("right")
-        axis10.set_ylabel(r'$\mathrm{exp(\delta_{bulge}-1)}$', size=16)
+        axis10.set_ylabel(r'$\mathrm{exp(\delta_{spheroid}-1)}$', size=16)
         axis11.set_ylabel(r'$\mathrm{exp(\delta_{disc}-1)}$', size=16)
 
         # Plot the component delta as a function of disc to total ratio colour-coded by galaxy's delta #
-        axis10.scatter(glx_disc_fractions_IT20, np.exp(bulge_deltas - 1), c=np.exp(glx_deltas - 1), s=8, vmin=0, vmax=1, cmap='magma')
+        axis10.scatter(glx_disc_fractions_IT20, np.exp(spheroid_deltas - 1), c=np.exp(glx_deltas - 1), s=8, vmin=0, vmax=1, cmap='magma')
         sc = axis11.scatter(glx_disc_fractions_IT20, np.exp(disc_deltas - 1), c=np.exp(glx_deltas - 1), s=8, vmin=0, vmax=1, cmap='magma')
         plot_tools.create_colorbar(axis00, sc, r'$\mathrm{exp(\delta_{gal}-1)}$', 'horizontal')
 

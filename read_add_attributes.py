@@ -291,7 +291,7 @@ class AddAttributes:
             stellar_data_tmp['kappa_corotation'] = self.kappa_corotation(stellar_data_tmp)
             stellar_data_tmp['delta_r'] = self.delta_r(stellar_data_tmp, gaseous_data_tmp, dark_matter_data_tmp)
             stellar_data_tmp['velocity_sqred'], stellar_data_tmp['velocity_r_sqred'] = self.beta_components(stellar_data_tmp)
-            stellar_data_tmp['disc_mask_IT20'], stellar_data_tmp['bulge_mask_IT20'], stellar_data_tmp['delta_theta'] = self.decomposition_IT20(
+            stellar_data_tmp['disc_mask_IT20'], stellar_data_tmp['spheroid_mask_IT20'], stellar_data_tmp['delta_theta'] = self.decomposition_IT20(
                 stellar_data_tmp)
             stellar_data_tmp['disc_fraction'], stellar_data_tmp['rotational_over_dispersion'], stellar_data_tmp['rotational_velocity'], \
             stellar_data_tmp['sigma_0'], stellar_data_tmp['delta'], stellar_data_tmp['sigma_0_re'], stellar_data_tmp[
@@ -311,7 +311,7 @@ class AddAttributes:
             gaseous_data_tmp['glx_gaseous_angular_momentum'] = np.sum(prc_gaseous_angular_momentum, axis=0)
 
             # Calculate component attributes #
-            for i, mask in enumerate([stellar_data_tmp['disc_mask_IT20'], stellar_data_tmp['bulge_mask_IT20']]):
+            for i, mask in enumerate([stellar_data_tmp['disc_mask_IT20'], stellar_data_tmp['spheroid_mask_IT20']]):
                 component_masses = stellar_data_tmp['Mass'][mask]
                 component_mass = np.sum(stellar_data_tmp['Mass'][mask])
                 component_metals = stellar_data_tmp['Metallicity'][mask]
@@ -351,18 +351,18 @@ class AddAttributes:
                     stellar_data_tmp['disc_weighted_a'] = np.average(component_birth_stellar_formation_time, weights=component_birth_mass,
                         axis=0)  # Expansion factor at birth.
                 else:
-                    stellar_data_tmp['bulge_delta'] = delta  # In km s^-1.
-                    stellar_data_tmp['bulge_sigma_0'] = sigma_0  # In km s^-1.
-                    stellar_data_tmp['bulge_sigma_0_re'] = sigma_0_re  # In km s^-1.
-                    stellar_data_tmp['bulge_rotational'] = rotational_velocity  # In km s^-1.
-                    stellar_data_tmp['bulge_metallicity'] = np.sum(metals) / 0.0134  # In solar metallicity.
-                    stellar_data_tmp['bulge_rotational_re'] = rotational_velocity_re  # In km s^-1.
-                    stellar_data_tmp['bulge_birth_density'] = component_birth_density  # In Msun kpc^-3.
-                    stellar_data_tmp['bulge_a'] = np.mean(component_birth_stellar_formation_time)  # Expansion factor at birth.
-                    stellar_data_tmp['bulge_stellar_angular_momentum'] = component_stellar_angular_momentum  # In Msun kpc km s^-1.
-                    stellar_data_tmp['bulge_beta'] = 1 - np.divide(np.mean(component_velocity_sqred) - np.mean(component_velocity_r_sqred),
-                                                                   2 * np.mean(component_velocity_r_sqred))
-                    stellar_data_tmp['bulge_weighted_a'] = np.average(component_birth_stellar_formation_time, weights=component_birth_mass,
+                    stellar_data_tmp['spheroid_delta'] = delta  # In km s^-1.
+                    stellar_data_tmp['spheroid_sigma_0'] = sigma_0  # In km s^-1.
+                    stellar_data_tmp['spheroid_sigma_0_re'] = sigma_0_re  # In km s^-1.
+                    stellar_data_tmp['spheroid_rotational'] = rotational_velocity  # In km s^-1.
+                    stellar_data_tmp['spheroid_metallicity'] = np.sum(metals) / 0.0134  # In solar metallicity.
+                    stellar_data_tmp['spheroid_rotational_re'] = rotational_velocity_re  # In km s^-1.
+                    stellar_data_tmp['spheroid_birth_density'] = component_birth_density  # In Msun kpc^-3.
+                    stellar_data_tmp['spheroid_a'] = np.mean(component_birth_stellar_formation_time)  # Expansion factor at birth.
+                    stellar_data_tmp['spheroid_stellar_angular_momentum'] = component_stellar_angular_momentum  # In Msun kpc km s^-1.
+                    stellar_data_tmp['spheroid_beta'] = 1 - np.divide(np.mean(component_velocity_sqred) - np.mean(component_velocity_r_sqred),
+                                                                      2 * np.mean(component_velocity_r_sqred))
+                    stellar_data_tmp['spheroid_weighted_a'] = np.average(component_birth_stellar_formation_time, weights=component_birth_mass,
                         axis=0)  # Expansion factor at birth.
 
             # Save data in numpy array #
@@ -416,9 +416,9 @@ class AddAttributes:
     @staticmethod
     def decomposition_IT20(stellar_data_tmp):
         """
-        Find the particles that belong to the disc and bulge based on the IT20 method.
+        Find the particles that belong to the disc and spheroid based on the IT20 method.
         :param stellar_data_tmp: from read_add_attributes.py.
-        :return: disc_mask_IT20, bulge_mask_IT20
+        :return: disc_mask_IT20, spheroid_mask_IT20
         """
         # Calculate the angular momentum for each particle and for the galaxy and the unit vector parallel to the galactic angular momentum vector #
         prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
@@ -444,12 +444,12 @@ class AddAttributes:
         lon_densest = (hp.healpix_to_lonlat([index_densest])[0].value + np.pi) % (2 * np.pi) - np.pi
         lat_densest = (hp.healpix_to_lonlat([index_densest])[1].value + np.pi / 2) % (2 * np.pi) - np.pi / 2
 
-        # Calculate and plot the disc (bulge) mass surface density as the mass within (outside) 30 degrees from the densest pixel #
+        # Calculate and plot the disc (spheroid) mass surface density as the mass within (outside) 30 degrees from the densest pixel #
         angular_theta_from_densest = np.arccos(
             np.sin(lat_densest) * np.sin(np.arcsin(prc_unit_vector[:, 2])) + np.cos(lat_densest) * np.cos(np.arcsin(prc_unit_vector[:, 2])) * np.cos(
                 lon_densest - np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0])))  # In radians.
         disc_mask_IT20, = np.where(angular_theta_from_densest < (np.pi / 6.0))
-        bulge_mask_IT20, = np.where(angular_theta_from_densest > (np.pi / 6.0))
+        spheroid_mask_IT20, = np.where(angular_theta_from_densest > (np.pi / 6.0))
 
         # Calculate the angle between the densest pixel and the angular momentum vector of the galaxy #
         position_of_X = np.vstack([np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2])]).T
@@ -458,7 +458,7 @@ class AddAttributes:
                 position_of_X[0, 0] - lon_densest))  # In radians.
         delta_theta = np.degrees(angular_theta_from_X)  # In degrees.
 
-        return disc_mask_IT20, bulge_mask_IT20, delta_theta
+        return disc_mask_IT20, spheroid_mask_IT20, delta_theta
 
 
     @staticmethod
@@ -547,7 +547,7 @@ class AddAttributes:
             """
             Calculate a Sersic profile.
             :param r: radius.
-            :param I_0b: Bulge central intensity.
+            :param I_0b: Spheroid central intensity.
             :param b: Sersic b parameter
             :param n: Sersic index
             :return: I_0b * np.exp(-(r / b) ** (1 / n))
@@ -572,7 +572,7 @@ class AddAttributes:
             :param r: radius.
             :param I_0d: Disc central intensity.
             :param R_d: Disc scale length.
-            :param I_0b: Bulge central intensity.
+            :param I_0b: Spheroid central intensity.
             :param b: Sersic b parameter.
             :param n: Sersic index.
             :return: exponential_profile(r, I_0d, R_d) + sersic_profile(r, I_0b, b, n)
@@ -614,8 +614,8 @@ class AddAttributes:
             I_0d, R_d, I_0b, b, n = popt[0], popt[1], popt[2], popt[3], popt[4]
             R_eff = b * sersic_b_n(n) ** n
             disk_mass = 2.0 * np.pi * I_0d * R_d ** 2
-            bulge_mass = np.pi * I_0b * R_eff ** 2 * gamma(2.0 / n + 1)
-            disk_fraction_profile = np.divide(disk_mass, bulge_mass + disk_mass)
+            spheroid_mass = np.pi * I_0b * R_eff ** 2 * gamma(2.0 / n + 1)
+            disk_fraction_profile = np.divide(disk_mass, spheroid_mass + disk_mass)
 
         except RuntimeError:
             fitting_flag = 0
@@ -627,7 +627,7 @@ class AddAttributes:
             try:
                 popt, pcov = curve_fit(sersic_profile, centers, sden, sigma=0.1 * sden, p0=[sden[0], 2, 4])  # p0 = [I_0b, b, n]
 
-                # Calculate bulge attributes #
+                # Calculate spheroid attributes #
                 I_0b, b, n = popt[0], popt[1], popt[2]
                 R_eff = b * sersic_b_n(n) ** n
             except RuntimeError:
@@ -677,11 +677,10 @@ class AppendAttributes:
         glx_gaseous_angular_momenta, glx_gaseous_masses, glx_star_formings, glx_non_star_formings, glx_star_formation_rates = [], [], [], [], []
         bh_masses = []
         dark_matter_masses = []
-        disc_metallicities, bulge_metallicities, disc_betas, bulge_betas, disc_rotationals, bulge_rotationals, disc_sigma_0s, bulge_sigma_0s, \
-        disc_birth_densities, bulge_birth_densities, disc_deltas, bulge_deltas, disc_as, bulge_as, disc_stellar_angular_momenta, \
-        bulge_stellar_angular_momenta, disc_weighted_as, bulge_weighted_as, disc_sigma_0s_re, bulge_sigma_0s_re = [], [], [], [], [], [], [], [], \
-                                                                                                                  [], [], [], [], [], [], [], [], \
-                                                                                                                  [], [], [], []
+        disc_metallicities, spheroid_metallicities, disc_betas, spheroid_betas, disc_rotationals, spheroid_rotationals, disc_sigma_0s, \
+        spheroid_sigma_0s, disc_birth_densities, spheroid_birth_densities, disc_deltas, spheroid_deltas, disc_as, spheroid_as, \
+        disc_stellar_angular_momenta, spheroid_stellar_angular_momenta, disc_weighted_as, spheroid_weighted_as, disc_sigma_0s_re, \
+        spheroid_sigma_0s_re = [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], [], []
 
         # Extract particle and subhalo attributes and convert them to astronomical units #
         self.subhalo_data = self.read_attributes(simulation_path, tag)
@@ -752,26 +751,26 @@ class AppendAttributes:
 
             # Append component attributes into single arrays #
             disc_as.append(stellar_data_tmp['disc_a'])
-            bulge_as.append(stellar_data_tmp['bulge_a'])
+            spheroid_as.append(stellar_data_tmp['spheroid_a'])
             disc_betas.append(stellar_data_tmp['disc_beta'])
             disc_betas.append(stellar_data_tmp['disc_beta'])
-            bulge_betas.append(stellar_data_tmp['bulge_beta'])
+            spheroid_betas.append(stellar_data_tmp['spheroid_beta'])
             disc_deltas.append(stellar_data_tmp['disc_delta'])
-            bulge_deltas.append(stellar_data_tmp['bulge_delta'])
+            spheroid_deltas.append(stellar_data_tmp['spheroid_delta'])
             disc_sigma_0s.append(stellar_data_tmp['disc_sigma_0'])
-            bulge_sigma_0s.append(stellar_data_tmp['bulge_sigma_0'])
+            spheroid_sigma_0s.append(stellar_data_tmp['spheroid_sigma_0'])
             disc_sigma_0s_re.append(stellar_data_tmp['disc_sigma_re'])
             disc_rotationals.append(stellar_data_tmp['disc_rotational'])
             disc_weighted_as.append(stellar_data_tmp['disc_weighted_a'])
-            bulge_sigma_0s_re.append(stellar_data_tmp['bulge_sigma_0_re'])
-            bulge_rotationals.append(stellar_data_tmp['bulge_rotational'])
-            bulge_weighted_as.append(stellar_data_tmp['bulge_weighted_a'])
+            spheroid_sigma_0s_re.append(stellar_data_tmp['spheroid_sigma_0_re'])
+            spheroid_rotationals.append(stellar_data_tmp['spheroid_rotational'])
+            spheroid_weighted_as.append(stellar_data_tmp['spheroid_weighted_a'])
             disc_metallicities.append(stellar_data_tmp['disc_metallicity'])
-            bulge_metallicities.append(stellar_data_tmp['bulge_metallicity'])
+            spheroid_metallicities.append(stellar_data_tmp['spheroid_metallicity'])
             disc_birth_densities.append(stellar_data_tmp['disc_birth_density'])
-            bulge_birth_densities.append(stellar_data_tmp['bulge_birth_density'])
+            spheroid_birth_densities.append(stellar_data_tmp['spheroid_birth_density'])
             disc_stellar_angular_momenta.append(stellar_data_tmp['disc_stellar_angular_momentum'])
-            bulge_stellar_angular_momenta.append(stellar_data_tmp['bulge_stellar_angular_momentum'])
+            spheroid_stellar_angular_momenta.append(stellar_data_tmp['spheroid_stellar_angular_momentum'])
 
             print(
                 'Masked and saved data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (time.time() - start_local_time))
@@ -819,25 +818,25 @@ class AppendAttributes:
         np.save(data_path + 'dark_matter_masses', dark_matter_masses)
 
         np.save(data_path + 'disc_as', disc_as)
-        np.save(data_path + 'bulge_as', bulge_as)
+        np.save(data_path + 'spheroid_as', spheroid_as)
         np.save(data_path + 'disc_betas', disc_betas)
-        np.save(data_path + 'bulge_betas', bulge_betas)
+        np.save(data_path + 'spheroid_betas', spheroid_betas)
         np.save(data_path + 'disc_deltas', disc_deltas)
-        np.save(data_path + 'bulge_deltas', bulge_deltas)
+        np.save(data_path + 'spheroid_deltas', spheroid_deltas)
         np.save(data_path + 'disc_sigma_0s', disc_sigma_0s)
-        np.save(data_path + 'bulge_sigma_0s', bulge_sigma_0s)
+        np.save(data_path + 'spheroid_sigma_0s', spheroid_sigma_0s)
         np.save(data_path + 'disc_sigma_0s_re', disc_sigma_0s_re)
         np.save(data_path + 'disc_rotationals', disc_rotationals)
         np.save(data_path + 'disc_weighted_as', disc_weighted_as)
-        np.save(data_path + 'bulge_sigma_0s_re', bulge_sigma_0s_re)
-        np.save(data_path + 'bulge_rotationals', bulge_rotationals)
-        np.save(data_path + 'bulge_weighted_as', bulge_weighted_as)
+        np.save(data_path + 'spheroid_sigma_0s_re', spheroid_sigma_0s_re)
+        np.save(data_path + 'spheroid_rotationals', spheroid_rotationals)
+        np.save(data_path + 'spheroid_weighted_as', spheroid_weighted_as)
         np.save(data_path + 'disc_metallicities', disc_metallicities)
-        np.save(data_path + 'bulge_metallicities', bulge_metallicities)
+        np.save(data_path + 'spheroid_metallicities', spheroid_metallicities)
         np.save(data_path + 'disc_birth_densities', disc_birth_densities)
-        np.save(data_path + 'bulge_birth_densities', bulge_birth_densities)
+        np.save(data_path + 'spheroid_birth_densities', spheroid_birth_densities)
         np.save(data_path + 'disc_stellar_angular_momenta', disc_stellar_angular_momenta)
-        np.save(data_path + 'bulge_stellar_angular_momenta', bulge_stellar_angular_momenta)
+        np.save(data_path + 'spheroid_stellar_angular_momenta', spheroid_stellar_angular_momenta)
 
         print('Finished AppendAttributes for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (
             time.time() - start_global_time))

@@ -35,6 +35,7 @@ class SurfaceDensityProfiles:
         
         for group_number in range(25, 26):
             for subgroup_number in range(0, 1):
+                # Load the data #
                 start_local_time = time.time()  # Start the local time.
                 
                 stellar_data_tmp = np.load(
@@ -53,9 +54,10 @@ class SurfaceDensityProfiles:
         print('Finished SurfaceDensityProfiles for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (
             time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
-    
-    
-    def plot(self, stellar_data_tmp, group_number, subgroup_number):
+
+
+    @staticmethod
+    def plot(stellar_data_tmp, group_number, subgroup_number):
         """
         Plot surface density profiles.
         :param stellar_data_tmp: from read_add_attributes.py.
@@ -70,7 +72,7 @@ class SurfaceDensityProfiles:
             """
             Calculate a Sersic profile.
             :param r: radius.
-            :param I_0b: Bulge central intensity.
+            :param I_0b: Spheroid central intensity.
             :param b: Sersic b parameter
             :param n: Sersic index
             :return: I_0b * np.exp(-(r / b) ** (1 / n))
@@ -95,7 +97,7 @@ class SurfaceDensityProfiles:
             :param r: radius.
             :param I_0d: Disc central intensity.
             :param R_d: Disc scale length.
-            :param I_0b: Bulge central intensity.
+            :param I_0b: Spheroid central intensity.
             :param b: Sersic b parameter.
             :param n: Sersic index.
             :return: exponential_profile(r, I_0d, R_d) + sersic_profile(r, I_0b, b, n)
@@ -148,17 +150,17 @@ class SurfaceDensityProfiles:
         lon_densest = (hp.healpix_to_lonlat([index_densest])[0].value + np.pi) % (2 * np.pi) - np.pi
         lat_densest = (hp.healpix_to_lonlat([index_densest])[1].value + np.pi / 2) % (2 * np.pi) - np.pi / 2
         
-        # Calculate and plot the disc (bulge) mass surface density as the mass within (outside) 30 degrees from the densest pixel #
+        # Calculate and plot the disc (spheroid) mass surface density as the mass within (outside) 30 degrees from the densest pixel #
         angular_theta_from_densest = np.arccos(
             np.sin(lat_densest) * np.sin(np.arcsin(prc_unit_vector[:, 2])) + np.cos(lat_densest) * np.cos(np.arcsin(prc_unit_vector[:, 2])) * np.cos(
                 lon_densest - np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0])))  # In radians.
         disc_mask, = np.where(angular_theta_from_densest < (np.pi / 6.0))
-        bulge_mask, = np.where(angular_theta_from_densest > (np.pi / 6.0))
+        spheroid_mask, = np.where(angular_theta_from_densest > (np.pi / 6.0))
         
         colors = ['blue', 'red']
-        labels = ['Disc', 'Bulge']
+        labels = ['Disc', 'Spheroid']
         labels2 = ['Exponential', 'Sersic']
-        masks = [disc_mask, bulge_mask]
+        masks = [disc_mask, spheroid_mask]
         profiles = [exponential_profile, sersic_profile]
         for mask, color, profile, label, label2 in zip(masks, colors, profiles, labels, labels2):
             cylindrical_distance = np.sqrt(
@@ -184,14 +186,14 @@ class SurfaceDensityProfiles:
                     I_0d, R_d = popt[0], popt[1]
                     disk_mass = 2.0 * np.pi * I_0d * R_d ** 2
                 
-                elif mask is bulge_mask:
+                elif mask is spheroid_mask:
                     popt, pcov = curve_fit(profile, centers, sden, sigma=0.1 * sden, p0=[sden[0], 2, 4])  # p0 = [I_0b, b, n]
                     plt.plot(centers, profile(centers, popt[0], popt[1], popt[2]), c=color, label=label2)
                     
-                    # Calculate bulge attributes #
+                    # Calculate spheroid attributes #
                     I_0b, b, n = popt[0], popt[1], popt[2]
                     R_eff = b * sersic_b_n(n) ** n
-                    bulge_mass = np.pi * I_0b * R_eff ** 2 * gamma(2.0 / n + 1)
+                    spheroid_mass = np.pi * I_0b * R_eff ** 2 * gamma(2.0 / n + 1)
             
             except RuntimeError:
                 print('Could not fit a Sersic or exponential profile')
@@ -216,8 +218,8 @@ class SurfaceDensityProfiles:
             I_0d, R_d, I_0b, b, n = popt[0], popt[1], popt[2], popt[3], popt[4]
             R_eff = b * sersic_b_n(n) ** n
             disk_mass = 2.0 * np.pi * I_0d * R_d ** 2
-            bulge_mass = np.pi * I_0b * R_eff ** 2 * gamma(2.0 / n + 1)
-            disk_fraction = disk_mass / (bulge_mass + disk_mass)
+            spheroid_mass = np.pi * I_0b * R_eff ** 2 * gamma(2.0 / n + 1)
+            disk_fraction = disk_mass / (spheroid_mass + disk_mass)
         
         except RuntimeError:
             print('Could not fit a Sersic+exponential profile')

@@ -40,7 +40,7 @@ class SampleRAEl:
             group_number = i + 1
             subgroup_number = 0
             
-            # Load data from numpy arrays #
+            # Load the data #
             stellar_data_tmp = np.load(data_path + 'stellar_data_tmps/stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy',
                                        allow_pickle=True)
             stellar_data_tmp = stellar_data_tmp.item()

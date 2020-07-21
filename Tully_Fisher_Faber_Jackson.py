@@ -29,17 +29,18 @@ class TullyFisherFaberJackson:
         :param simulation_path: simulation directory.
         :param tag: redshift directory.
         """
+        # Load the data #
         start_local_time = time.time()  # Start the local time.
 
         glx_deltas = np.load(data_path + 'glx_deltas.npy')
         disc_deltas = np.load(data_path + 'disc_deltas.npy')
-        bulge_deltas = np.load(data_path + 'bulge_deltas.npy')
+        spheroid_deltas = np.load(data_path + 'spheroid_deltas.npy')
         glx_sigma_0s = np.load(data_path + 'glx_sigma_0s.npy')
         disc_sigma_0s = np.load(data_path + 'disc_sigma_0s.npy')
-        bulge_sigma_0s = np.load(data_path + 'bulge_sigma_0s.npy')
+        spheroid_sigma_0s = np.load(data_path + 'spheroid_sigma_0s.npy')
         glx_rotationals = np.load(data_path + 'glx_rotationals.npy')
         disc_rotationals = np.load(data_path + 'disc_rotationals.npy')
-        bulge_rotationals = np.load(data_path + 'bulge_rotationals.npy')
+        spheroid_rotationals = np.load(data_path + 'spheroid_rotationals.npy')
         glx_stellar_masses = np.load(data_path + 'glx_stellar_masses.npy')
         glx_disc_fractions_IT20 = np.load(data_path + 'glx_disc_fractions_IT20.npy')
 
@@ -53,8 +54,8 @@ class TullyFisherFaberJackson:
         # Plot the data #
         start_local_time = time.time()  # Start the local time.
 
-        self.plot(glx_stellar_masses, glx_rotationals, disc_rotationals, bulge_rotationals, glx_sigma_0s, disc_sigma_0s, bulge_sigma_0s,
-            glx_disc_fractions_IT20, glx_deltas, disc_deltas, bulge_deltas)
+        self.plot(glx_stellar_masses, glx_rotationals, disc_rotationals, spheroid_rotationals, glx_sigma_0s, disc_sigma_0s, spheroid_sigma_0s,
+            glx_disc_fractions_IT20, glx_deltas, disc_deltas, spheroid_deltas)
         print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
 
@@ -64,17 +65,17 @@ class TullyFisherFaberJackson:
 
 
     @staticmethod
-    def plot(glx_stellar_masses, glx_rotationals, disc_rotationals, bulge_rotationals, glx_sigma_0s, disc_sigma_0s, bulge_sigma_0s,
-             glx_disc_fractions_IT20, glx_deltas, disc_deltas, bulge_deltas):
+    def plot(glx_stellar_masses, glx_rotationals, disc_rotationals, spheroid_rotationals, glx_sigma_0s, disc_sigma_0s, spheroid_sigma_0s,
+             glx_disc_fractions_IT20, glx_deltas, disc_deltas, spheroid_deltas):
         """
         Plot the Tully-Fisher and Faber-Jackson relation.
         :param glx_stellar_masses: defined as the mass of all stellar particles within 30kpc from the most bound particle.
         :param glx_rotationals: defined as the rotational velocity for the whole galaxy.
         :param disc_rotationals: defined as the rotational velocity for the disc component.
-        :param bulge_rotationals: defined as the rotational velocity for the bulge component.
+        :param spheroid_rotationals: defined as the rotational velocity for the spheroid component.
         :param glx_sigma_0s: defined as the disc-plane velocity dispersion for the whole galaxy.
         :param disc_sigma_0s: defined as the disc-plane velocity dispersion for the disc component.
-        :param bulge_sigma_0s: defined as the disc-plane velocity dispersion for the bulge component.
+        :param spheroid_sigma_0s: defined as the disc-plane velocity dispersion for the spheroid component.
         :param glx_disc_fractions_IT20: where the disc consists of particles whose angular momentum angular separation is 30deg from the densest
         pixel.
         :return: None
@@ -100,14 +101,14 @@ class TullyFisherFaberJackson:
         # Plot the Tully-Fisher relations #
         sc = axis10.scatter(np.log10(glx_rotationals), np.log10(glx_stellar_masses), c=glx_disc_fractions_IT20, s=10, cmap='seismic_r')
         axis20.scatter(np.log10(disc_rotationals), np.log10(glx_stellar_masses), c='tab:blue', s=10, label=r'$\mathrm{Disc}$')
-        axis20.scatter(np.log10(bulge_rotationals), np.log10(glx_stellar_masses), c='tab:red', s=10, label=r'$\mathrm{Bulge}$')
+        axis20.scatter(np.log10(spheroid_rotationals), np.log10(glx_stellar_masses), c='tab:red', s=10, label=r'$\mathrm{Spheroid}$')
         plot_tools.create_colorbar(axiscbar, sc, r'$\mathrm{D/T_{30\degree}}$', 'horizontal')
 
         # Plot the Faber-Jackson relations #
         axis11.scatter(np.log10(np.sqrt(1 - glx_deltas) * glx_sigma_0s), np.log10(glx_stellar_masses), c=glx_disc_fractions_IT20, s=10,
             cmap='seismic_r')
         axis21.scatter(np.log10(np.sqrt(1 - disc_deltas) * disc_sigma_0s), np.log10(glx_stellar_masses), c='tab:blue', s=10)
-        axis21.scatter(np.log10(np.sqrt(1 - bulge_deltas) * bulge_sigma_0s), np.log10(glx_stellar_masses), c='tab:red', s=10)
+        axis21.scatter(np.log10(np.sqrt(1 - spheroid_deltas) * spheroid_sigma_0s), np.log10(glx_stellar_masses), c='tab:red', s=10)
 
         # Read and plot observational data from AZF08, TEA11 and OCB20 #
         AZF08 = np.genfromtxt('./observational_data/AZF_0807.0636/Figure1.csv', delimiter=',', names=['Vrot', 'Mstar'])

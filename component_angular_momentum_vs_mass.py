@@ -33,14 +33,14 @@ class ComponentAngularMomentumVsMass:
         glx_stellar_masses = np.load(data_path + 'glx_stellar_masses.npy')
         glx_disc_fractions_IT20 = np.load(data_path + 'glx_disc_fractions_IT20.npy')
         disc_stellar_angular_momenta = np.load(data_path + 'disc_stellar_angular_momenta.npy')
-        bulge_stellar_angular_momenta = np.load(data_path + 'bulge_stellar_angular_momenta.npy')
+        spheroid_stellar_angular_momenta = np.load(data_path + 'spheroid_stellar_angular_momenta.npy')
         print('Loaded data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
 
         # Plot the data #
         start_local_time = time.time()  # Start the local time.
 
-        self.plot(glx_stellar_masses, glx_disc_fractions_IT20, disc_stellar_angular_momenta, bulge_stellar_angular_momenta)
+        self.plot(glx_stellar_masses, glx_disc_fractions_IT20, disc_stellar_angular_momenta, spheroid_stellar_angular_momenta)
         print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
 
@@ -50,30 +50,30 @@ class ComponentAngularMomentumVsMass:
 
 
     @staticmethod
-    def plot(glx_stellar_masses, glx_disc_fractions_IT20, disc_stellar_angular_momenta, bulge_stellar_angular_momenta):
+    def plot(glx_stellar_masses, glx_disc_fractions_IT20, disc_stellar_angular_momenta, spheroid_stellar_angular_momenta):
         """
         Plot the component angular momentum as a function of its stellar mass.
         :param glx_stellar_masses: defined as the mass of all stellar particles within 30kpc from the most bound particle.
         :param glx_disc_fractions_IT20: where the disc consists of particles whose angular momentum angular separation is 30deg from the densest
         pixel.
         :param disc_stellar_angular_momenta: defined as the sum of each disc particle's angular momentum.
-        :param bulge_stellar_angular_momenta: defined as the sum of each bulge particle's angular momentum.
+        :param spheroid_stellar_angular_momenta: defined as the sum of each spheroid particle's angular momentum.
         :return: None
         """
         # Generate the figure and define its parameters #
         figure, axis = plt.subplots(1, figsize=(10, 7.5))
-        plot_tools.set_axis(axis, xlim=[5e9, 1e12], ylim=[1e0, 1e6], xscale='log', yscale='log',
+        plot_tools.set_axis(axis, xlim=[1e8, 1e12], ylim=[1e-1, 1e6], xscale='log', yscale='log',
             xlabel=r'$\mathrm{log_{10}(M_{\bigstar,comp}/M_{\odot})}$',
             ylabel=r'$\mathrm{(|\vec{J}_{\bigstar,comp}|/M_{\bigstar, comp})/(kpc\;km\;s^{-1})}$', aspect=None, which='major')
 
         # Calculate component specific angular momentum #
         spc_disc_angular_momenta = np.divide(np.linalg.norm(disc_stellar_angular_momenta, axis=1), glx_disc_fractions_IT20 * glx_stellar_masses)
-        spc_bulge_angular_momenta = np.divide(np.linalg.norm(bulge_stellar_angular_momenta, axis=1),
+        spc_spheroid_angular_momenta = np.divide(np.linalg.norm(spheroid_stellar_angular_momenta, axis=1),
             (1 - glx_disc_fractions_IT20) * glx_stellar_masses)
 
         # Plot galactic angular momentum as a function of stellar mass colour-coded by disc to total ratio #
         d = plt.scatter(glx_disc_fractions_IT20 * glx_stellar_masses, spc_disc_angular_momenta, c='tab:blue', s=8, label='')
-        b = plt.scatter((1 - glx_disc_fractions_IT20) * glx_stellar_masses, spc_bulge_angular_momenta, c='tab:red', s=8)
+        b = plt.scatter((1 - glx_disc_fractions_IT20) * glx_stellar_masses, spc_spheroid_angular_momenta, c='tab:red', s=8)
 
         # Read observational data from FR13 and OG14 #
         FR13_D = np.genfromtxt('./observational_data/FR_1305.1626/Figure2_D.csv', delimiter=',', names=['Md', 'jd'])
