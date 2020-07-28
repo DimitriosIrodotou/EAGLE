@@ -28,23 +28,23 @@ def download_image(group_number, subgroup_number):
                     SH.SnapNum = 27 \
                     and  SH.GroupNumber = %d \
                     and SH.SubGroupNumber = %d' % (group_number, subgroup_number)
-    
+
     # Connect to database and execute the query #
     connnect = sql.connect("hnz327", password="HRC478zd")
     sql_data = sql.execute_query(connnect, query)
-    
+
     # Save the result in a data frame and remove the unnecessary characters #
     df = pd.DataFrame(sql_data, columns=['face', 'edge'], index=[0])
     df['face'] = df['face'].str.replace('"<img src=', '').str.replace('>"', '').str.replace("'", '').str.replace(url, '')
     df['edge'] = df['edge'].str.replace('"<img src=', '').str.replace('>"', '').str.replace("'", '').str.replace(url, '')
     galaxy_id = df['face'].item().split('_')[1]
-    
+
     # Check if the images exist, if not download and save them #
     if not os.path.isfile(plots_path + df['face'].item()):
         urllib.request.urlretrieve(url + df['face'].item(), plots_path + df['face'].item())
     if not os.path.isfile(plots_path + df['edge'].item()):
         urllib.request.urlretrieve(url + df['edge'].item(), plots_path + df['edge'].item())
-    
+
     return galaxy_id
 
 
@@ -69,16 +69,16 @@ def create_merger_tree(group_number, subgroup_number):
         REF.SnapNum = 27 \
         and REF.GroupNumber = %d \
         and REF.SubGroupNumber = %d' % (group_number, subgroup_number)
-    
+
     # Connect to database and execute the query #
     connnect = sql.connect("hnz327", password="HRC478zd")
     sql_data = sql.execute_query(connnect, query)
-    
+
     # Save the result in a data frame #
     df = pd.DataFrame(sql_data, columns=['z', 'snap', 'galaxy', 'top_leaf', 'descendant', 'last_progenitor'], index=[0])
     main_galaxy = df['galaxy'][0]
     main_descendant = df['descendant'][0]
-    
+
     # Navigate through all branches and get all the progenitors #
     query = 'SELECT \
         SH.Redshift as z, \
@@ -101,14 +101,14 @@ def create_merger_tree(group_number, subgroup_number):
             'REF.GalaxyID and REF.LastProgID)) \
     ORDER BY \
         SH.Redshift' % main_galaxy
-    
+
     # Connect to database and execute the query #
     connnect = sql.connect("hnz327", password="HRC478zd")
     sql_data = sql.execute_query(connnect, query)
-    
+
     # Save the result in a data frame #
     df = pd.DataFrame(sql_data, columns=['z', 'snap', 'galaxy', 'descendant', 'last_progenitor', 'stellar_mass'])
-    
+
     # Find how many progenitors exist in the previous snap (26) to check if the galaxy had a merger #
     n_mergers, n_minor_mergers, n_major_mergers = 0, 0, 0
     if len(df.loc[lambda df:df['snap'] == 26, :]) == 1:
@@ -128,5 +128,5 @@ def create_merger_tree(group_number, subgroup_number):
             raise KeyError("wrong merger ratio in create_merger_tree")
     else:
         raise KeyError("wrong number of mergers in create_merger_tree")
-    
+
     return df, merger_flag, n_mergers, n_minor_mergers, n_major_mergers

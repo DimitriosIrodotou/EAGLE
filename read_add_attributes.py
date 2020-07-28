@@ -429,14 +429,14 @@ class AddAttributes:
         # Rotate coordinates and velocities of stellar particles wrt galactic angular momentum #
         coordinates, velocity, prc_unit_vector, glx_unit_vector = RotateCoordinates.rotate_X(stellar_data_tmp, glx_unit_vector)
 
-        # Calculate the ra and dec of the (unit vector of) angular momentum for each particle #
+        # Calculate the ra and el of the (unit vector of) angular momentum for each particle #
         ra = np.degrees(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]))
-        dec = np.degrees(np.arcsin(prc_unit_vector[:, 2]))
+        el = np.degrees(np.arcsin(prc_unit_vector[:, 2]))
 
         # Plot a HEALPix histogram #
         nside = 2 ** 5  # Define the resolution of the grid (number of divisions along the side of a base-resolution pixel).
         hp = HEALPix(nside=nside)  # Initialise the HEALPix pixelisation class.
-        indices = hp.lonlat_to_healpix(ra * u.deg, dec * u.deg)  # Create list of HEALPix indices from particles' ra and dec.
+        indices = hp.lonlat_to_healpix(ra * u.deg, el * u.deg)  # Create list of HEALPix indices from particles' ra and el.
         density = np.bincount(indices, minlength=hp.npix)  # Count number of data points in each HEALPix pixel.
 
         # Find location of density maximum #

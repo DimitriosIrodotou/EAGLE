@@ -22,7 +22,7 @@ from plot_tools import RotateCoordinates
 from morpho_kinematics import MorphoKinematic
 
 # Create a parser and add argument to read data #
-parser = argparse.ArgumentParser(description='Create ra and dec plot.')
+parser = argparse.ArgumentParser(description='Create ra and el plot.')
 parser.add_argument('-r', action='store_true', help='Read data')
 parser.add_argument('-l', action='store_true', help='Load data')
 parser.add_argument('-rs', action='store_true', help='Read data and save to numpy arrays')
@@ -33,7 +33,7 @@ start_global_time = time.time()  # Start the global time.
 warnings.filterwarnings('ignore', category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
 
 
-class RADec:
+class RAEl:
     """
     For each galaxy create: a HEALPix histogram from the angular momentum of particles - an angular distance plot - a surface density plot / mock
     image - a bar strength plot - a circularity distribution.
@@ -103,7 +103,7 @@ class RADec:
                 print('Plotted data for halo ' + str(group_number) + ' in %.4s s' % (time.time() - start_local_time))
                 print('–––––––––––––––––––––––––––––––––––––––––––––')
 
-        print('Finished RADec for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
+        print('Finished RAEl for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
 
 
@@ -245,7 +245,7 @@ class RADec:
         axis20.set_xlim(0.0, 10.0)
 
         axis00.set_xlabel('RA ($\degree$)')
-        axis00.set_ylabel('Dec ($\degree$)')
+        axis00.set_ylabel('El ($\degree$)')
         axis10.set_ylabel('Particles per grid cell')
         axis10.set_xlabel('Angular distance from X ($\degree$)')
         axis11.set_ylabel('Particles per grid cell')
@@ -273,17 +273,17 @@ class RADec:
         stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_unit_vector, glx_unit_vector = RotateCoordinates.rotate_X(stellar_data_tmp,
             glx_unit_vector)
 
-        # Calculate the ra and dec of the (unit vector of) angular momentum for each particle #
+        # Calculate the ra and el of the (unit vector of) angular momentum for each particle #
         ra = np.degrees(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]))
-        dec = np.degrees(np.arcsin(prc_unit_vector[:, 2]))
+        el = np.degrees(np.arcsin(prc_unit_vector[:, 2]))
 
         # Plot a HEALPix histogram #
         nside = 2 ** 5  # Define the resolution of the grid (number of divisions along the side of a base-resolution pixel).
         hp = HEALPix(nside=nside)  # Initialise the HEALPix pixellisation class.
-        indices = hp.lonlat_to_healpix(ra * u.deg, dec * u.deg)  # Create list of HEALPix indices from particles' ra and dec.
+        indices = hp.lonlat_to_healpix(ra * u.deg, el * u.deg)  # Create list of HEALPix indices from particles' ra and el.
         density = np.bincount(indices, minlength=hp.npix)  # Count number of points in each HEALPix pixel.
 
-        # Find location of density maximum and plot its positions and the ra and dec of the galactic angular momentum #
+        # Find location of density maximum and plot its positions and the ra and el of the galactic angular momentum #
         index_densest = np.argmax(density)
         lon_densest = (hp.healpix_to_lonlat([index_densest])[0].value + np.pi) % (2 * np.pi) - np.pi
         lat_densest = (hp.healpix_to_lonlat([index_densest])[1].value + np.pi / 2) % (2 * np.pi) - np.pi / 2
@@ -292,20 +292,20 @@ class RADec:
         axis00.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black',
             marker='X')  # Position of the galactic angular momentum.
 
-        # Sample a 360x180 grid in ra/dec #
+        # Sample a 360x180 grid in ra/el #
         ra = np.linspace(-180.0, 180.0, num=360) * u.deg
-        dec = np.linspace(-90.0, 90.0, num=180) * u.deg
-        ra_grid, dec_grid = np.meshgrid(ra, dec)
+        el = np.linspace(-90.0, 90.0, num=180) * u.deg
+        ra_grid, el_grid = np.meshgrid(ra, el)
 
         # Find density at each coordinate position #
-        coordinate_index = hp.lonlat_to_healpix(ra_grid, dec_grid)
+        coordinate_index = hp.lonlat_to_healpix(ra_grid, el_grid)
         density_map = density[coordinate_index]
 
         # Display data on a 2D regular raster and create a pseudo-color plot #
         im = axis00.imshow(density_map, cmap='nipy_spectral_r', aspect='auto', norm=matplotlib.colors.LogNorm(vmin=1))
         cbar = plt.colorbar(im, ax=axis00, orientation='horizontal')
         cbar.set_label('$\mathrm{Particles\; per\; grid\; cell}$')
-        axis00.pcolormesh(np.radians(ra), np.radians(dec), density_map, cmap='nipy_spectral_r')
+        axis00.pcolormesh(np.radians(ra), np.radians(el), density_map, cmap='nipy_spectral_r')
 
         # Calculate disc mass fraction as the mass within 30 degrees from the densest pixel #
         angular_theta_from_densest = np.arccos(
@@ -321,7 +321,7 @@ class RADec:
 
         # Calculate and plot the angular distance (spherical law of cosines) between the densest and all the other grid cells #
         angular_theta_from_densest = np.arccos(
-            np.sin(lat_densest) * np.sin(np.radians(dec_grid.value)) + np.cos(lat_densest) * np.cos(np.radians(dec_grid.value)) * np.cos(
+            np.sin(lat_densest) * np.sin(np.radians(el_grid.value)) + np.cos(lat_densest) * np.cos(np.radians(el_grid.value)) * np.cos(
                 lon_densest - np.radians(ra_grid.value)))  # In radians.
 
         axis11.scatter(angular_theta_from_densest[density_map.nonzero()] * np.divide(180.0, np.pi), density_map[density_map.nonzero()], c='black',
@@ -348,8 +348,8 @@ class RADec:
         # Calculate and plot the angular distance between the (unit vector of) the galactic angular momentum and all the other grid cells #
         position_of_X = np.vstack([np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2])]).T
 
-        angular_theta_from_X = np.arccos(np.sin(position_of_X[0, 1]) * np.sin(np.radians(dec_grid.value)) + np.cos(position_of_X[0, 1]) * np.cos(
-            np.radians(dec_grid.value)) * np.cos(position_of_X[0, 0] - np.radians(ra_grid.value)))  # In radians.
+        angular_theta_from_X = np.arccos(np.sin(position_of_X[0, 1]) * np.sin(np.radians(el_grid.value)) + np.cos(position_of_X[0, 1]) * np.cos(
+            np.radians(el_grid.value)) * np.cos(position_of_X[0, 0] - np.radians(ra_grid.value)))  # In radians.
         axis10.scatter(angular_theta_from_X[density_map.nonzero()] * np.divide(180.0, np.pi), density_map[density_map.nonzero()], c='black',
             s=10)  # In degrees.
         axis10.axvline(x=90, c='red', lw=3, linestyle='dashed', label='D/T= %.3f ' % disc_fraction_00)  # Vertical line at 30 degrees.
@@ -398,4 +398,4 @@ if __name__ == '__main__':
     data_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/Test/'  # Path to save/load data.
     if not os.path.exists(plots_path):
         os.makedirs(plots_path)
-    x = RADec(simulation_path, tag)
+    x = RAEl(simulation_path, tag)

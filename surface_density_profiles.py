@@ -22,7 +22,7 @@ warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # I
 
 class SurfaceDensityProfiles:
     """
-    Fit surface density profiles to the components produced by RA_Dec_surface_density.
+    Fit surface density profiles to the components produced by RA_El_surface_density.
     """
     
     
@@ -134,15 +134,15 @@ class SurfaceDensityProfiles:
         stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_angular_momentum, glx_angular_momentum = RotateCoordinates.rotate_Jz(
             stellar_data_tmp)
         
-        # Calculate the ra and dec of the (unit vector of) angular momentum for each particle #
+        # Calculate the ra and el of the (unit vector of) angular momentum for each particle #
         prc_unit_vector = prc_angular_momentum / np.linalg.norm(prc_angular_momentum, axis=1)[:, np.newaxis]
         ra = np.degrees(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]))
-        dec = np.degrees(np.arcsin(prc_unit_vector[:, 2]))
+        el = np.degrees(np.arcsin(prc_unit_vector[:, 2]))
         
         # Plot a HEALPix histogram #
         nside = 2 ** 5  # Define the resolution of the grid (number of divisions along the side of a base-resolution pixel).
         hp = HEALPix(nside=nside)  # Initialise the HEALPix pixelisation class.
-        indices = hp.lonlat_to_healpix(ra * u.deg, dec * u.deg)  # Create list of HEALPix indices from particles' ra and dec.
+        indices = hp.lonlat_to_healpix(ra * u.deg, el * u.deg)  # Create list of HEALPix indices from particles' ra and el.
         density = np.bincount(indices, minlength=hp.npix)  # Count number of data points in each HEALPix pixel.
         
         # Find location of density maximum #

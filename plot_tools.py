@@ -21,10 +21,10 @@ class RotateCoordinates:
         """
         # Calculate the rotation matrices and combine them #
         ra = np.arctan2(glx_unit_vector[1], glx_unit_vector[0])
-        dec = np.arcsin(glx_unit_vector[2])
+        el = np.arcsin(glx_unit_vector[2])
 
         Rz = np.array([[np.cos(ra), np.sin(ra), 0], [-np.sin(ra), np.cos(ra), 0], [0, 0, 1]])
-        Ry = np.array([[np.cos(dec), 0, np.sin(dec)], [0, 1, 0], [-np.sin(dec), 0, np.cos(dec)]])
+        Ry = np.array([[np.cos(el), 0, np.sin(el)], [0, 1, 0], [-np.sin(el), 0, np.cos(el)]])
         Ryz = np.matmul(Ry, Rz)
 
         # Rotate the coordinates and velocities of stellar particles #
@@ -48,30 +48,30 @@ class RotateCoordinates:
         :param glx_unit_vector:
         :return: prc_unit_vector, glx_unit_vector
         """
-        # Calculate the ra and dec of the (unit vector of) angular momentum for each particle #
+        # Calculate the ra and el of the (unit vector of) angular momentum for each particle #
         ra = np.degrees(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]))
-        dec = np.degrees(np.arcsin(prc_unit_vector[:, 2]))
+        el = np.degrees(np.arcsin(prc_unit_vector[:, 2]))
 
         # Create HEALPix map #
         nside = 2 ** 5  # Define the resolution of the grid (number of divisions along the side of a base-resolution pixel).
         hp = HEALPix(nside=nside)  # Initialise the HEALPix pixelisation class.
-        indices = hp.lonlat_to_healpix(ra * u.deg, dec * u.deg)  # Create list of HEALPix indices from particles' ra and dec.
+        indices = hp.lonlat_to_healpix(ra * u.deg, el * u.deg)  # Create list of HEALPix indices from particles' ra and el.
         density = np.bincount(indices, minlength=hp.npix)  # Count number of data points in each HEALPix pixel.
 
-        # Find location of density maximum and plot its positions and the ra (lon) and dec (lat) of the galactic angular momentum #
+        # Find location of density maximum and plot its positions and the ra (lon) and el (lat) of the galactic angular momentum #
         index_densest = np.argmax(density)
         lon_densest = (hp.healpix_to_lonlat([index_densest])[0].value + np.pi) % (2 * np.pi) - np.pi
         lat_densest = (hp.healpix_to_lonlat([index_densest])[1].value + np.pi / 2) % (2 * np.pi) - np.pi / 2
 
         # Calculate the rotation matrices and combine them #
         ra = np.float(lon_densest)
-        dec = np.float(lat_densest)
+        el = np.float(lat_densest)
         print(density[index_densest])
         # ra = np.arctan2(glx_unit_vector[1], glx_unit_vector[0])
-        # dec = np.arcsin(glx_unit_vector[2])
+        # el = np.arcsin(glx_unit_vector[2])
 
         Rz = np.array([[np.cos(ra), np.sin(ra), 0], [-np.sin(ra), np.cos(ra), 0], [0, 0, 1]])
-        Ry = np.array([[np.cos(dec), 0, np.sin(dec)], [0, 1, 0], [-np.sin(dec), 0, np.cos(dec)]])
+        Ry = np.array([[np.cos(el), 0, np.sin(el)], [0, 1, 0], [-np.sin(el), 0, np.cos(el)]])
         Ryz = np.matmul(Ry, Rz)
 
         prc_unit_vector = np.matmul(Ryz, prc_unit_vector[..., None]).squeeze()
@@ -90,7 +90,7 @@ class RotateCoordinates:
 
         # Calculate the angular momentum of the galaxy #
         prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
-            stellar_data_tmp['Velocity'])  # In Msun kpc km s^-1.
+                                                                                  stellar_data_tmp['Velocity'])  # In Msun kpc km s^-1.
         glx_angular_momentum = np.sum(prc_angular_momentum, axis=0)  # In Msun kpc km s^-1.
 
         # Define the rotation matrices #
