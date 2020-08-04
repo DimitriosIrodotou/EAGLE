@@ -65,7 +65,7 @@ class MergerTree:
         
         # Create the hierarchical tree structure and display it #
         # pos = nx.drawing.nx_agraph.graphviz_layout(tree, root=df['galaxy'][0])
-        pos = self.hierarchy_pos(tree, root=df['galaxy'][0])
+        pos = MergerTree.hierarchy_pos(tree, root=df['galaxy'][0])
         
         # Reorder df to assign the colors to each node based on lookback time and plot #
         df['lbt'] = df.apply(lambda x:round(Planck13.lookback_time(x.z).value, 1), axis=1)

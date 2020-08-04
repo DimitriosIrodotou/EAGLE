@@ -35,44 +35,37 @@ class SampleMultipleDecomposition:
         :param simulation_path: simulation directory.
         :param tag: redshift directory.
         """
-        group_numbers = [25, 2, 3, 5, 20, 6, 21, 18]
+        group_numbers = [25, 2, 6, 21]
 
         # Generate the figure and define its parameters #
         plt.close()
-        figure = plt.figure(figsize=(24, 13.5))
+        figure = plt.figure(figsize=(20, 20))
 
-        gs = gridspec.GridSpec(4, 6)
-        axis00, axis01, axis02, axis03, axis04, axis05 = figure.add_subplot(gs[0, 0], projection='mollweide'), figure.add_subplot(
-            gs[0, 1]), figure.add_subplot(gs[0, 2]), figure.add_subplot(gs[0, 3], projection='mollweide'), figure.add_subplot(
-            gs[0, 4]), figure.add_subplot(gs[0, 5]),
-        axis10, axis11, axis12, axis13, axis14, axis15 = figure.add_subplot(gs[1, 0], projection='mollweide'), figure.add_subplot(
-            gs[1, 1]), figure.add_subplot(gs[1, 2]), figure.add_subplot(gs[1, 3], projection='mollweide'), figure.add_subplot(
-            gs[1, 4]), figure.add_subplot(gs[1, 5]),
-        axis20, axis21, axis22, axis23, axis24, axis25 = figure.add_subplot(gs[2, 0], projection='mollweide'), figure.add_subplot(
-            gs[2, 1]), figure.add_subplot(gs[2, 2]), figure.add_subplot(gs[2, 3], projection='mollweide'), figure.add_subplot(
-            gs[2, 4]), figure.add_subplot(gs[2, 5])
-        axis30, axis31, axis32, axis33, axis34, axis35 = figure.add_subplot(gs[3, 0], projection='mollweide'), figure.add_subplot(
-            gs[3, 1]), figure.add_subplot(gs[3, 2]), figure.add_subplot(gs[3, 3], projection='mollweide'), figure.add_subplot(
-            gs[3, 4]), figure.add_subplot(gs[3, 5])
+        gs = gridspec.GridSpec(4, 4, wspace=0.31, hspace=0.3)
+        axis00, axis01, axis02, axis03 = figure.add_subplot(gs[0, 0], projection='mollweide'), figure.add_subplot(gs[0, 1]), figure.add_subplot(
+            gs[0, 2]), figure.add_subplot(gs[0, 3])
+        axis10, axis11, axis12, axis13 = figure.add_subplot(gs[1, 0], projection='mollweide'), figure.add_subplot(gs[1, 1]), figure.add_subplot(
+            gs[1, 2]), figure.add_subplot(gs[1, 3])
+        axis20, axis21, axis22, axis23 = figure.add_subplot(gs[2, 0], projection='mollweide'), figure.add_subplot(gs[2, 1]), figure.add_subplot(
+            gs[2, 2]), figure.add_subplot(gs[2, 3])
+        axis30, axis31, axis32, axis33 = figure.add_subplot(gs[3, 0], projection='mollweide'), figure.add_subplot(gs[3, 1]), figure.add_subplot(
+            gs[3, 2]), figure.add_subplot(gs[3, 3])
 
         for axis in [axis00, axis10, axis20, axis30]:
-            axis.set_xlabel(r'$\mathrm{\alpha\;(\degree)}$')
-            axis.set_ylabel(r'$\mathrm{\delta\;(\degree)}$')
-        # for axis in [axis01, axis05, axis11, axis15, axis21, axis25, axis31, axis35]:
-        #     plot_tools.set_axis(axis, aspect=None, size=10)
-        for axis in [axis01, axis04, axis11, axis14, axis21, axis24]:
-            plot_tools.set_axis(axis, ylabel=r'$\mathrm{Particles\;per\;grid\;cell}$', aspect=None, size=10)
-        for axis in [axis31, axis34]:
-            plot_tools.set_axis(axis, xlabel=r'$\mathrm{\Delta \theta\;(\degree)}$', ylabel=r'$\mathrm{Particles\;per\;grid\;cell}$', aspect=None,
-                                size=10)
-        for axis in [axis31, axis35]:
-            plot_tools.set_axis(axis, xlabel=r'$\mathrm{\Delta \theta\;(\degree)}$', aspect=None, size=10)
-        for axis in [axis02, axis05, axis12, axis15, axis22, axis25, axis32, axis35]:
-            plot_tools.set_axis(axis, xlabel=r'$\mathrm{Angular\;distance\;from\;\vec{J}_{gal}\;(\degree)}$',
-                                ylabel=r'$\mathrm{Particles\;per\;grid\;cell}$', aspect=None, size=10)
+            axis.set_xlabel(r'$\mathrm{\alpha/\degree}$', size=16)
+            axis.set_ylabel(r'$\mathrm{\delta/\degree}$', size=16)
+            axis.set_yticklabels(['', '-60', '', '-30', '', '0', '', '30', '', '60', ''], size=16)
+            axis.set_xticklabels(['', '-120', '', '-60', '', '0', '', '60', '', '120', ''], size=16)
+        for axis in [axis01, axis11, axis21, axis31]:
+            plot_tools.set_axis(axis, xlabel=r'$\mathrm{\Delta \theta/\degree}$', ylabel=r'$\mathrm{Particles\;per\;grid\;cell}$', aspect=None)
+        for axis in [axis02, axis12, axis22, axis32]:
+            plot_tools.set_axis(axis, xlabel=r'$\mathrm{(Angular\;distance\;from\;\vec{J}_{gal})/\degree}$',
+                                ylabel=r'$\mathrm{Particles\;per\;grid\;cell}$', aspect=None)
+        for axis in [axis03, axis13, axis23, axis33]:
+            plot_tools.set_axis(axis, xlabel=r'$\mathrm{\epsilon}$', ylabel=r'$\mathrm{f(\epsilon)}$', aspect=None)
 
-        all_axes = [[axis00, axis01, axis02], [axis03, axis04, axis05], [axis10, axis11, axis12], [axis13, axis14, axis15], [axis20, axis21, axis22],
-                    [axis23, axis24, axis25], [axis30, axis31, axis32], [axis33, axis34, axis35]]
+        all_axes = [[axis00, axis01, axis02, axis03], [axis10, axis11, axis12, axis13], [axis20, axis21, axis22, axis23],
+                    [axis30, axis31, axis32, axis33]]
 
         for group_number, axes in zip(group_numbers, all_axes):  # Loop over all masked haloes.
             for subgroup_number in range(0, 1):  # Get centrals only.
@@ -116,8 +109,7 @@ class SampleMultipleDecomposition:
         glx_unit_vector = glx_angular_momentum / np.linalg.norm(glx_angular_momentum)
 
         # Rotate coordinates and velocities of stellar particles so the galactic angular momentum points along the x axis #
-        stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_unit_vector, glx_unit_vector = RotateCoordinates.rotate_X(stellar_data_tmp,
-                                                                                                                                     glx_unit_vector)
+        coordinates, velocities, prc_unit_vector, glx_unit_vector = RotateCoordinates.rotate_X(stellar_data_tmp, glx_unit_vector)
 
         # Calculate the ra and dec of the (unit vector of) angular momentum for each particle #
         ra = np.degrees(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]))
@@ -133,9 +125,6 @@ class SampleMultipleDecomposition:
         index_densest = np.argmax(density)
         lon_densest = (hp.healpix_to_lonlat([index_densest])[0].value + np.pi) % (2 * np.pi) - np.pi
         lat_densest = (hp.healpix_to_lonlat([index_densest])[1].value + np.pi / 2) % (2 * np.pi) - np.pi / 2
-        axes[0].annotate(r'$\mathrm{Density\;maximum}$', xy=(lon_densest, lat_densest), xycoords='data', xytext=(0.2, 1.1),
-                         textcoords='axes fraction',
-                         arrowprops=dict(arrowstyle='-', color='black', connectionstyle='arc3,rad=0'))  # Position of the densest pixel.
         axes[0].scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=100, color='black', marker='X',
                         facecolors='none', zorder=5)  # Position of the galactic angular momentum.
 
@@ -151,9 +140,10 @@ class SampleMultipleDecomposition:
         # Display data on a 2D regular raster and create a pseudo-color plot #
         pcm = axes[0].pcolormesh(np.radians(ra), np.radians(dec), density_map, cmap='nipy_spectral_r')
         cbar = plt.colorbar(pcm, ax=axes[0], orientation='horizontal')
-        cbar.ax.tick_params(labelsize=12)
+        cbar.ax.tick_params(labelsize=16)
+        cbar.set_label('$\mathrm{Particles\;per\;grid\;cell}$', size=16)
 
-        # # Calculate disc mass fraction as the mass within 30 degrees from the densest pixel #
+        # Calculate disc mass fraction as the mass within 30 degrees from the densest pixel #
         angular_theta_from_densest = np.arccos(
             np.sin(lat_densest) * np.sin(np.arcsin(prc_unit_vector[:, 2])) + np.cos(lat_densest) * np.cos(np.arcsin(prc_unit_vector[:, 2])) * np.cos(
                 lon_densest - np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0])))  # In radians.
@@ -170,15 +160,17 @@ class SampleMultipleDecomposition:
         axes[1].axvline(x=30, c='blue', lw=3, linestyle='dashed', label='D/T= %.3f ' % disc_fraction_IT20)  # Vertical line at 30 degrees.
         axes[1].axvspan(0, 30, facecolor='0.2', alpha=0.5)  # Draw a vertical span.
 
-        # Calculate the kinematic diagnostics #
-        kappa, disc_fraction, circularity, rotational_over_dispersion, vrots, rotational_velocity, sigma_0, \
-        delta = MorphoKinematic.kinematic_diagnostics(
-            stellar_data_tmp['Coordinates'], stellar_data_tmp['Mass'], stellar_data_tmp['Velocity'], stellar_data_tmp['ParticleBindingEnergy'])
+        # Calculate and plot the distribution of orbital circularity #
+        epsilon, stellar_masses = plot_tools.circularity(stellar_data_tmp)
+        j, = np.where(epsilon < 0.0)
+        k, = np.where((epsilon > 0.7) & (epsilon < 1))
+        l, = np.where((epsilon > -1) & (epsilon < 1))
+        disc_fraction_00 = 1 - 2 * np.sum(stellar_masses[j]) / np.sum(stellar_masses[l])
+        disc_fraction_07 = np.sum(stellar_masses[k]) / np.sum(stellar_masses[l])
 
-        # Calculate the D/T based on counter-rotation particles #
-        j, = np.where(circularity < 0.0)
-        l, = np.where((circularity > -1.7) & (circularity < 1.7))
-        disc_fraction_00 = 1 - 2 * np.sum(stellar_data_tmp['Mass'][j]) / np.sum(stellar_data_tmp['Mass'][l])
+        y_data, edges = np.histogram(epsilon, weights=stellar_masses / np.sum(stellar_masses), bins=100, range=[-1, 1])
+        y_data /= edges[1:] - edges[:-1]
+        axes[3].plot(0.5 * (edges[1:] + edges[:-1]), y_data, label=r'$\mathrm{D/T = %.3f}$' % disc_fraction_07)
 
         # Calculate and plot the angular distance between the (unit vector of) the galactic angular momentum and all the other grid cells #
         position_of_X = np.vstack([np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2])]).T
@@ -190,9 +182,11 @@ class SampleMultipleDecomposition:
         axes[2].axvline(x=90, c='red', lw=3, linestyle='dashed', label='D/T= %.3f ' % disc_fraction_00)  # Vertical line at 30 degrees.
         axes[2].axvspan(90, 180, facecolor='0.2', alpha=0.5)  # Draw a vertical span.
 
-        # Create the legends and save the figure #
-        axes[1].legend(loc='upper center', fontsize=12, frameon=False, scatterpoints=3)
-        axes[2].legend(loc='upper center', fontsize=12, frameon=False, scatterpoints=3)
+        # Add text and create the legend #
+        plt.text(-0.2, 1.1, str(group_number), fontsize=16, transform=axes[0].transAxes)
+        axes[1].legend(loc='upper center', fontsize=16, frameon=False, handlelength=0)
+        axes[2].legend(loc='upper center', fontsize=16, frameon=False, handlelength=0)
+        axes[3].legend(loc='upper right', fontsize=16, frameon=False, handlelength=0)
         return None
 
 
