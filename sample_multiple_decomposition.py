@@ -11,12 +11,10 @@ import numpy as np
 import matplotlib.cbook
 import astropy.units as u
 import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
 
 from matplotlib import gridspec
 from astropy_healpix import HEALPix
 from plot_tools import RotateCoordinates
-from morpho_kinematics import MorphoKinematic
 
 date = time.strftime('%d_%m_%y_%H%M')  # Date.
 start_global_time = time.time()  # Start the global time.
@@ -41,7 +39,7 @@ class SampleMultipleDecomposition:
         plt.close()
         figure = plt.figure(figsize=(20, 20))
 
-        gs = gridspec.GridSpec(4, 4, wspace=0.31, hspace=0.3)
+        gs = gridspec.GridSpec(4, 4, wspace=0.3, hspace=0.3)
         axis00, axis01, axis02, axis03 = figure.add_subplot(gs[0, 0], projection='mollweide'), figure.add_subplot(gs[0, 1]), figure.add_subplot(
             gs[0, 2]), figure.add_subplot(gs[0, 3])
         axis10, axis11, axis12, axis13 = figure.add_subplot(gs[1, 0], projection='mollweide'), figure.add_subplot(gs[1, 1]), figure.add_subplot(
@@ -127,6 +125,9 @@ class SampleMultipleDecomposition:
         lat_densest = (hp.healpix_to_lonlat([index_densest])[1].value + np.pi / 2) % (2 * np.pi) - np.pi / 2
         axes[0].scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=100, color='black', marker='X',
                         facecolors='none', zorder=5)  # Position of the galactic angular momentum.
+        axes[0].annotate(r'$\mathrm{Density\;maximum}$', xy=(lon_densest, lat_densest), xycoords='data', xytext=(0.2, 1.1),
+                         textcoords='axes fraction', arrowprops=dict(arrowstyle='-', color='black', connectionstyle='arc3,rad=0'),
+                         size=16)  # Position of the densest pixel.
 
         # Sample a 360x180 grid in ra/dec #
         ra = np.linspace(-180.0, 180.0, num=360) * u.deg
@@ -155,9 +156,10 @@ class SampleMultipleDecomposition:
             np.sin(lat_densest) * np.sin(np.radians(dec_grid.value)) + np.cos(lat_densest) * np.cos(np.radians(dec_grid.value)) * np.cos(
                 lon_densest - np.radians(ra_grid.value)))  # In radians.
 
+        axes[1].set_ylim(-5, 1.3 * max(density_map[density_map.nonzero()]))
         axes[1].scatter(angular_theta_from_densest[density_map.nonzero()] * (180.0 / np.pi), density_map[density_map.nonzero()], c='black',
                         s=5)  # In degrees.
-        axes[1].axvline(x=30, c='blue', lw=3, linestyle='dashed', label='D/T= %.3f ' % disc_fraction_IT20)  # Vertical line at 30 degrees.
+        axes[1].axvline(x=30, c='blue', lw=3, linestyle='dashed')  # Vertical line at 30 degrees.
         axes[1].axvspan(0, 30, facecolor='0.2', alpha=0.5)  # Draw a vertical span.
 
         # Calculate and plot the distribution of orbital circularity #
@@ -168,25 +170,58 @@ class SampleMultipleDecomposition:
         disc_fraction_00 = 1 - 2 * np.sum(stellar_masses[j]) / np.sum(stellar_masses[l])
         disc_fraction_07 = np.sum(stellar_masses[k]) / np.sum(stellar_masses[l])
 
-        y_data, edges = np.histogram(epsilon, weights=stellar_masses / np.sum(stellar_masses), bins=100, range=[-1, 1])
+        y_data, edges = np.histogram(epsilon, weights=stellar_masses / np.sum(stellar_masses), bins=50, range=[-1, 1])
+        x_data = 0.5 * (edges[1:] + edges[:-1])
         y_data /= edges[1:] - edges[:-1]
-        axes[3].plot(0.5 * (edges[1:] + edges[:-1]), y_data, label=r'$\mathrm{D/T = %.3f}$' % disc_fraction_07)
+        axes[3].set_xlim(-1.3, 1.3)
+        axes[3].set_ylim(0, 1.3 * max(y_data))
+        axes[3].plot(x_data, y_data, color='black')
+
+        xdata = np.zeros(len(x_data))
+        ydata = np.zeros(len(y_data))
+        ydatad = np.zeros(len(y_data))
+
+        kk, = np.where(x_data <= 0.0)
+        pivot = np.max(kk)
+
+        # Add the spheroid component #
+        ydata[:] = y_data[:]
+        xdata[:] = x_data[:]
+
+        # Mirror part with negative epsilon (if that is too big keep the actual value) #
+        if len(ydata) % 2 == 0:
+            for i in range(0, np.int_(len(ydata)) // 2):
+                if ydata[pivot + i + 1] > ydata[pivot - i]:
+                    ydata[pivot + i + 1] = ydata[pivot - i]
+        else:
+            for i in range(1, np.int_(len(ydata)) // 2):
+                if ydata[pivot + i] > ydata[pivot - i]:
+                    ydata[pivot + i] = ydata[pivot - i]
+        axes[3].fill_between(xdata, ydata, hatch='\\\\', facecolor='none', edgecolor='tab:red', label=r'$\rm{Bulge}$')
+
+        # Add the disc component #
+        ydatad[:] = y_data[:]
+        xdata[:] = x_data[:]
+        ydatad[:] -= ydata[:]  # Subtract the spheroid.
+        axes[3].fill_between(xdata, ydatad, hatch='//', facecolor="none", edgecolor='tab:blue', label=r'$\rm{Disc}$')
 
         # Calculate and plot the angular distance between the (unit vector of) the galactic angular momentum and all the other grid cells #
         position_of_X = np.vstack([np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2])]).T
 
         angular_theta_from_X = np.arccos(np.sin(position_of_X[0, 1]) * np.sin(np.radians(dec_grid.value)) + np.cos(position_of_X[0, 1]) * np.cos(
             np.radians(dec_grid.value)) * np.cos(position_of_X[0, 0] - np.radians(ra_grid.value)))  # In radians.
+        axes[2].set_ylim(-5, 1.3 * max(density_map[density_map.nonzero()]))
         axes[2].scatter(angular_theta_from_X[density_map.nonzero()] * (180.0 / np.pi), density_map[density_map.nonzero()], c='black',
                         s=5)  # In degrees.
-        axes[2].axvline(x=90, c='red', lw=3, linestyle='dashed', label='D/T= %.3f ' % disc_fraction_00)  # Vertical line at 30 degrees.
+        axes[2].axvline(x=90, c='red', lw=3, linestyle='dashed')  # Vertical line at 30 degrees.
         axes[2].axvspan(90, 180, facecolor='0.2', alpha=0.5)  # Draw a vertical span.
 
         # Add text and create the legend #
         plt.text(-0.2, 1.1, str(group_number), fontsize=16, transform=axes[0].transAxes)
-        axes[1].legend(loc='upper center', fontsize=16, frameon=False, handlelength=0)
-        axes[2].legend(loc='upper center', fontsize=16, frameon=False, handlelength=0)
-        axes[3].legend(loc='upper right', fontsize=16, frameon=False, handlelength=0)
+        plt.text(0.15, 0.92, r'$\mathrm{D/T_{\Delta \theta<30\degree}=  %.2f }$' % disc_fraction_IT20, fontsize=18, transform=axes[1].transAxes)
+        plt.text(0.15, 0.92, r'$\mathrm{D/T_{\vec{J}_{b}=0}= %.2f }$' % np.abs(disc_fraction_00), fontsize=18, transform=axes[2].transAxes)
+        plt.text(0.15, 0.92, r'$\mathrm{D/T_{\epsilon>0.7}= %.2f }$' % disc_fraction_07, fontsize=18, transform=axes[3].transAxes)
+        axes[3].legend(loc='upper right', fontsize=16, frameon=False)
         return None
 
 
