@@ -165,8 +165,8 @@ class SampleMultipleDecomposition:
         # Calculate and plot the distribution of orbital circularity #
         epsilon, stellar_masses = plot_tools.circularity(stellar_data_tmp)
         j, = np.where(epsilon < 0.0)
-        k, = np.where((epsilon > 0.7) & (epsilon < 1))
-        l, = np.where((epsilon > -1) & (epsilon < 1))
+        k, = np.where((epsilon > 0.7) & (epsilon <= 1))
+        l, = np.where((epsilon >= -1) & (epsilon <= 1))
         disc_fraction_00 = 1 - 2 * np.sum(stellar_masses[j]) / np.sum(stellar_masses[l])
         disc_fraction_07 = np.sum(stellar_masses[k]) / np.sum(stellar_masses[l])
 
@@ -177,33 +177,23 @@ class SampleMultipleDecomposition:
         axes[3].set_ylim(0, 1.3 * max(y_data))
         axes[3].plot(x_data, y_data, color='black')
 
-        xdata = np.zeros(len(x_data))
-        ydata = np.zeros(len(y_data))
-        ydatad = np.zeros(len(y_data))
-
-        kk, = np.where(x_data <= 0.0)
-        pivot = np.max(kk)
-
-        # Add the spheroid component #
-        ydata[:] = y_data[:]
-        xdata[:] = x_data[:]
-
-        # Mirror part with negative epsilon (if that is too big keep the actual value) #
-        if len(ydata) % 2 == 0:
-            for i in range(0, np.int_(len(ydata)) // 2):
-                if ydata[pivot + i + 1] > ydata[pivot - i]:
-                    ydata[pivot + i + 1] = ydata[pivot - i]
-        else:
-            for i in range(1, np.int_(len(ydata)) // 2):
-                if ydata[pivot + i] > ydata[pivot - i]:
-                    ydata[pivot + i] = ydata[pivot - i]
-        axes[3].fill_between(xdata, ydata, hatch='\\\\', facecolor='none', edgecolor='tab:red', label=r'$\rm{Bulge}$')
-
-        # Add the disc component #
-        ydatad[:] = y_data[:]
-        xdata[:] = x_data[:]
-        ydatad[:] -= ydata[:]  # Subtract the spheroid.
-        axes[3].fill_between(xdata, ydatad, hatch='//', facecolor="none", edgecolor='tab:blue', label=r'$\rm{Disc}$')
+        # # Add hatches for the bulge and disc component #
+        # # Declare arrays to store the data #
+        # ydata = np.zeros(len(y_data))
+        # ydata[:] = y_data[:]
+        #
+        # # Mirror part with negative epsilon (if that is too big keep the actual value) #
+        # pivot = np.max(np.where(x_data <= 0.0)[0])
+        # if len(ydata) % 2 == 0:
+        #     for i in range(0, np.int_(len(ydata)) // 2):
+        #         if ydata[pivot + i + 1] > ydata[pivot - i]:
+        #             ydata[pivot + i + 1] = ydata[pivot - i]
+        # else:
+        #     for i in range(1, np.int_(len(ydata)) // 2):
+        #         if ydata[pivot + i] > ydata[pivot - i]:
+        #             ydata[pivot + i] = ydata[pivot - i]
+        axes[3].fill_between(x_data[np.where(x_data<=0.7)], y_data[np.where(x_data<=0.7)], hatch='\\\\', facecolor='none', edgecolor='tab:red', label=r'$\rm{Bulge}$')
+        axes[3].fill_between(x_data[np.where(x_data>=0.7)], y_data[np.where(x_data>=0.7)], hatch='//', facecolor="none", edgecolor='tab:blue', label=r'$\rm{Disc}$')
 
         # Calculate and plot the angular distance between the (unit vector of) the galactic angular momentum and all the other grid cells #
         position_of_X = np.vstack([np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2])]).T
