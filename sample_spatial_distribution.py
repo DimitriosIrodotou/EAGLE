@@ -39,8 +39,8 @@ class SampleSpatialDistribution:
         plt.close()
         figure = plt.figure(figsize=(20, 20))
 
-        gs = gridspec.GridSpec(5, 4, wspace=0.3, hspace=0.3)
-        axiscbar = figure.add_subplot(gs[0, :]),
+        gs = gridspec.GridSpec(5, 4, wspace=0.3, hspace=0.3, height_ratios=[0.1, 1, 1, 1, 1])
+        axiscbar = figure.add_subplot(gs[0, :])
         axis10, axis11, axis12, axis13 = figure.add_subplot(gs[1, 0]), figure.add_subplot(gs[1, 1]), figure.add_subplot(gs[1, 2]), figure.add_subplot(
             gs[1, 3])
         axis20, axis21, axis22, axis23 = figure.add_subplot(gs[2, 0]), figure.add_subplot(gs[2, 1]), figure.add_subplot(gs[2, 2]), figure.add_subplot(
@@ -50,16 +50,10 @@ class SampleSpatialDistribution:
         axis40, axis41, axis42, axis43 = figure.add_subplot(gs[4, 0]), figure.add_subplot(gs[4, 1]), figure.add_subplot(gs[4, 2]), figure.add_subplot(
             gs[4, 3])
 
-        for axis in [axis10, axis20, axis30, axis40]:
-            axis.set_xlabel(r'$\mathrm{x/kpc}$', size=16)
-            # axis.set_ylabel(r'$\mathrm{\delta/\degree}$', size=16)
-        for axis in [axis11, axis21, axis31, axis41]:
-            plot_tools.set_axis(axis, xlabel=r'$\mathrm{\Delta \theta/\degree}$', ylabel=r'$\mathrm{Particles\;per\;grid\;cell}$', aspect=None)
-        for axis in [axis12, axis22, axis32, axis42]:
-            plot_tools.set_axis(axis, xlabel=r'$\mathrm{(Angular\;distance\;from\;\vec{J}_{gal})/\degree}$',
-                                ylabel=r'$\mathrm{Particles\;per\;grid\;cell}$', aspect=None)
-        for axis in [axis13, axis23, axis33, axis43]:
-            plot_tools.set_axis(axis, xlabel=r'$\mathrm{\epsilon}$', ylabel=r'$\mathrm{f(\epsilon)}$', aspect=None)
+        for axis in [axis10, axis12, axis20, axis22, axis30, axis32, axis40, axis42]:
+            plot_tools.set_axis(axis, xlabel=r'$\mathrm{x/kpc}$', ylabel=r'$\mathrm{y/kpc}$', aspect=None)
+        for axis in [axis11, axis13, axis21, axis23, axis31, axis33, axis41, axis43]:
+            plot_tools.set_axis(axis, xlabel=r'$\mathrm{x/kpc}$', ylabel=r'$\mathrm{z/kpc}$', aspect=None)
 
         all_axes = [[axis10, axis11, axis12, axis13], [axis20, axis21, axis22, axis23], [axis30, axis31, axis32, axis33],
                     [axis40, axis41, axis42, axis43]]
@@ -78,9 +72,17 @@ class SampleSpatialDistribution:
                 # Plot the data #
                 start_local_time = time.time()  # Start the local time.
 
-                self.plot(axes, stellar_data_tmp, group_number, subgroup_number)
+                im = self.plot(axes, axiscbar, stellar_data_tmp, group_number)
                 print('Plotted data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (time.time() - start_local_time))
                 print('–––––––––––––––––––––––––––––––––––––––––––––')
+
+        # Add color bar #
+        plot_tools.create_colorbar(axiscbar, im, r'$\mathrm{log_{10}(\Sigma_{\bigstar}/(M_\odot\,kpc^{-2}))}$', 'horizontal', extend='both')
+        # Add text #
+        plt.text(0.21, 1.1, r'$\mathrm{Disc\;face-on}$', fontsize=16, transform=axis10.transAxes)
+        plt.text(0.21, 1.1, r'$\mathrm{Disc\;edge-on}$', fontsize=16, transform=axis11.transAxes)
+        plt.text(0.15, 1.1, r'$\mathrm{Spheroid\;face-on}$', fontsize=16, transform=axis12.transAxes)
+        plt.text(0.15, 1.1, r'$\mathrm{Spheroid\;edge-on}$', fontsize=16, transform=axis13.transAxes)
 
         plt.savefig(plots_path + 'SSD' + '-' + date + '.png', bbox_inches='tight')
         print('Finished MultipleDecomposition for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (
@@ -89,13 +91,14 @@ class SampleSpatialDistribution:
 
 
     @staticmethod
-    def plot(axes, stellar_data_tmp, group_number, subgroup_number):
+    def plot(axes, axiscbar, stellar_data_tmp, group_number):
         """
         Plot a HEALPix histogram from the angular momentum of particles - an angular distance plot - a surface density plot / gri mock image - a
         circularity distribution.
+        :param axes: set of axes
+        :param axiscbar: color bar axis.
         :param stellar_data_tmp: from read_add_attributes.py.
         :param group_number: from read_add_attributes.py.
-        :param subgroup_number: from read_add_attributes.py.
         :return: None
         """
 
@@ -127,15 +130,17 @@ class SampleSpatialDistribution:
         # Plot the 2D surface density projection and scatter for the disc #
         disc_mask, = np.where(angular_theta_from_densest < (np.pi / 6.0))
         weights = stellar_data_tmp['Mass'][disc_mask]
-        vmin, vmax = 0, 5e7
+        vmin, vmax = 6, 8
 
+        cmap = matplotlib.cm.get_cmap('ocean')
         count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][disc_mask, 0], stellar_data_tmp['Coordinates'][disc_mask, 1],
                                                weights=weights, bins=500, range=[[-30, 30], [-30, 30]])
-        axes[0].imshow(count.T, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', vmin=vmin, interpolation='gaussian', aspect='equal')
+        im = axes[0].imshow(np.log10(count.T), extent=[-30, 30, -30, 30], origin='lower', cmap=cmap, vmin=vmin, vmax=vmax, rasterized=True,
+                            aspect='equal')
 
         count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][disc_mask, 0], stellar_data_tmp['Coordinates'][disc_mask, 2],
                                                weights=weights, bins=500, range=[[-30, 30], [-30, 30]])
-        axes[1].imshow(count.T, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', vmin=vmin, interpolation='gaussian', aspect='equal')
+        axes[1].imshow(np.log10(count.T), extent=[-30, 30, -30, 30], origin='lower', cmap=cmap, vmin=vmin, vmax=vmax, rasterized=True, aspect='equal')
 
         # Plot the 2D surface density projection and scatter for the bulge #
         bulge_mask, = np.where(angular_theta_from_densest > (np.pi / 6.0))
@@ -143,25 +148,14 @@ class SampleSpatialDistribution:
         weights = stellar_data_tmp['Mass'][bulge_mask]
         count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][bulge_mask, 0], stellar_data_tmp['Coordinates'][bulge_mask, 1],
                                                weights=weights, bins=500, range=[[-30, 30], [-30, 30]])
-        im = axes[2].imshow(count.T, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', vmin=vmin, interpolation='gaussian',
-                           aspect='equal')
+        axes[2].imshow(np.log10(count.T), extent=[-30, 30, -30, 30], origin='lower', cmap=cmap, vmin=vmin, vmax=vmax, rasterized=True, aspect='equal')
 
         count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][bulge_mask, 0], stellar_data_tmp['Coordinates'][bulge_mask, 2],
                                                weights=weights, bins=500, range=[[-30, 30], [-30, 30]])
-        axes[3].imshow(count.T, extent=[-30, 30, -30, 30], origin='lower', cmap='nipy_spectral_r', vmin=vmin, interpolation='gaussian', aspect='equal')
+        axes[3].imshow(np.log10(count.T), extent=[-30, 30, -30, 30], origin='lower', cmap=cmap, vmin=vmin, vmax=vmax, rasterized=True, aspect='equal')
 
-        cbar = plt.colorbar(im, cax=axiscbar, orientation='horizontal')
-        cbar.set_label(r'$\mathrm{\Sigma_{\bigstar}\,[M_\odot\,kpc^{-2}]}$', size=16)
-        axiscbar.xaxis.tick_top()
-        axiscbar.xaxis.set_label_position("top")
-
-        # Add text and create the legend #
-        plt.text(-0.2, 1.1, str(group_number), fontsize=16, transform=axes[0].transAxes)
-        plt.text(0.15, 0.92, r'$\mathrm{D/T_{\Delta \theta<30\degree}=  %.2f }$' % disc_fraction_IT20, fontsize=18, transform=axes[1].transAxes)
-        plt.text(0.15, 0.92, r'$\mathrm{D/T_{\vec{J}_{b}=0}= %.2f }$' % np.abs(disc_fraction_00), fontsize=18, transform=axes[2].transAxes)
-        plt.text(0.15, 0.92, r'$\mathrm{D/T_{\epsilon>0.7}= %.2f }$' % disc_fraction_07, fontsize=18, transform=axes[3].transAxes)
-        axes[3].legend(loc='upper right', fontsize=16, frameon=False)
-        return None
+        plt.text(-0.2, 1.1, str(group_number), color='red', fontsize=16, transform=axes[0].transAxes)  # Add text.
+        return im
 
 
 if __name__ == '__main__':

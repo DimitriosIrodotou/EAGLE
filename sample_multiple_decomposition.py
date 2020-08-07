@@ -79,7 +79,7 @@ class SampleMultipleDecomposition:
                 # Plot the data #
                 start_local_time = time.time()  # Start the local time.
 
-                self.plot(axes, stellar_data_tmp, group_number, subgroup_number)
+                self.plot(axes, stellar_data_tmp, group_number)
                 print('Plotted data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (time.time() - start_local_time))
                 print('–––––––––––––––––––––––––––––––––––––––––––––')
 
@@ -90,13 +90,13 @@ class SampleMultipleDecomposition:
 
 
     @staticmethod
-    def plot(axes, stellar_data_tmp, group_number, subgroup_number):
+    def plot(axes, stellar_data_tmp, group_number):
         """
         Plot a HEALPix histogram from the angular momentum of particles - an angular distance plot - a surface density plot / gri mock image - a
         circularity distribution.
+        :param axes: set of axes
         :param stellar_data_tmp: from read_add_attributes.py.
         :param group_number: from read_add_attributes.py.
-        :param subgroup_number: from read_add_attributes.py.
         :return: None
         """
 
@@ -192,8 +192,10 @@ class SampleMultipleDecomposition:
         #     for i in range(1, np.int_(len(ydata)) // 2):
         #         if ydata[pivot + i] > ydata[pivot - i]:
         #             ydata[pivot + i] = ydata[pivot - i]
-        axes[3].fill_between(x_data[np.where(x_data<=0.7)], y_data[np.where(x_data<=0.7)], hatch='\\\\', facecolor='none', edgecolor='tab:red', label=r'$\rm{Bulge}$')
-        axes[3].fill_between(x_data[np.where(x_data>=0.7)], y_data[np.where(x_data>=0.7)], hatch='//', facecolor="none", edgecolor='tab:blue', label=r'$\rm{Disc}$')
+        axes[3].fill_between(x_data[np.where(x_data <= 0.7)], y_data[np.where(x_data <= 0.7)], hatch='\\\\', facecolor='none', edgecolor='tab:red',
+                             label=r'$\rm{Bulge}$')
+        axes[3].fill_between(x_data[np.where(x_data >= 0.7)], y_data[np.where(x_data >= 0.7)], hatch='//', facecolor="none", edgecolor='tab:blue',
+                             label=r'$\rm{Disc}$')
 
         # Calculate and plot the angular distance between the (unit vector of) the galactic angular momentum and all the other grid cells #
         position_of_X = np.vstack([np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2])]).T
@@ -207,7 +209,7 @@ class SampleMultipleDecomposition:
         axes[2].axvspan(90, 180, facecolor='0.2', alpha=0.5)  # Draw a vertical span.
 
         # Add text and create the legend #
-        plt.text(-0.2, 1.1, str(group_number), fontsize=16, transform=axes[0].transAxes)
+        plt.text(-0.2, 1.1, str(group_number), color='red', fontsize=16, transform=axes[0].transAxes)
         plt.text(0.15, 0.92, r'$\mathrm{D/T_{\Delta \theta<30\degree}=  %.2f }$' % disc_fraction_IT20, fontsize=18, transform=axes[1].transAxes)
         plt.text(0.15, 0.92, r'$\mathrm{D/T_{\vec{J}_{b}=0}= %.2f }$' % np.abs(disc_fraction_00), fontsize=18, transform=axes[2].transAxes)
         plt.text(0.15, 0.92, r'$\mathrm{D/T_{\epsilon>0.7}= %.2f }$' % disc_fraction_07, fontsize=18, transform=axes[3].transAxes)

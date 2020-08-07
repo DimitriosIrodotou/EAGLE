@@ -115,7 +115,7 @@ class SampleRAEl:
 
         # Define the figure parameters #
         axis.axis('off')
-        plt.text(0.0, 0.95, str(group_number), fontsize=14, transform=axis.transAxes)
+        plt.text(0.0, 0.95, str(group_number), color='red', fontsize=14, transform=axis.transAxes)
 
         return pcm
 
