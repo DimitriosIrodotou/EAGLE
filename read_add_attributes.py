@@ -39,18 +39,18 @@ class ReadAttributes:
 
         self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher than 5e9 Msun.
 
-        # Split the group and subgroup numbers into 30 groups and submit an array job #
+        # Split the group and subgroup numbers into 50 groups and submit an array job #
         job_number = int(sys.argv[2]) - 1
-        group_numbers = np.array_split(list(self.subhalo_data_tmp['GroupNumber']), 30)
-        subgroup_numbers = np.array_split(list(self.subhalo_data_tmp['SubGroupNumber']), 30)
+        group_numbers = np.array_split(list(self.subhalo_data_tmp['GroupNumber']), 50)
+        subgroup_numbers = np.array_split(list(self.subhalo_data_tmp['SubGroupNumber']), 50)
 
         for group_number, subgroup_number in zip(group_numbers[job_number],
-            subgroup_numbers[job_number]):  # Loop over all masked haloes and sub-haloes.
+                                                 subgroup_numbers[job_number]):  # Loop over all masked haloes and sub-haloes.
             start_local_time = time.time()  # Start the local time.
 
             # Mask galaxies and normalise data #
             stellar_data_tmp, gaseous_data_tmp, blackhole_data_tmp, dark_matter_data_tmp, subhalo_data_tmp = self.mask_galaxies(group_number,
-                subgroup_number)
+                                                                                                                                subgroup_number)
 
             # Save data in numpy array #
             np.save(data_path + 'box_data', self.box_data)
@@ -178,17 +178,19 @@ class ReadAttributes:
                                            self.subhalo_data_tmp['CentreOfPotential'][halo_mask] - 0.5 * box_side
 
         # Mask the data to select galaxies with a given GroupNumber and SubGroupNumber and particles inside a 30kpc sphere #
-        stellar_mask = np.where(
-            np.linalg.norm(self.stellar_data['Coordinates'] - self.subhalo_data_tmp['CentreOfPotential'][halo_mask], axis=1) <= 30.0)
+        stellar_mask = np.where((self.stellar_data['GroupNumber'] == group_number) & (self.stellar_data['SubGroupNumber'] == subgroup_number) & (
+            np.linalg.norm(self.stellar_data['Coordinates'] - self.subhalo_data_tmp['CentreOfPotential'][halo_mask], axis=1) <= 30.0))
 
-        gaseous_mask = np.where(
-            np.linalg.norm(self.gaseous_data['Coordinates'] - self.subhalo_data_tmp['CentreOfPotential'][halo_mask], axis=1) <= 30.0)
+        gaseous_mask = np.where((self.gaseous_data['GroupNumber'] == group_number) & (self.gaseous_data['SubGroupNumber'] == subgroup_number) & (
+                np.linalg.norm(self.gaseous_data['Coordinates'] - self.subhalo_data_tmp['CentreOfPotential'][halo_mask], axis=1) <= 30.0))
 
         blackhole_mask = np.where(
-            np.linalg.norm(self.blackhole_data['Coordinates'] - self.subhalo_data_tmp['CentreOfPotential'][halo_mask], axis=1) <= 30.0)
+            (self.blackhole_data['GroupNumber'] == group_number) & (self.blackhole_data['SubGroupNumber'] == subgroup_number) & (
+                    np.linalg.norm(self.blackhole_data['Coordinates'] - self.subhalo_data_tmp['CentreOfPotential'][halo_mask], axis=1) <= 30.0))
 
         dark_matter_mask = np.where(
-            np.linalg.norm(self.dark_matter_data['Coordinates'] - self.subhalo_data_tmp['CentreOfPotential'][halo_mask], axis=1) <= 30.0)
+            (self.dark_matter_data['GroupNumber'] == group_number) & (self.dark_matter_data['SubGroupNumber'] == subgroup_number) & (
+                    np.linalg.norm(self.dark_matter_data['Coordinates'] - self.subhalo_data_tmp['CentreOfPotential'][halo_mask], axis=1) <= 30.0))
 
         # Mask the temporary dictionary for each galaxy #
         subhalo_data_tmp, stellar_data_tmp, gaseous_data_tmp, blackhole_data_tmp, dark_matter_data_tmp = {}, {}, {}, {}, {}
@@ -264,21 +266,21 @@ class AddAttributes:
 
         self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher than 5e9 Msun.
 
-        # Split the group and subgroup numbers into 30 groups and submit an array job #
+        # Split the group and subgroup numbers into 50 groups and submit an array job #
         job_number = int(sys.argv[2]) - 1
-        group_numbers = np.array_split(list(self.subhalo_data_tmp['GroupNumber']), 30)
-        subgroup_numbers = np.array_split(list(self.subhalo_data_tmp['SubGroupNumber']), 30)
+        group_numbers = np.array_split(list(self.subhalo_data_tmp['GroupNumber']), 50)
+        subgroup_numbers = np.array_split(list(self.subhalo_data_tmp['SubGroupNumber']), 50)
 
         for group_number, subgroup_number in zip(group_numbers[job_number],
-            subgroup_numbers[job_number]):  # Loop over all masked haloes and sub-haloes.
+                                                 subgroup_numbers[job_number]):  # Loop over all masked haloes and sub-haloes.
             # Load the data #
             start_local_time = time.time()  # Start the local time.
 
             stellar_data_tmp = np.load(data_path + 'stellar_data_tmps/stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy',
-                allow_pickle=True)
+                                       allow_pickle=True)
             stellar_data_tmp = stellar_data_tmp.item()
             gaseous_data_tmp = np.load(data_path + 'gaseous_data_tmps/gaseous_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy',
-                allow_pickle=True)
+                                       allow_pickle=True)
             gaseous_data_tmp = gaseous_data_tmp.item()
             dark_matter_data_tmp = np.load(
                 data_path + 'dark_matter_data_tmps/dark_matter_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy',
@@ -299,7 +301,7 @@ class AddAttributes:
             stellar_data_tmp['n'], stellar_data_tmp['R_d'], stellar_data_tmp['R_eff'], stellar_data_tmp['disk_fraction_profile'], stellar_data_tmp[
                 'fitting_flag'] = self.profile_fitting(stellar_data_tmp)
             prc_stellar_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
-                stellar_data_tmp['Velocity'])  # In Msun kpc km s^-1.
+                                                                                              stellar_data_tmp['Velocity'])  # In Msun kpc km s^-1.
             stellar_data_tmp['glx_stellar_angular_momentum'] = np.sum(prc_stellar_angular_momentum, axis=0)
             stellar_data_tmp['disc_fraction_IT20'] = np.sum(stellar_data_tmp['Mass'][stellar_data_tmp['disc_mask_IT20']]) / np.sum(
                 stellar_data_tmp['Mass'])
@@ -307,7 +309,7 @@ class AddAttributes:
             gaseous_data_tmp['star_forming_mask'] = np.where(gaseous_data_tmp['StarFormationRate'] > 0.0)
             gaseous_data_tmp['non_star_forming_mask'] = np.where(gaseous_data_tmp['StarFormationRate'] == 0.0)
             prc_gaseous_angular_momentum = gaseous_data_tmp['Mass'][:, np.newaxis] * np.cross(gaseous_data_tmp['Coordinates'],
-                gaseous_data_tmp['Velocity'])  # In Msun kpc km s^-1.
+                                                                                              gaseous_data_tmp['Velocity'])  # In Msun kpc km s^-1.
             gaseous_data_tmp['glx_gaseous_angular_momentum'] = np.sum(prc_gaseous_angular_momentum, axis=0)
 
             # Calculate component attributes #
@@ -349,7 +351,7 @@ class AddAttributes:
                     stellar_data_tmp['disc_beta'] = 1 - np.divide(np.mean(component_velocity_sqred) - np.mean(component_velocity_r_sqred),
                                                                   2 * np.mean(component_velocity_r_sqred))
                     stellar_data_tmp['disc_weighted_a'] = np.average(component_birth_stellar_formation_time, weights=component_birth_mass,
-                        axis=0)  # Expansion factor at birth.
+                                                                     axis=0)  # Expansion factor at birth.
                 else:
                     stellar_data_tmp['spheroid_delta'] = delta  # In km s^-1.
                     stellar_data_tmp['spheroid_sigma_0'] = sigma_0  # In km s^-1.
@@ -363,7 +365,7 @@ class AddAttributes:
                     stellar_data_tmp['spheroid_beta'] = 1 - np.divide(np.mean(component_velocity_sqred) - np.mean(component_velocity_r_sqred),
                                                                       2 * np.mean(component_velocity_r_sqred))
                     stellar_data_tmp['spheroid_weighted_a'] = np.average(component_birth_stellar_formation_time, weights=component_birth_mass,
-                        axis=0)  # Expansion factor at birth.
+                                                                         axis=0)  # Expansion factor at birth.
 
             # Save data in numpy array #
             np.save(data_path + 'stellar_data_tmps/stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number), stellar_data_tmp)
@@ -422,7 +424,7 @@ class AddAttributes:
         """
         # Calculate the angular momentum for each particle and for the galaxy and the unit vector parallel to the galactic angular momentum vector #
         prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
-            stellar_data_tmp['Velocity'])  # In Msun kpc km s^-1.
+                                                                                  stellar_data_tmp['Velocity'])  # In Msun kpc km s^-1.
         glx_stellar_angular_momentum = np.sum(prc_angular_momentum, axis=0)
         glx_unit_vector = glx_stellar_angular_momentum / np.linalg.norm(glx_stellar_angular_momentum)
 
@@ -528,7 +530,7 @@ class AddAttributes:
         # Calculate u^2 and u_r^2 #
         velocity_sqred = np.sum(stellar_data_tmp['Velocity'] * stellar_data_tmp['Velocity'], axis=1)
         velocity_r_sqred = np.divide(np.sum(stellar_data_tmp['Velocity'] * stellar_data_tmp['Coordinates'], axis=1) ** 2,
-            np.sum(stellar_data_tmp['Coordinates'] * stellar_data_tmp['Coordinates'], axis=1))
+                                     np.sum(stellar_data_tmp['Coordinates'] * stellar_data_tmp['Coordinates'], axis=1))
 
         return velocity_sqred, velocity_r_sqred
 
@@ -689,18 +691,18 @@ class AppendAttributes:
 
         self.subhalo_data_tmp = self.mask_haloes()  # Mask haloes: select haloes with masses within 30 kpc aperture higher than 5e9 Msun.
         for group_number, subgroup_number in zip(list(self.subhalo_data_tmp['GroupNumber']),
-            list(self.subhalo_data_tmp['SubGroupNumber'])):  # Loop over all masked haloes and sub-haloes.
+                                                 list(self.subhalo_data_tmp['SubGroupNumber'])):  # Loop over all masked haloes and sub-haloes.
             start_local_time = time.time()  # Start the local time.
 
             # Load the data #
             subhalo_data_tmp = np.load(data_path + 'subhalo_data_tmps/subhalo_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy',
-                allow_pickle=True)
+                                       allow_pickle=True)
             subhalo_data_tmp = subhalo_data_tmp.item()
             stellar_data_tmp = np.load(data_path + 'stellar_data_tmps/stellar_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy',
-                allow_pickle=True)
+                                       allow_pickle=True)
             stellar_data_tmp = stellar_data_tmp.item()
             gaseous_data_tmp = np.load(data_path + 'gaseous_data_tmps/gaseous_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy',
-                allow_pickle=True)
+                                       allow_pickle=True)
             gaseous_data_tmp = gaseous_data_tmp.item()
             blackhole_data_tmp = np.load(
                 data_path + 'blackhole_data_tmps/blackhole_data_tmp_' + str(group_number) + '_' + str(subgroup_number) + '.npy', allow_pickle=True)
@@ -713,7 +715,6 @@ class AppendAttributes:
             # Append (sub)halo attributes into single arrays #
             group_numbers.append(group_number)
             subgroup_numbers.append(subgroup_number)
-            CoPs.append(subhalo_data_tmp['CentreOfPotential'])
             CoPs.append(subhalo_data_tmp['CentreOfPotential'])
 
             # Append galactic attributes into single arrays #
@@ -779,7 +780,7 @@ class AppendAttributes:
         # Save data in numpy array #
         box_data_tmp = np.load(data_path + 'box_data.npy')
         box_data_tmp = box_data_tmp.item()
-        CoP_flags = self.CoP_flag(CoPs, box_data_tmp)
+        CoP_flags = self.CoP_flags(CoPs, box_data_tmp, glx_stellar_masses)
         np.save(data_path + 'CoPs', CoPs)
         np.save(data_path + 'CoP_flags', CoP_flags)
         np.save(data_path + 'group_numbers', group_numbers)
@@ -880,38 +881,48 @@ class AppendAttributes:
 
 
     @staticmethod
-    def CoP_flag(CoPs, box_data_tmp):
+    def CoP_flags(CoPs, box_data_tmp, glx_stellar_masses):
         """
         Calculate the distance between centres of potential of all galaxies and flag galaxies that are closer than 30 kpc.
         :param CoPs: defined as the coordinates of the most bound particle (i.e., most negative binding energy).
         :param box_data_tmp: data extracted from the header of SUBFIND.
+        :param glx_stellar_masses: defined as the mass of all stellar particles within 30kpc from the most bound particle.
         :return: CoP_mask
         """
-        box_side = box_data_tmp['BoxSize'] * 1e3 / box_data_tmp['HubbleParam']  # Calculate the box side length.
+        box_side = box_data_tmp['BoxSize'] * 1e3 / box_data_tmp['HubbleParam']  # Calculate the box side length in kpc.
 
         # Declare arrays to store the data.
+        CoP_flags = np.zeros(len(CoPs))
         distances = np.zeros([len(CoPs), len(CoPs)])
-        CoP_flag = np.zeros(len(CoPs))
+        mass_ratios = np.zeros([len(CoPs), len(CoPs)])
 
-        # Calculate the distances between all centres of potential #
-        CoPs = np.linalg.norm(CoPs, axis=1)  # Reduce the dimension from 3D to 2D.
+        # Calculate the position of all centres of potential #
+        CoPs = np.linalg.norm(CoPs, axis=1)  # Reduce the array dimension from 3D to 2D.
         CoPs = np.linalg.norm(CoPs, axis=1)
 
+        # Loop over all CoPs and calculate distances between them #
         for i in np.arange(0, len(CoPs), 1):
             for j in np.arange(i + 1, len(CoPs), 1):
-                # Periodic wrap coordinates around centre before calculating distances #
+                # Periodically wrap coordinates around centre before calculating distances #
                 CoPs[j] = np.mod(CoPs[j] - CoPs[i] + 0.5 * box_side, box_side) + CoPs[i] - 0.5 * box_side
                 distances[i, j] = np.abs(CoPs[i] - CoPs[j])
                 distances[j, i] = distances[i, j]
+                # Calculate the stellar mass ratio for all galaxies #
+                mass_ratios[i, j] = np.divide(np.minimum(glx_stellar_masses[i], glx_stellar_masses[j]),
+                                              np.maximum(glx_stellar_masses[i], glx_stellar_masses[j]))
+                mass_ratios[j, i] = mass_ratios[i, j]
 
+        # Loop over all CoPs and flag merging galaxies based on their separation (<30kpc) and mass ratio (>0.1) #
         for i in np.arange(0, len(CoPs), 1):
-            mask, = np.where((distances[i, :] > 0) & (distances[i, :] < 30))
-            if len(mask) == 0:
-                CoP_flag[i] = 0
+            print(distances[i, :])
+            merger_mask, = np.where((distances[i, :] > 0) & (distances[i, :] <= 30) & (mass_ratios[i, :] >= 0.1))
+            print(len(merger_mask))
+            if len(merger_mask) > 0:
+                CoP_flags[i] = 0
             else:
-                CoP_flag[i] = 1
+                CoP_flags[i] = 1
 
-        return CoP_flag
+        return CoP_flags
 
 
 if __name__ == '__main__':
