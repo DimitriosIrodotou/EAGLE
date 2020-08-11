@@ -33,7 +33,8 @@ class SampleMultipleDecomposition:
         :param simulation_path: simulation directory.
         :param tag: redshift directory.
         """
-        group_numbers = [25, 2, 6, 21]
+        group_numbers = [25, 18, 2, 14]
+        group_numbers = [34, 3, 5, 20]
 
         # Generate the figure and define its parameters #
         plt.close()
@@ -50,17 +51,18 @@ class SampleMultipleDecomposition:
             gs[3, 2]), figure.add_subplot(gs[3, 3])
 
         for axis in [axis00, axis10, axis20, axis30]:
-            axis.set_xlabel(r'$\mathrm{\alpha/\degree}$', size=16)
-            axis.set_ylabel(r'$\mathrm{\delta/\degree}$', size=16)
-            axis.set_yticklabels(['', '-60', '', '-30', '', '0', '', '30', '', '60', ''], size=16)
-            axis.set_xticklabels(['', '-120', '', '-60', '', '0', '', '60', '', '120', ''], size=16)
+            axis.set_xlabel(r'$\mathrm{\alpha/\degree}$', size=20)
+            axis.set_ylabel(r'$\mathrm{\delta/\degree}$', size=20)
+            axis.set_yticklabels(['', '-60', '', '-30', '', '0', '', '30', '', '60', ''], size=20)
+            axis.set_xticklabels(['', '-120', '', '-60', '', '0', '', '60', '', '120', ''], size=20)
         for axis in [axis01, axis11, axis21, axis31]:
-            plot_tools.set_axis(axis, xlabel=r'$\mathrm{\Delta \theta/\degree}$', ylabel=r'$\mathrm{Particles\;per\;grid\;cell}$', aspect=None)
+            plot_tools.set_axis(axis, xlabel=r'$\mathrm{\Delta \theta/\degree}$', ylabel=r'$\mathrm{Particles\;per\;grid\;cell}$', aspect=None,
+                                size=20)
         for axis in [axis02, axis12, axis22, axis32]:
             plot_tools.set_axis(axis, xlabel=r'$\mathrm{(Angular\;distance\;from\;\vec{J}_{gal})/\degree}$',
-                                ylabel=r'$\mathrm{Particles\;per\;grid\;cell}$', aspect=None)
+                                ylabel=r'$\mathrm{Particles\;per\;grid\;cell}$', aspect=None, size=20)
         for axis in [axis03, axis13, axis23, axis33]:
-            plot_tools.set_axis(axis, xlabel=r'$\mathrm{\epsilon}$', ylabel=r'$\mathrm{f(\epsilon)}$', aspect=None)
+            plot_tools.set_axis(axis, xlabel=r'$\mathrm{\epsilon}$', ylabel=r'$\mathrm{f(\epsilon)}$', aspect=None, size=20)
 
         all_axes = [[axis00, axis01, axis02, axis03], [axis10, axis11, axis12, axis13], [axis20, axis21, axis22, axis23],
                     [axis30, axis31, axis32, axis33]]
@@ -127,7 +129,7 @@ class SampleMultipleDecomposition:
                         facecolors='none', zorder=5)  # Position of the galactic angular momentum.
         axes[0].annotate(r'$\mathrm{Density\;maximum}$', xy=(lon_densest, lat_densest), xycoords='data', xytext=(0.2, 1.1),
                          textcoords='axes fraction', arrowprops=dict(arrowstyle='-', color='black', connectionstyle='arc3,rad=0'),
-                         size=16)  # Position of the densest pixel.
+                         size=20)  # Position of the densest pixel.
 
         # Sample a 360x180 grid in ra/dec #
         ra = np.linspace(-180.0, 180.0, num=360) * u.deg
@@ -141,8 +143,8 @@ class SampleMultipleDecomposition:
         # Display data on a 2D regular raster and create a pseudo-color plot #
         pcm = axes[0].pcolormesh(np.radians(ra), np.radians(dec), density_map, cmap='nipy_spectral_r')
         cbar = plt.colorbar(pcm, ax=axes[0], orientation='horizontal')
-        cbar.ax.tick_params(labelsize=16)
-        cbar.set_label('$\mathrm{Particles\;per\;grid\;cell}$', size=16)
+        cbar.ax.tick_params(labelsize=20)
+        cbar.set_label('$\mathrm{Particles\;per\;grid\;cell}$', size=20)
 
         # Calculate disc mass fraction as the mass within 30 degrees from the densest pixel #
         angular_theta_from_densest = np.arccos(
@@ -209,11 +211,11 @@ class SampleMultipleDecomposition:
         axes[2].axvspan(90, 180, facecolor='0.2', alpha=0.5)  # Draw a vertical span.
 
         # Add text and create the legend #
-        plt.text(-0.2, 1.1, str(group_number), color='red', fontsize=16, transform=axes[0].transAxes)
-        plt.text(0.15, 0.92, r'$\mathrm{D/T_{\Delta \theta<30\degree}=  %.2f }$' % disc_fraction_IT20, fontsize=18, transform=axes[1].transAxes)
-        plt.text(0.15, 0.92, r'$\mathrm{D/T_{\vec{J}_{b}=0}= %.2f }$' % np.abs(disc_fraction_00), fontsize=18, transform=axes[2].transAxes)
-        plt.text(0.15, 0.92, r'$\mathrm{D/T_{\epsilon>0.7}= %.2f }$' % disc_fraction_07, fontsize=18, transform=axes[3].transAxes)
-        axes[3].legend(loc='upper right', fontsize=16, frameon=False)
+        plt.text(-0.2, 1.1, str(group_number), color='red', fontsize=20, transform=axes[0].transAxes)
+        plt.text(0.15, 0.92, r'$\mathrm{D/T_{\Delta \theta<30\degree}=  %.2f }$' % disc_fraction_IT20, fontsize=20, transform=axes[1].transAxes)
+        plt.text(0.15, 0.92, r'$\mathrm{D/T_{\vec{J}_{b}=0}= %.2f }$' % np.abs(disc_fraction_00), fontsize=20, transform=axes[2].transAxes)
+        plt.text(0.15, 0.92, r'$\mathrm{D/T_{\epsilon>0.7}= %.2f }$' % disc_fraction_07, fontsize=20, transform=axes[3].transAxes)
+        axes[3].legend(loc='upper right', fontsize=20, frameon=False)
         return None
 
 

@@ -33,7 +33,8 @@ class SampleSpatialDistribution:
         :param simulation_path: simulation directory.
         :param tag: redshift directory.
         """
-        group_numbers = [25, 2, 6, 21]
+        group_numbers = [25, 18, 2, 14]
+        group_numbers = [34, 3, 5, 20]
 
         # Generate the figure and define its parameters #
         plt.close()
@@ -51,9 +52,9 @@ class SampleSpatialDistribution:
             gs[4, 3])
 
         for axis in [axis10, axis12, axis20, axis22, axis30, axis32, axis40, axis42]:
-            plot_tools.set_axis(axis, xlabel=r'$\mathrm{x/kpc}$', ylabel=r'$\mathrm{y/kpc}$', aspect=None)
+            plot_tools.set_axis(axis, xlabel=r'$\mathrm{x/kpc}$', ylabel=r'$\mathrm{y/kpc}$', aspect=None, size=20)
         for axis in [axis11, axis13, axis21, axis23, axis31, axis33, axis41, axis43]:
-            plot_tools.set_axis(axis, xlabel=r'$\mathrm{x/kpc}$', ylabel=r'$\mathrm{z/kpc}$', aspect=None)
+            plot_tools.set_axis(axis, xlabel=r'$\mathrm{x/kpc}$', ylabel=r'$\mathrm{z/kpc}$', aspect=None, size=20)
 
         all_axes = [[axis10, axis11, axis12, axis13], [axis20, axis21, axis22, axis23], [axis30, axis31, axis32, axis33],
                     [axis40, axis41, axis42, axis43]]
@@ -77,12 +78,12 @@ class SampleSpatialDistribution:
                 print('–––––––––––––––––––––––––––––––––––––––––––––')
 
         # Add color bar #
-        plot_tools.create_colorbar(axiscbar, im, r'$\mathrm{log_{10}(\Sigma_{\bigstar}/(M_\odot\,kpc^{-2}))}$', 'horizontal', extend='both')
+        plot_tools.create_colorbar(axiscbar, im, r'$\mathrm{log_{10}(\Sigma_{\bigstar}/(M_\odot\,kpc^{-2}))}$', 'horizontal', extend='both', size=20)
         # Add text #
-        plt.text(0.21, 1.1, r'$\mathrm{Disc\;face-on}$', fontsize=16, transform=axis10.transAxes)
-        plt.text(0.21, 1.1, r'$\mathrm{Disc\;edge-on}$', fontsize=16, transform=axis11.transAxes)
-        plt.text(0.15, 1.1, r'$\mathrm{Spheroid\;face-on}$', fontsize=16, transform=axis12.transAxes)
-        plt.text(0.15, 1.1, r'$\mathrm{Spheroid\;edge-on}$', fontsize=16, transform=axis13.transAxes)
+        plt.text(0.17, 1.1, r'$\mathrm{Disc\;face-on}$', fontsize=20, transform=axis10.transAxes)
+        plt.text(0.17, 1.1, r'$\mathrm{Disc\;edge-on}$', fontsize=20, transform=axis11.transAxes)
+        plt.text(0.05, 1.1, r'$\mathrm{Spheroid\;face-on}$', fontsize=20, transform=axis12.transAxes)
+        plt.text(0.05, 1.1, r'$\mathrm{Spheroid\;edge-on}$', fontsize=20, transform=axis13.transAxes)
 
         plt.savefig(plots_path + 'SSD' + '-' + date + '.png', bbox_inches='tight')
         print('Finished MultipleDecomposition for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (
@@ -154,7 +155,7 @@ class SampleSpatialDistribution:
                                                weights=weights, bins=500, range=[[-30, 30], [-30, 30]])
         axes[3].imshow(np.log10(count.T), extent=[-30, 30, -30, 30], origin='lower', cmap=cmap, vmin=vmin, vmax=vmax, rasterized=True, aspect='equal')
 
-        plt.text(-0.2, 1.1, str(group_number), color='red', fontsize=16, transform=axes[0].transAxes)  # Add text.
+        plt.text(-0.2, 1.1, str(group_number), color='red', fontsize=20, transform=axes[0].transAxes)  # Add text.
         return im
 
 

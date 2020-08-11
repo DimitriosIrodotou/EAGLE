@@ -760,7 +760,7 @@ class AppendAttributes:
             spheroid_deltas.append(stellar_data_tmp['spheroid_delta'])
             disc_sigma_0s.append(stellar_data_tmp['disc_sigma_0'])
             spheroid_sigma_0s.append(stellar_data_tmp['spheroid_sigma_0'])
-            disc_sigma_0s_re.append(stellar_data_tmp['disc_sigma_re'])
+            disc_sigma_0s_re.append(stellar_data_tmp['disc_sigma_0_re'])
             disc_rotationals.append(stellar_data_tmp['disc_rotational'])
             disc_weighted_as.append(stellar_data_tmp['disc_weighted_a'])
             spheroid_sigma_0s_re.append(stellar_data_tmp['spheroid_sigma_0_re'])
