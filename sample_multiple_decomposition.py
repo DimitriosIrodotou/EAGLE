@@ -34,7 +34,7 @@ class SampleMultipleDecomposition:
         :param tag: redshift directory.
         """
         group_numbers = [25, 18, 2, 14]
-        group_numbers = [34, 3, 5, 20]
+        # group_numbers = [34 , 3, 5, 20]
 
         # Generate the figure and define its parameters #
         plt.close()
@@ -84,6 +84,11 @@ class SampleMultipleDecomposition:
                 self.plot(axes, stellar_data_tmp, group_number)
                 print('Plotted data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (time.time() - start_local_time))
                 print('–––––––––––––––––––––––––––––––––––––––––––––')
+
+        # Add text/title in each column #
+        plt.text(0.15, 1.1, r'$\mathrm{D/T_{\Delta \theta<30\degree} }$', fontsize=30, transform=axis01.transAxes)
+        plt.text(0.15, 1.1, r'$\mathrm{D/T_{\vec{J}_{b}=0}}$', fontsize=30, transform=axis02.transAxes)
+        plt.text(0.15, 1.1, r'$\mathrm{D/T_{\epsilon>0.7}}$', fontsize=30, transform=axis03.transAxes)
 
         plt.savefig(plots_path + 'SMD' + '-' + date + '.png', bbox_inches='tight')
         print('Finished MultipleDecomposition for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (
@@ -176,7 +181,7 @@ class SampleMultipleDecomposition:
         x_data = 0.5 * (edges[1:] + edges[:-1])
         y_data /= edges[1:] - edges[:-1]
         axes[3].set_xlim(-1.3, 1.3)
-        axes[3].set_ylim(0, 1.3 * max(y_data))
+        axes[3].set_ylim(0, 1.4 * max(y_data))
         axes[3].plot(x_data, y_data, color='black')
 
         # # Add hatches for the bulge and disc component #
@@ -212,10 +217,10 @@ class SampleMultipleDecomposition:
 
         # Add text and create the legend #
         plt.text(-0.2, 1.1, str(group_number), color='red', fontsize=20, transform=axes[0].transAxes)
-        plt.text(0.15, 0.92, r'$\mathrm{D/T_{\Delta \theta<30\degree}=  %.2f }$' % disc_fraction_IT20, fontsize=20, transform=axes[1].transAxes)
-        plt.text(0.15, 0.92, r'$\mathrm{D/T_{\vec{J}_{b}=0}= %.2f }$' % np.abs(disc_fraction_00), fontsize=20, transform=axes[2].transAxes)
-        plt.text(0.15, 0.92, r'$\mathrm{D/T_{\epsilon>0.7}= %.2f }$' % disc_fraction_07, fontsize=20, transform=axes[3].transAxes)
-        axes[3].legend(loc='upper right', fontsize=20, frameon=False)
+        plt.text(0.8, 0.9, r'$\mathrm{%.2f }$' % disc_fraction_IT20, fontsize=20, transform=axes[1].transAxes)
+        plt.text(0.8, 0.9, r'$\mathrm{%.2f }$' % np.abs(disc_fraction_00), fontsize=20, transform=axes[2].transAxes)
+        plt.text(0.8, 0.9, r'$\mathrm{%.2f }$' % disc_fraction_07, fontsize=20, transform=axes[3].transAxes)
+        axes[3].legend(loc='upper left', fontsize=20, frameon=False)
         return None
 
 
