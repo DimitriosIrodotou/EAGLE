@@ -78,10 +78,10 @@ class DiscToTotalVsGalacticAttributes:
         axis10, axis11, axis12, axis13 = figure.add_subplot(gs[1, 0]), figure.add_subplot(gs[1, 1]), figure.add_subplot(gs[1, 2]), figure.add_subplot(
             gs[1, 3])
 
-        plot_tools.set_axis(axis10, xlim=(5e9, 5e11), ylim=[0, 1], xlabel=r'$\mathrm{M_{\bigstar}/M_{\odot}}$', ylabel=r'$\mathrm{D/T_{30\degree}}$',
-            xscale='log', aspect=None, which='major')
+        plot_tools.set_axis(axis10, xlim=(5e9, 5e11), ylim=[0, 1], xlabel=r'$\mathrm{M_{\bigstar}/M_{\odot}}$',
+                            ylabel=r'$\mathrm{D/T_{\Delta \theta<30\degree}}$', xscale='log', aspect=None, which='major')
         plot_tools.set_axis(axis11, xlim=(1e1, 2e3), ylim=[0, 1], xlabel=r'$\mathrm{(|\vec{J}_{\bigstar}|/M_{\bigstar})/(kpc\;km\;s^{-1})}$',
-            xscale='log', aspect=None, which='major')
+                            xscale='log', aspect=None, which='major')
         plot_tools.set_axis(axis12, xlim=(1e-3, 5e-1), ylim=[0, 1], xlabel=r'$\mathrm{f_{gas}}$', xscale='log', aspect=None, which='major')
         plot_tools.set_axis(axis13, xlim=(2e-13, 2e-10), ylim=[0, 1], xlabel=r'$\mathrm{sSFR/yr^{-1}}$', xscale='log', aspect=None, which='major')
         for axis in [axis11, axis12, axis13]:

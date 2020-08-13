@@ -48,7 +48,7 @@ class DTTVsEnvironment:
         start_local_time = time.time()  # Start the local time.
 
         self.plot(group_numbers, subgroup_numbers, glx_disc_fractions_IT20, glx_stellar_angular_momenta, glx_gaseous_angular_momenta,
-            disc_stellar_angular_momenta, spheroid_stellar_angular_momenta)
+                  disc_stellar_angular_momenta, spheroid_stellar_angular_momenta)
         print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
 
@@ -79,24 +79,25 @@ class DTTVsEnvironment:
         axis02, axis03 = figure.add_subplot(gs[0, 2]), figure.add_subplot(gs[0, 3])
         axis10, axis11, axis12, axis13 = figure.add_subplot(gs[1, 0]), figure.add_subplot(gs[1, 1]), figure.add_subplot(gs[1, 2]), figure.add_subplot(
             gs[1, 3])
-        plot_tools.set_axis(axis10, ylim=[0, 1], xlabel=r'$\mathrm{PDF}$', ylabel=r'$\mathrm{D/T_{30\degree}}$', aspect=None, which='major')
+        plot_tools.set_axis(axis10, ylim=[0, 1], xlabel=r'$\mathrm{PDF}$', ylabel=r'$\mathrm{D/T_{\Delta \theta<30\degree}}$', aspect=None,
+                            which='major')
         plot_tools.set_axis(axis11, xlim=[9e-1, 2e2], ylim=[0, 1], xlabel=r'$\mathrm{N_{satellites}}$', aspect=None, which='major')
         plot_tools.set_axis(axis12, xlim=[-0.99, 1.01],
-            xlabel=r'$\mathrm{(\vec{J}_{disc}\cdot\vec{J}_{spheroid})/(|\vec{J}_{disc}||\vec{J}_{spheroid}|)}$', ylim=[0, 1], aspect=None,
-            which='major')
+                            xlabel=r'$\mathrm{(\vec{J}_{disc}\cdot\vec{J}_{spheroid})/(|\vec{J}_{disc}||\vec{J}_{spheroid}|)}$', ylim=[0, 1],
+                            aspect=None, which='major')
         plot_tools.set_axis(axis13, xlim=[-0.99, 1.01],
-            xlabel=r'$\mathrm{(\vec{J}_{\bigstar}\cdot\vec{J}_{gas})/(|\vec{J}_{\bigstar}||\vec{J}_{gas}|)}$', ylim=[0, 1], aspect=None,
-            which='major')
+                            xlabel=r'$\mathrm{(\vec{J}_{\bigstar}\cdot\vec{J}_{gas})/(|\vec{J}_{\bigstar}||\vec{J}_{gas}|)}$', ylim=[0, 1],
+                            aspect=None, which='major')
         for axis in [axis11, axis12, axis13]:
             axis.set_yticklabels([])
 
         # Calculate the cosine of angle between gaseous and stellar components #
         angle = np.divide(np.sum(glx_stellar_angular_momenta * glx_gaseous_angular_momenta, axis=1),
-            np.linalg.norm(glx_stellar_angular_momenta, axis=1) * np.linalg.norm(glx_gaseous_angular_momenta, axis=1))
+                          np.linalg.norm(glx_stellar_angular_momenta, axis=1) * np.linalg.norm(glx_gaseous_angular_momenta, axis=1))
 
         # Calculate the cosine of angle between disc and spheroid components #
         angle_components = np.divide(np.sum(disc_stellar_angular_momenta * spheroid_stellar_angular_momenta, axis=1),
-            np.linalg.norm(disc_stellar_angular_momenta, axis=1) * np.linalg.norm(spheroid_stellar_angular_momenta, axis=1))
+                                     np.linalg.norm(disc_stellar_angular_momenta, axis=1) * np.linalg.norm(spheroid_stellar_angular_momenta, axis=1))
 
         # Plot the angle between the angular momentum of gaseous and stellar components and disc and spheroid #
         axes = [axis12, axis13]
@@ -108,7 +109,7 @@ class DTTVsEnvironment:
 
             # Plot median and 1-sigma lines #
             x_value, median, shigh, slow = plot_tools.binned_median_1sigma(x_attribute, glx_disc_fractions_IT20, bin_type='equal_width', n_bins=25,
-                log=False)
+                                                                           log=False)
             median, = axis.plot(x_value, median, color='black', linewidth=3)
             axis.fill_between(x_value, shigh, slow, color='black', alpha='0.3')
             fill, = plt.fill(np.NaN, np.NaN, color='black', alpha=0.3)
