@@ -33,8 +33,8 @@ class SampleMultipleDecomposition:
         :param simulation_path: simulation directory.
         :param tag: redshift directory.
         """
-        group_numbers = [25, 18, 2, 14]
-        # group_numbers = [34 , 3, 5, 20]
+        # group_numbers = [25, 18, 2, 14]
+        group_numbers = [34 , 3, 5, 20]
 
         # Generate the figure and define its parameters #
         plt.close()
@@ -86,9 +86,9 @@ class SampleMultipleDecomposition:
                 print('–––––––––––––––––––––––––––––––––––––––––––––')
 
         # Add text/title in each column #
-        plt.text(0.15, 1.1, r'$\mathrm{D/T_{\Delta \theta<30\degree} }$', fontsize=30, transform=axis01.transAxes)
-        plt.text(0.15, 1.1, r'$\mathrm{D/T_{\vec{J}_{b}=0}}$', fontsize=30, transform=axis02.transAxes)
-        plt.text(0.15, 1.1, r'$\mathrm{D/T_{\epsilon>0.7}}$', fontsize=30, transform=axis03.transAxes)
+        plt.text(0.25, 1.1, r'$\mathrm{D/T_{\Delta \theta<30\degree} }$', fontsize=30, transform=axis01.transAxes)
+        plt.text(0.25, 1.1, r'$\mathrm{D/T_{\vec{J}_{b}=0}}$', fontsize=30, transform=axis02.transAxes)
+        plt.text(0.25, 1.1, r'$\mathrm{D/T_{\epsilon>0.7}}$', fontsize=30, transform=axis03.transAxes)
 
         plt.savefig(plots_path + 'SMD' + '-' + date + '.png', bbox_inches='tight')
         print('Finished MultipleDecomposition for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (

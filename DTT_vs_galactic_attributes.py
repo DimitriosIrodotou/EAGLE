@@ -38,10 +38,6 @@ class DiscToTotalVsGalacticAttributes:
         glx_star_formation_rates = np.load(data_path + 'glx_star_formation_rates.npy')
         glx_stellar_angular_momenta = np.load(data_path + 'glx_stellar_angular_momenta.npy')
 
-        # Normalise disc fractions #
-        # epsilon = 0.5 * np.subtract(1, np.cos((np.pi / 6)))
-        # glx_disc_fractions_IT20 = np.divide(1, np.subtract(1, epsilon)) * np.subtract(glx_disc_fractions_IT20, epsilon)
-
         print('Loaded data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
 

@@ -74,21 +74,21 @@ class DiscToTotalVsMorphologicalParameters:
         axis10, axis11, axis12, axis13 = figure.add_subplot(gs[1, 0]), figure.add_subplot(gs[1, 1]), figure.add_subplot(gs[1, 2]), figure.add_subplot(
             gs[1, 3])
 
-        plot_tools.set_axis(axis10, xlim=[0, 0.95], ylim=[0, 1], xlabel=r'$\mathrm{\overline{\epsilon}}$',
-                            ylabel=r'$\mathrm{D/T_{\Delta \theta<30\degree}}$', aspect=None, which='major')
-        plot_tools.set_axis(axis11, xlim=[0, 0.95], ylim=[0, 1], xlabel=r'$\mathrm{\kappa_{co}}$', aspect=None, which='major')
-        plot_tools.set_axis(axis12, xlim=[0, 0.95], xlabel=r'$\mathrm{D/T_{\vec{J}_{b}=0}}$', ylim=[0, 1], aspect=None, which='major')
-        plot_tools.set_axis(axis13, xlim=[0, 4], xlabel=r'$\mathrm{V_{rot}/\sigma}$', ylim=[0, 1], aspect=None, which='major')
+        plot_tools.set_axis(axis10, xlim=[0, 0.95], xlabel=r'$\mathrm{D/T_{\vec{J}_{b}=0}}$', ylabel=r'$\mathrm{D/T_{\Delta \theta<30\degree}}$',
+                            ylim=[0, 1], aspect=None, which='major')
+        plot_tools.set_axis(axis11, xlim=[0, 0.95], ylim=[0, 1], xlabel=r'$\mathrm{\overline{\epsilon}}$', aspect=None, which='major')
+        plot_tools.set_axis(axis12, xlim=[0, 4.5], xlabel=r'$\mathrm{V_{rot}/\sigma}$', ylim=[0, 1], aspect=None, which='major')
+        plot_tools.set_axis(axis13, xlim=[0, 0.95], ylim=[0, 1], xlabel=r'$\mathrm{\kappa_{co}}$', aspect=None, which='major')
         for axis in [axis11, axis12, axis13]:
             axis.set_yticklabels([])
 
         axes = [axis10, axis11, axis12, axis13]
         axescbar = [axis00, axis01, axis02, axis03]
-        thresholds = [0.3, 0.40, 0.50, 1.00]
-        x_attributes = [glx_circularities, glx_kappas_corotation, glx_disc_fractions, glx_rotationals_over_dispersions]
+        thresholds = [0.50, 0.3, 1.00, 0.4]
+        x_attributes = [glx_disc_fractions, glx_circularities, glx_rotationals_over_dispersions, glx_kappas_corotation]
         for axis, axiscbar, x_attribute, threshold in zip(axes, axescbar, x_attributes, thresholds):
             # Plot attributes #
-            hb = axis.hexbin(x_attribute, glx_disc_fractions_IT20, gridsize=100, label=r'$D/T_{\vec{J}_{b} = 0}$', cmap='terrain_r')
+            hb = axis.hexbin(x_attribute, glx_disc_fractions_IT20, gridsize=100, cmap='terrain_r')
             plot_tools.create_colorbar(axiscbar, hb, r'$\mathrm{Counts\;per\;hexbin}$', 'horizontal')
 
             # Plot median and 1-sigma lines #
