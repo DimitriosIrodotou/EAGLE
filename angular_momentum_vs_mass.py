@@ -74,7 +74,7 @@ class AngularMomentumVsMass:
         # Plot the specific galactic angular momentum as a function of stellar mass colour-coded by disc to total ratio #
         spc_stellar_angular_momenta = np.linalg.norm(glx_stellar_angular_momenta, axis=1) / glx_stellar_masses
         sc = axis10.scatter(glx_stellar_masses, spc_stellar_angular_momenta, c=glx_disc_fractions_IT20, s=8, cmap='seismic_r', vmin=0, vmax=1)
-        plot_tools.create_colorbar(axis00, sc, r'$\mathrm{D/T_{\Delta \theta<30\degree} }$', 'horizontal')
+        plot_tools.create_colorbar(axis00, sc, r'$\mathrm{D/T_{\Delta \theta<30\degree}}$', 'horizontal')
 
         # Read observational data from OG13 and FR18 #
         OG13 = np.genfromtxt('./observational_data/OG_1312.4543/Figure7_stars.csv', delimiter=',', names=['Mstar', 'jstar'])

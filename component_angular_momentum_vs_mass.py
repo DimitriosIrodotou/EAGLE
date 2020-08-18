@@ -72,7 +72,7 @@ class ComponentAngularMomentumVsMass:
             (1 - glx_disc_fractions_IT20) * glx_stellar_masses)
 
         # Plot galactic angular momentum as a function of stellar mass colour-coded by disc to total ratio #
-        d = plt.scatter(glx_disc_fractions_IT20 * glx_stellar_masses, spc_disc_angular_momenta, c='tab:blue', s=8, label='')
+        d = plt.scatter(glx_disc_fractions_IT20 * glx_stellar_masses, spc_disc_angular_momenta, c='tab:blue', s=8)
         b = plt.scatter((1 - glx_disc_fractions_IT20) * glx_stellar_masses, spc_spheroid_angular_momenta, c='tab:red', s=8)
 
         # Read observational data from FR13 and OG14 #

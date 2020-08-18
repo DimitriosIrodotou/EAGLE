@@ -10,8 +10,6 @@ import numpy as np
 import matplotlib.cbook
 import matplotlib.pyplot as plt
 
-from matplotlib import gridspec
-
 date = time.strftime('%d_%m_%y_%H%M')  # Date.
 start_global_time = time.time()  # Start the global time.
 warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
@@ -32,8 +30,6 @@ class ComponentDeltaVsDTT:
         # Load the data #
         start_local_time = time.time()  # Start the local time.
 
-        glx_deltas = np.load(data_path + 'glx_deltas.npy')
-        disc_deltas = np.load(data_path + 'disc_deltas.npy')
         spheroid_deltas = np.load(data_path + 'spheroid_deltas.npy')
         glx_disc_fractions_IT20 = np.load(data_path + 'glx_disc_fractions_IT20.npy')
         print('Loaded data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
@@ -42,7 +38,7 @@ class ComponentDeltaVsDTT:
         # Plot the data #
         start_local_time = time.time()  # Start the local time.
 
-        self.plot(glx_deltas, disc_deltas, spheroid_deltas, glx_disc_fractions_IT20)
+        self.plot(spheroid_deltas, glx_disc_fractions_IT20)
         print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
 
@@ -52,42 +48,31 @@ class ComponentDeltaVsDTT:
 
 
     @staticmethod
-    def plot(glx_deltas, disc_deltas, spheroid_deltas, glx_disc_fractions_IT20):
+    def plot(spheroid_deltas, glx_disc_fractions_IT20):
         """
         Plot the component delta as a function of disc to total ratio colour-coded by galaxy's delta.
-        :param glx_deltas: defined as the anisotropy parameter for the whole galaxy.
-        :param disc_deltas: defined as the anisotropy parameter for the disc component.
         :param spheroid_deltas: defined as the anisotropy parameter for the spheroid component.
-        :param glx_disc_fractions_IT20: where the disc consists of particles whose angular momentum angular separation is 30deg from the densest pixel.
+        :param glx_disc_fractions_IT20: where the disc consists of particles whose angular momentum angular separation is 30deg from the densest
+        pixel.
         :return: None
         """
         # Generate the figure and define its parameters #
-        figure = plt.figure(figsize=(20, 7.5))
-        gs = gridspec.GridSpec(2, 2, wspace=0.0, hspace=0.0, height_ratios=[0.05, 1])
-        axis00 = figure.add_subplot(gs[0, :])
-        axis10, axis11 = figure.add_subplot(gs[1, 0]), figure.add_subplot(gs[1, 1])
-
-        for axis in [axis10, axis11]:
-            plot_tools.set_axis(axis, ylim=[-0.1, 1.1], xlabel=r'$\mathrm{D/T_{30\degree}}$', aspect=None)
-        axis11.yaxis.tick_right()
-        axis11.yaxis.set_label_position("right")
-        axis10.set_ylabel(r'$\mathrm{exp(\delta_{spheroid}-1)}$', size=16)
-        axis11.set_ylabel(r'$\mathrm{exp(\delta_{disc}-1)}$', size=16)
+        figure, axis = plt.subplots(1, figsize=(10, 7.5))
+        plot_tools.set_axis(axis, xlim=[0, 1], ylim=[-0.1, 1.1], xlabel=r'$\mathrm{D/T_{\Delta \theta<30\degree}}$', ylabel=r'$\mathrm{\tau}$',
+                            aspect=None)
 
         # Plot the component delta as a function of disc to total ratio colour-coded by galaxy's delta #
-        axis10.scatter(glx_disc_fractions_IT20, np.exp(spheroid_deltas - 1), c=np.exp(glx_deltas - 1), s=8, vmin=0, vmax=1, cmap='magma')
-        sc = axis11.scatter(glx_disc_fractions_IT20, np.exp(disc_deltas - 1), c=np.exp(glx_deltas - 1), s=8, vmin=0, vmax=1, cmap='magma')
-        plot_tools.create_colorbar(axis00, sc, r'$\mathrm{exp(\delta_{gal}-1)}$', 'horizontal')
+        axis.scatter(glx_disc_fractions_IT20, np.exp(spheroid_deltas - 1), c='tab:red', s=8, label=r'$\mathrm{Spheroids}$')
 
-        # Plot horizontal lines for different delta values #
-        for axis in [axis10, axis11]:
-            axis.axhline(y=np.exp(0 - 1), c='black', lw=3, linestyle='dashed', label=r'$\mathrm{\delta=0}$')
-            axis.axhline(y=np.exp(1 - 1), c='tab:red', lw=3, linestyle='dashed', label=r'$\mathrm{\delta=1}$')
-            axis.axhline(y=np.exp(-np.inf - 1), c='tab:blue', lw=3, linestyle='dashed', label=r'$\mathrm{\delta=-inf}$')
+        # Plot median and 1-sigma lines #
+        x_value, median, shigh, slow = plot_tools.binned_median_1sigma(glx_disc_fractions_IT20, np.exp(spheroid_deltas - 1), bin_type='equal_width',
+                                                                       n_bins=25, log=False)
+        axis.plot(x_value, median, color='black', linewidth=3, label=r'$\mathrm{Median}$')
+        axis.fill_between(x_value, shigh, slow, color='black', alpha='0.3')
+        plt.fill(np.NaN, np.NaN, color='black', alpha=0.3, label=r'$\mathrm{16^{th}-84^{th}\;\%ile}$')
 
         # Create the legends, save and close the figure #
-        axis10.legend(loc='upper center', ncol=3, fontsize=12, frameon=False)
-        axis11.legend(loc='upper center', ncol=3, fontsize=12, frameon=False)
+        plt.legend(loc='upper right', fontsize=16, frameon=False, numpoints=1)
         plt.savefig(plots_path + 'C_D_DTT' + '-' + date + '.png', bbox_inches='tight')
         plt.close()
         return None

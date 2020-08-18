@@ -94,14 +94,14 @@ class TullyFisherFaberJackson:
         # Plot the Tully-Fisher relations #
         sc = axis10.scatter(np.log10(glx_rotationals), np.log10(glx_stellar_masses), c=glx_disc_fractions_IT20, s=10, cmap='seismic_r', vmin=0,
                             vmax=1)
-        axis20.scatter(np.log10(disc_rotationals), np.log10(glx_stellar_masses), c='tab:blue', s=10, label=r'$\mathrm{Disc}$')
-        axis20.scatter(np.log10(spheroid_rotationals), np.log10(glx_stellar_masses), c='tab:red', s=10, label=r'$\mathrm{Spheroid}$')
-        plot_tools.create_colorbar(axiscbar, sc, r'$\mathrm{D/T_{\Delta \theta<30\degree} }$', 'horizontal')
+        axis20.scatter(np.log10(disc_rotationals), np.log10(glx_stellar_masses), c='tab:blue', s=10, label=r'$\mathrm{Discs}$')
+        axis20.scatter(np.log10(spheroid_rotationals), np.log10(glx_stellar_masses), c='tab:red', s=10, label=r'$\mathrm{Spheroids}$')
+        plot_tools.create_colorbar(axiscbar, sc, r'$\mathrm{D/T_{\Delta \theta<30\degree}}$', 'horizontal')
 
         # Plot the Faber-Jackson relations #
         axis11.scatter(np.log10(glx_sigma_0s), np.log10(glx_stellar_masses), c=glx_disc_fractions_IT20, s=10, cmap='seismic_r', vmin=0, vmax=1)
-        axis21.scatter(np.log10(disc_sigma_0s), np.log10(glx_stellar_masses), c='tab:blue', s=10, label=r'$\mathrm{Disc}$')
-        axis21.scatter(np.log10(spheroid_sigma_0s), np.log10(glx_stellar_masses), c='tab:red', s=10, label=r'$\mathrm{Spheroid}$')
+        axis21.scatter(np.log10(disc_sigma_0s), np.log10(glx_stellar_masses), c='tab:blue', s=10, label=r'$\mathrm{Discs}$')
+        axis21.scatter(np.log10(spheroid_sigma_0s), np.log10(glx_stellar_masses), c='tab:red', s=10, label=r'$\mathrm{Spheroids}$')
 
         # Read and plot observational data from AZF08, TEA11 and OCB20 #
         AZF08 = np.genfromtxt('./observational_data/AZF_0807.0636/Figure1.csv', delimiter=',', names=['Vrot', 'Mstar'])
