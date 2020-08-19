@@ -61,16 +61,17 @@ class BlackholeVsSpheroidMass:
         # Generate the figure and define its parameters #
         figure, axis = plt.subplots(1, figsize=(10, 7.5))
         plot_tools.set_axis(axis, xlim=[9, 12], ylim=[5, 11], xlabel=r'$\mathrm{log_{10}(M_{spheroid}/M_{\odot})}$',
-            ylabel=r'$\mathrm{log_{10}(M_{\bullet}/M_{\odot})}$', aspect=None, which='major')
+                            ylabel=r'$\mathrm{log_{10}(M_{\bullet}/M_{\odot})}$', aspect=None, which='major')
 
-        plt.scatter(np.log10((1 - glx_disc_fractions_IT20) * glx_stellar_masses), np.log10(bh_masses), c='tab:red',
-            s=8)  # Plot the black hole mass as a function of spheroid mass.
+        # Plot the black hole mass as a function of spheroid mass #
+        plt.scatter(np.log10((1 - glx_disc_fractions_IT20) * glx_stellar_masses), np.log10(bh_masses), c='tab:red', s=8,
+                    label=r'$\mathrm{Spheroids}$')
 
         # Read and  observational data from HR04 #
         HR04 = np.genfromtxt('./observational_data/HR04.csv', delimiter=',', names=['Mb', 'Mbh', 'yplus', 'yminus'])
         yerr = [np.log10(HR04['Mbh'] / HR04['yminus']), np.log10(HR04['yplus'] / HR04['Mbh'])]
         plt.errorbar(np.log10(HR04['Mb'] * 1e10), np.log10(HR04['Mbh'] * 1e10), yerr=yerr, fmt='s', ecolor='black', color='gray', markersize=5,
-            label=r'$\mathrm{HR04}$')
+                     label=r'$\mathrm{HR04}$')
 
         # Create the legends, save and close the figure #
         plt.legend(loc='upper right', fontsize=12, frameon=False, numpoints=1)
