@@ -23,7 +23,7 @@ warnings.filterwarnings('ignore', category=matplotlib.cbook.mplDeprecation)  # I
 
 class SampleMultipleDecomposition:
     """
-    For each galaxy create: a HEALPix histogram from the angular momentum of particles and angular distance plots.
+    For a sample of galaxies create: a HEALPix histogram from the angular momentum of particles and angular distance plots.
     """
 
 

@@ -317,6 +317,7 @@ def circularity(stellar_data_tmp):
         max_circular_angular_momentum[i] = np.max(specific_angular_momentum_z[left:right])
     epsilon = specific_angular_momentum_z / max_circular_angular_momentum
 
+    # No need to pass the rotated coordinates and velocities since kinematic_diagnostics rotates the galaxy #
     kappa, disc_fraction, epsilon, rotational_over_dispersion, vrots, rotational_velocity, sigma_0, delta = MorphoKinematic.kinematic_diagnostics(
         stellar_data_tmp['Coordinates'], stellar_data_tmp['Mass'], stellar_data_tmp['Velocity'], stellar_data_tmp['ParticleBindingEnergy'])
     stellar_masses = stellar_data_tmp['Mass']

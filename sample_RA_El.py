@@ -22,7 +22,7 @@ warnings.filterwarnings('ignore', category=matplotlib.cbook.mplDeprecation)  # I
 
 class SampleRAEl:
     """
-    Plot a sample of HEALPix histograms.
+    For a sample of galaxies create: HEALPix histograms.
     """
 
 
@@ -56,13 +56,9 @@ class SampleRAEl:
             # Plot the data #
             start_local_time = time.time()  # Start the local time.
 
-            pcm = self.plot(axis, stellar_data_tmp, group_number)
+            self.plot(axis, stellar_data_tmp, group_number)
             print('Plotted data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (time.time() - start_local_time))
             print('–––––––––––––––––––––––––––––––––––––––––––––')
-
-        # Create axis and add a colorbar #
-        # axiscbar = figure.add_axes([0, 1, 1, 0.02])
-        # plot_tools.create_colorbar(axiscbar, pcm, '$\mathrm{Particles\; per\; grid\; cell}$', 'horizontal',size=12)
 
         plt.savefig(plots_path + 'SRAEl' + '-' + date + '.png', bbox_inches='tight')
         print('Finished SampleRAEl for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (
