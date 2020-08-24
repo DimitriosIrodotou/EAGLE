@@ -2,6 +2,7 @@ import numpy as np
 import astropy.units as u
 import matplotlib.pyplot as plt
 
+from astropy.constants import G
 from astropy_healpix import HEALPix
 from morpho_kinematics import MorphoKinematic
 
@@ -284,41 +285,63 @@ def set_axis(axis, xlim=None, ylim=None, xscale=None, yscale=None, xlabel=None, 
     return None
 
 
-def circularity(stellar_data_tmp):
+def circularity(stellar_data_tmp, method):
     """
     Calculate the circularity parameter epsilon.
     :param stellar_data_tmp: from read_add_attributes.py.
+    :param method: follow Scannapieco+09, Marinacci+14 or Thob+19
     :return: epsilon
     """
-    # Rotate coordinates and velocities of stellar particles wrt galactic angular momentum #
-    coordinates, velocities, prc_angular_momentum, glx_angular_momentum = RotateCoordinates.rotate_Jz(stellar_data_tmp)
+    if method == 'Scannapieco':
+        # Rotate coordinates and velocities of stellar particles wrt galactic angular momentum #
+        coordinates, velocities, prc_angular_momentum, glx_angular_momentum = RotateCoordinates.rotate_Jz(stellar_data_tmp)
 
-    # Calculate the z component of the specific angular momentum and the total (kinetic plus potential) energy of stellar particles #
-    specific_angular_momentum_z = np.cross(coordinates, velocities)[:, 2]  # In Msun kpc km s^-1.
-    total_energy = stellar_data_tmp['ParticleBindingEnergy']
-    sorted_total_energy = total_energy.argsort()
-    specific_angular_momentum_z = specific_angular_momentum_z[sorted_total_energy]
-    stellar_masses = stellar_data_tmp['Mass'][sorted_total_energy]
+        # Calculate the z component of the specific angular momentum, the spherical distance and circular velocity of each stellar particle #
+        prc_spherical_radius = np.linalg.norm(coordinates, axis=1)  # In kpc.
+        sort = np.argsort(prc_spherical_radius)
+        cumulative_mass = np.cumsum(stellar_data_tmp['Mass'][sort])  # In Msun.
+        specific_angular_momentum_z = np.cross(coordinates, velocities)[:, 2][sort]  # In kpc km s^-1.
+        astronomical_G = G.to(u.km ** 2 * u.kpc * u.Msun ** -1 * u.s ** -2).value  # In km^2 kpc Msun^-1 s^-2.
+        circular_velocity = np.sqrt(np.divide(astronomical_G * cumulative_mass, prc_spherical_radius[sort]))  # In km s^-1.
 
-    # Calculate the orbital circularity #
-    n_stars = len(stellar_data_tmp['Mass'])
-    max_circular_angular_momentum = np.zeros(n_stars)
-    for i in range(n_stars):
-        if i < 50:
-            left = 0
-            right = 100
-        elif i > n_stars - 50:
-            left = n_stars - 100
-            right = n_stars
-        else:
-            left = i - 50
-            right = i + 50
+        # Calculate the circularity parameter ε as the ratio between the z component of the angular momentum and the angular momentum of the
+        # corresponding circular orbit #
+        specific_circular_angular_momentum = prc_spherical_radius[sort] * circular_velocity   # In kpc km s^-1.
+        epsilon = specific_angular_momentum_z / specific_circular_angular_momentum
+        stellar_masses = cumulative_mass
 
-        max_circular_angular_momentum[i] = np.max(specific_angular_momentum_z[left:right])
-    epsilon = specific_angular_momentum_z / max_circular_angular_momentum
+    if method == 'Marinacci':
+        # Rotate coordinates and velocities of stellar particles wrt galactic angular momentum #
+        coordinates, velocities, prc_angular_momentum, glx_angular_momentum = RotateCoordinates.rotate_Jz(stellar_data_tmp)
 
-    # No need to pass the rotated coordinates and velocities since kinematic_diagnostics rotates the galaxy #
-    kappa, disc_fraction, epsilon, rotational_over_dispersion, vrots, rotational_velocity, sigma_0, delta = MorphoKinematic.kinematic_diagnostics(
-        stellar_data_tmp['Coordinates'], stellar_data_tmp['Mass'], stellar_data_tmp['Velocity'], stellar_data_tmp['ParticleBindingEnergy'])
-    stellar_masses = stellar_data_tmp['Mass']
+        # Calculate the z component of the specific angular momentum and the total (kinetic plus potential) energy of stellar particles #
+        specific_angular_momentum_z = np.cross(coordinates, velocities)[:, 2]  # In Msun kpc km s^-1.
+        total_energy = stellar_data_tmp['ParticleBindingEnergy']
+        sorted_total_energy = total_energy.argsort()
+        specific_angular_momentum_z = specific_angular_momentum_z[sorted_total_energy]
+
+        # Calculate the orbital circularity #
+        n_stars = len(stellar_data_tmp['Mass'])
+        max_circular_angular_momentum = np.zeros(n_stars)
+        for i in range(n_stars):
+            if i < 50:
+                left = 0
+                right = 100
+            elif i > n_stars - 50:
+                left = n_stars - 100
+                right = n_stars
+            else:
+                left = i - 50
+                right = i + 50
+
+            max_circular_angular_momentum[i] = np.max(specific_angular_momentum_z[left:right])
+        epsilon = specific_angular_momentum_z / max_circular_angular_momentum
+        stellar_masses = stellar_data_tmp['Mass'][sorted_total_energy]
+
+    if method == 'Thob':
+        # No need to pass the rotated coordinates and velocities since kinematic_diagnostics rotates the galaxy #
+        kappa, disc_fraction, epsilon, rotational_over_dispersion, vrots, rotational_velocity, sigma_0, delta = MorphoKinematic.kinematic_diagnostics(
+            stellar_data_tmp['Coordinates'], stellar_data_tmp['Mass'], stellar_data_tmp['Velocity'], stellar_data_tmp['ParticleBindingEnergy'])
+        stellar_masses = stellar_data_tmp['Mass']
+
     return epsilon, stellar_masses
