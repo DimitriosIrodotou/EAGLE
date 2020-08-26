@@ -102,7 +102,15 @@ class DiscToTotalVsGalacticAttributes:
             axis.fill_between(x_value, shigh, slow, color='black', alpha='0.3')
             fill, = plt.fill(np.NaN, np.NaN, color='black', alpha=0.3)
 
+        # Read observational data from OG13 and FR18 #
+        TDH19_Zhu = np.genfromtxt('./observational_data/TDH_1904.12860/Figure3_toppanel_green.csv', delimiter=',', names=['Mstar', 'BTT'])
+
+        # Plot observational data from OG13 and FR18 #
+        axis10.scatter(np.power(10, TDH19_Zhu['Mstar']), 1 - TDH19_Zhu['BTT'], edgecolor='black', color='orange', s=150, marker='^',
+                       label=r'$\mathrm{Zhu+18}$', zorder=5)
+
         # Create a legend, save and close the figure #
+        axis10.legend(frameon=False, fontsize=16, loc='upper right')
         axis11.legend([median], [r'$\mathrm{Median}$'], frameon=False, fontsize=16, loc='upper right')
         axis12.legend([fill], [r'$\mathrm{16^{th}-84^{th}\;\%ile}$'], frameon=False, fontsize=16, loc='upper left')
         plt.savefig(plots_path + 'DTT_GP' + '-' + date + '.png', bbox_inches='tight')

@@ -308,7 +308,7 @@ def circularity(stellar_data_tmp, method):
         # corresponding circular orbit #
         specific_circular_angular_momentum = prc_spherical_radius[sort] * circular_velocity   # In kpc km s^-1.
         epsilon = specific_angular_momentum_z / specific_circular_angular_momentum
-        stellar_masses = cumulative_mass
+        stellar_masses = stellar_data_tmp['Mass'][sort]
 
     if method == 'Marinacci':
         # Rotate coordinates and velocities of stellar particles wrt galactic angular momentum #
@@ -322,7 +322,7 @@ def circularity(stellar_data_tmp, method):
 
         # Calculate the orbital circularity #
         n_stars = len(stellar_data_tmp['Mass'])
-        max_circular_angular_momentum = np.zeros(n_stars)
+        max_angular_momentum = np.zeros(n_stars)
         for i in range(n_stars):
             if i < 50:
                 left = 0
@@ -334,8 +334,8 @@ def circularity(stellar_data_tmp, method):
                 left = i - 50
                 right = i + 50
 
-            max_circular_angular_momentum[i] = np.max(specific_angular_momentum_z[left:right])
-        epsilon = specific_angular_momentum_z / max_circular_angular_momentum
+            max_angular_momentum[i] = np.max(specific_angular_momentum_z[left:right])
+        epsilon = specific_angular_momentum_z / max_angular_momentum
         stellar_masses = stellar_data_tmp['Mass'][sorted_total_energy]
 
     if method == 'Thob':

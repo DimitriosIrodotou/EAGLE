@@ -170,7 +170,7 @@ class SampleMultipleDecomposition:
         axes[1].axvspan(0, 30, facecolor='0.2', alpha=0.5)  # Draw a vertical span.
 
         # Calculate and plot the distribution of orbital circularity #
-        epsilon, stellar_masses = plot_tools.circularity(stellar_data_tmp, method='Scannapieco')
+        epsilon, stellar_masses = plot_tools.circularity(stellar_data_tmp, method='Thob')
         j, = np.where(epsilon < 0.0)
         k, = np.where((epsilon > 0.7) & (epsilon <= 1))
         l, = np.where((epsilon >= -1) & (epsilon <= 1))
