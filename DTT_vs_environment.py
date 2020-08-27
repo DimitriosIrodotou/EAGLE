@@ -35,7 +35,6 @@ class DTTVsEnvironment:
 
         group_numbers = np.load(data_path + 'group_numbers.npy')
         subgroup_numbers = np.load(data_path + 'subgroup_numbers.npy')
-        glx_stellar_masses = np.load(data_path + 'glx_stellar_masses.npy')
         glx_disc_fractions_IT20 = np.load(data_path + 'glx_disc_fractions_IT20.npy')
         glx_stellar_angular_momenta = np.load(data_path + 'glx_stellar_angular_momenta.npy')
         glx_gaseous_angular_momenta = np.load(data_path + 'glx_gaseous_angular_momenta.npy')

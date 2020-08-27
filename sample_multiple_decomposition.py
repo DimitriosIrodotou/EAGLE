@@ -33,7 +33,7 @@ class SampleMultipleDecomposition:
         :param simulation_path: simulation directory.
         :param tag: redshift directory.
         """
-        group_numbers = [25]  # , 18, 2, 14]
+        group_numbers = [25 , 18, 2, 14]
         # group_numbers = [34 , 3, 5, 20]
 
         # Generate the figure and define its parameters #
@@ -176,7 +176,6 @@ class SampleMultipleDecomposition:
         l, = np.where((epsilon >= -1) & (epsilon <= 1))
         disc_fraction_00 = 1 - 2 * np.sum(stellar_masses[j]) / np.sum(stellar_masses[l])
         disc_fraction_07 = np.sum(stellar_masses[k]) / np.sum(stellar_masses[l])
-        print(min(epsilon), max(epsilon),np.average(epsilon))
         y_data, edges = np.histogram(epsilon, weights=stellar_masses / np.sum(stellar_masses), bins=50, range=[-1, 1])
         x_data = 0.5 * (edges[1:] + edges[:-1])
         y_data /= edges[1:] - edges[:-1]
