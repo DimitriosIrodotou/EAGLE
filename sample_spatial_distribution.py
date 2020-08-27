@@ -73,7 +73,7 @@ class SampleSpatialDistribution:
                 # Plot the data #
                 start_local_time = time.time()  # Start the local time.
 
-                im = self.plot(axes, axiscbar, stellar_data_tmp, group_number)
+                im = self.plot(axes, stellar_data_tmp, group_number)
                 print('Plotted data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (time.time() - start_local_time))
                 print('–––––––––––––––––––––––––––––––––––––––––––––')
 
@@ -92,12 +92,11 @@ class SampleSpatialDistribution:
 
 
     @staticmethod
-    def plot(axes, axiscbar, stellar_data_tmp, group_number):
+    def plot(axes, stellar_data_tmp, group_number):
         """
         Plot a HEALPix histogram from the angular momentum of particles - an angular distance plot - a surface density plot / gri mock image - a
         circularity distribution.
         :param axes: set of axes
-        :param axiscbar: color bar axis.
         :param stellar_data_tmp: from read_add_attributes.py.
         :param group_number: from read_add_attributes.py.
         :return: None

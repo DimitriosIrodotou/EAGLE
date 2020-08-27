@@ -33,7 +33,7 @@ class SampleMultipleDecomposition:
         :param simulation_path: simulation directory.
         :param tag: redshift directory.
         """
-        group_numbers = [25 , 18, 2, 14]
+        group_numbers = [25, 18, 2, 14]
         # group_numbers = [34 , 3, 5, 20]
 
         # Generate the figure and define its parameters #
