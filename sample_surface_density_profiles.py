@@ -12,7 +12,6 @@ import matplotlib.cbook
 import astropy.units as u
 import matplotlib.pyplot as plt
 
-from matplotlib import gridspec
 from scipy.special import gamma
 from astropy_healpix import HEALPix
 from scipy.optimize import curve_fit
@@ -35,30 +34,14 @@ class SampleSurfaceDensityProfiles:
         :param simulation_path: simulation directory.
         :param tag: redshift directory.
         """
-        group_numbers = [25, 18, 2, 14, 34, 3, 5, 20]
+        group_numbers = [10, 12, 17, 23, 25, 34, 39, 42, 53, 60, 62, 66, 82, 91, 93, 100]
 
         # Generate the figure and define its parameters #
         plt.close()
-        figure = plt.figure(figsize=(20, 20))
+        figure, axes = plt.subplots(nrows=4, ncols=4, figsize=(20, 20))
+        plt.subplots_adjust(wspace=0.31)
 
-        gs = gridspec.GridSpec(4, 4, wspace=0.3, hspace=0.3)
-        axis00, axis01, axis02, axis03 = figure.add_subplot(gs[0, 0]), figure.add_subplot(gs[0, 1]), figure.add_subplot(gs[0, 2]), figure.add_subplot(
-            gs[0, 3])
-        axis10, axis11, axis12, axis13 = figure.add_subplot(gs[1, 0]), figure.add_subplot(gs[1, 1]), figure.add_subplot(gs[1, 2]), figure.add_subplot(
-            gs[1, 3])
-        axis20, axis21, axis22, axis23 = figure.add_subplot(gs[2, 0]), figure.add_subplot(gs[2, 1]), figure.add_subplot(gs[2, 2]), figure.add_subplot(
-            gs[2, 3])
-        axis30, axis31, axis32, axis33 = figure.add_subplot(gs[3, 0]), figure.add_subplot(gs[3, 1]), figure.add_subplot(gs[3, 2]), figure.add_subplot(
-            gs[3, 3])
-
-        for axis in [axis00, axis01, axis02, axis03, axis10, axis11, axis12, axis13, axis20, axis21, axis22, axis23, axis30, axis31, axis32, axis33]:
-            plot_tools.set_axis(axis, xlim=[0.0, 30.0], ylim=[1e6, 1e10], xlabel=r'$\mathrm{R/kpc}$',
-                                ylabel=r'$\mathrm{\Sigma/(M_{\odot}\;kpc^{-2})}$', yscale='log', aspect=None, which='major')
-
-        all_axes = [[axis00, axis01], [axis02, axis03], [axis10, axis11], [axis12, axis13], [axis20, axis21], [axis22, axis23], [axis30, axis31],
-                    [axis32, axis33]]
-
-        for group_number, axes in zip(group_numbers, all_axes):  # Loop over all masked haloes.
+        for group_number, axis in zip(group_numbers, axes.flatten()):
             for subgroup_number in range(0, 1):  # Get centrals only.
                 start_local_time = time.time()  # Start the local time.
 
@@ -72,7 +55,7 @@ class SampleSurfaceDensityProfiles:
                 # Plot the data #
                 start_local_time = time.time()  # Start the local time.
 
-                self.plot(axes, stellar_data_tmp, group_number)
+                self.plot(axis, stellar_data_tmp, group_number)
                 print('Plotted data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (time.time() - start_local_time))
                 print('–––––––––––––––––––––––––––––––––––––––––––––')
 
@@ -83,10 +66,10 @@ class SampleSurfaceDensityProfiles:
 
 
     @staticmethod
-    def plot(axes, stellar_data_tmp, group_number):
+    def plot(axis, stellar_data_tmp, group_number):
         """
         Plot a sample of HEALPix histograms.
-        :param axes: set of axes
+        :param axis: from __init__.
         :param stellar_data_tmp: from read_add_attributes.py.
         :param group_number: from read_add_attributes.py.
         :return: None
@@ -146,6 +129,10 @@ class SampleSurfaceDensityProfiles:
             return b_n
 
 
+        # Generate the figure and define its parameters #
+        plot_tools.set_axis(axis, xlim=[0.0, 30.0], ylim=[1e6, 1e10], xlabel=r'$\mathrm{R/kpc}$', ylabel=r'$\mathrm{\Sigma/(M_{\odot}\;kpc^{-2})}$',
+                            yscale='log', aspect=None, which='major')
+
         # Rotate coordinates and velocities of stellar particles wrt galactic angular momentum #
         stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_angular_momentum, glx_angular_momentum = RotateCoordinates.rotate_Jz(
             stellar_data_tmp)
@@ -173,7 +160,7 @@ class SampleSurfaceDensityProfiles:
         disc_mask, = np.where(angular_theta_from_densest < (np.pi / 6.0))
         spheroid_mask, = np.where(angular_theta_from_densest > (np.pi / 6.0))
 
-        colors = ['blue', 'red']
+        colors = ['tab:blue', 'tab:red']
         labels = ['Disc', 'Spheroid']
         labels2 = ['Exponential', 'Sersic']
         masks = [disc_mask, spheroid_mask]
@@ -181,20 +168,19 @@ class SampleSurfaceDensityProfiles:
         for mask, color, profile, label, label2 in zip(masks, colors, profiles, labels, labels2):
             cylindrical_distance = np.sqrt(
                 stellar_data_tmp['Coordinates'][mask, 0] ** 2 + stellar_data_tmp['Coordinates'][mask, 1] ** 2)  # Radius of each particle.
-            vertical_mask, = np.where(abs(stellar_data_tmp['Coordinates'][:, 2][mask]) < 5)  # Vertical cut in kpc.
             component_mass = stellar_data_tmp['Mass'][mask]
 
-            mass, edges = np.histogram(cylindrical_distance[vertical_mask], bins=50, range=(0, 30), weights=component_mass[vertical_mask])
+            mass, edges = np.histogram(cylindrical_distance, bins=50, range=(0, 30), weights=component_mass)
             centers = 0.5 * (edges[1:] + edges[:-1])
             surface = np.pi * (edges[1:] ** 2 - edges[:-1] ** 2)
             sden = mass / surface
 
-            axes[1].errorbar(centers, sden, yerr=0.1 * sden, c=color, marker='.', linestyle="None", elinewidth=1, capsize=2, capthick=1, label=label)
+            axis.errorbar(centers, sden, yerr=0.1 * sden, c=color, marker='.', linestyle="None", elinewidth=1, capsize=2, capthick=1, label=label)
 
             try:
                 if mask is disc_mask:
                     popt, pcov = curve_fit(profile, centers, sden, sigma=0.1 * sden, p0=[sden[0], 2])  # p0 = [I_0d, R_d]
-                    axes[1].plot(centers, profile(centers, popt[0], popt[1]), c=color, label=label2)
+                    axis.plot(centers, profile(centers, popt[0], popt[1]), c=color, label=label2)
                     sden_tmp = sden
 
                     # Calculate disc attributes #
@@ -203,7 +189,7 @@ class SampleSurfaceDensityProfiles:
 
                 elif mask is spheroid_mask:
                     popt, pcov = curve_fit(profile, centers, sden, sigma=0.1 * sden, p0=[sden[0], 2, 4])  # p0 = [I_0b, b, n]
-                    axes[1].plot(centers, profile(centers, popt[0], popt[1], popt[2]), c=color, label=label2)
+                    axis.plot(centers, profile(centers, popt[0], popt[1], popt[2]), c=color, label=label2)
 
                     # Calculate spheroid attributes #
                     I_0b, b, n = popt[0], popt[1], popt[2]
@@ -215,21 +201,17 @@ class SampleSurfaceDensityProfiles:
 
         cylindrical_distance = np.sqrt(
             stellar_data_tmp['Coordinates'][:, 0] ** 2 + stellar_data_tmp['Coordinates'][:, 1] ** 2)  # Radius of each particle.
-        vertical_mask, = np.where(abs(stellar_data_tmp['Coordinates'][:, 2]) < 5)  # Vertical cut in kpc.
 
-        mass, edges = np.histogram(cylindrical_distance[vertical_mask], bins=50, range=(0, 30), weights=stellar_data_tmp['Mass'][vertical_mask])
+        mass, edges = np.histogram(cylindrical_distance, bins=50, range=(0, 30), weights=stellar_data_tmp['Mass'])
         centers = 0.5 * (edges[1:] + edges[:-1])
         surface = np.pi * (edges[1:] ** 2 - edges[:-1] ** 2)
         sden = mass / surface
 
-        axes[0].errorbar(centers, sden, yerr=0.1 * sden, c='k', marker='.', linestyle="None", elinewidth=1, capsize=2, capthick=1, label='Total')
-        axes[1].errorbar(centers, sden, yerr=0.1 * sden, c='k', marker='.', linestyle="None", elinewidth=1, capsize=2, capthick=1, label='Total')
+        axis.errorbar(centers, sden, yerr=0.1 * sden, c='k', marker='.', linestyle="None", elinewidth=1, capsize=2, capthick=1, label='Total')
 
         try:
             popt, pcov = curve_fit(total_profile, centers, sden, sigma=0.1 * sden, p0=[sden_tmp[0], 2, sden[0], 2, 4])  # p0 = [I_0d, R_d, I_0b, b, n]
-            axes[0].plot(centers, exponential_profile(centers, popt[0], popt[1]), c='b', label=r'$\mathrm{Exponential}$')
-            axes[0].plot(centers, sersic_profile(centers, popt[2], popt[3], popt[4]), c='r', label=r'$\mathrm{Sersic}$')
-            axes[0].plot(centers, total_profile(centers, popt[0], popt[1], popt[2], popt[3], popt[4]), c='k', label=r'$\mathrm{Total}$')
+            axis.plot(centers, total_profile(centers, popt[0], popt[1], popt[2], popt[3], popt[4]), c='k', label=r'$\mathrm{Total}$')
 
             # Calculate galactic attributes #
             I_0d, R_d, I_0b, b, n = popt[0], popt[1], popt[2], popt[3], popt[4]
@@ -245,9 +227,10 @@ class SampleSurfaceDensityProfiles:
         #          transform=axis.transAxes, size=14)
 
         # Create the legend and save the figure #
-        axes[0].legend(loc='upper right', fontsize=12, frameon=False, numpoints=1)
-        axes[1].legend(loc='upper right', fontsize=12, frameon=False, numpoints=1)
-        plt.text(0.0, 1.05, str(group_number), color='red', fontsize=14, transform=axes[0].transAxes)
+        axis.legend(loc='upper centre', fontsize=12, frameon=False, numpoints=1, ncol=2)
+        plt.text(0.0, 1.05, str(group_number), color='red', fontsize=14, transform=axis.transAxes)
+        plt.text(0.3, 0.7, r'$\mathrm{D/T_{\Delta \theta<30\degree}=%.2f}$' % stellar_data_tmp['disc_fraction_IT20'], fontsize=14,
+                 transform=axis.transAxes)
         return None
 
 
