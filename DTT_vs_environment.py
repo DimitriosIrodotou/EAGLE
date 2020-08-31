@@ -74,10 +74,15 @@ class DTTVsEnvironment:
         """
         # Generate the figure and define its parameters #
         figure = plt.figure(figsize=(25, 7.5))
-        gs = gridspec.GridSpec(2, 4, wspace=0.0, hspace=0.0, height_ratios=[0.05, 1])
+        gs = gridspec.GridSpec(2, 4, wspace=0.0, hspace=0.0, height_ratios=[0.5, 1])
         axis02, axis03 = figure.add_subplot(gs[0, 2]), figure.add_subplot(gs[0, 3])
         axis10, axis11, axis12, axis13 = figure.add_subplot(gs[1, 0]), figure.add_subplot(gs[1, 1]), figure.add_subplot(gs[1, 2]), figure.add_subplot(
             gs[1, 3])
+        for axis in [axis02, axis03]:
+            plot_tools.set_axis(axis, xlim=[-0.99, 1.01], ylim=[-1, 7], aspect=None, which='major')
+        axis02.set_ylabel(r'$\mathrm{PDF}$', size=16)
+        axis03.set_yticklabels([])
+        axis03.set_xticklabels([])
         plot_tools.set_axis(axis10, ylim=[0, 1], xlabel=r'$\mathrm{PDF}$', ylabel=r'$\mathrm{D/T_{\Delta \theta<30\degree}}$', aspect=None,
                             which='major')
         plot_tools.set_axis(axis11, xlim=[9e-1, 2e2], ylim=[0, 1], xlabel=r'$\mathrm{N_{satellites}}$', aspect=None, which='major')
@@ -100,18 +105,18 @@ class DTTVsEnvironment:
 
         # Plot the angle between the angular momentum of gaseous and stellar components and disc and spheroid #
         axes = [axis12, axis13]
-        axescbar = [axis02, axis03]
+        axes_hist = [axis02, axis03]
         x_attributes = [angle_components, angle]
-        for axis, axiscbar, x_attribute in zip(axes, axescbar, x_attributes):
-            hb = axis.hexbin(x_attribute, glx_disc_fractions_IT20, bins='log', cmap='terrain_r')
-            plot_tools.create_colorbar(axiscbar, hb, r'$\mathrm{Counts\;per\;hexbin}$', 'horizontal')
+        for axis, axis_hist, x_attribute in zip(axes, axes_hist, x_attributes):
+            axis.scatter(x_attribute, glx_disc_fractions_IT20, color='black')
+            axis_hist.hist(x_attribute, density=True, bins=20, histtype='step', color='black')
 
             # Plot median and 1-sigma lines #
             x_value, median, shigh, slow = plot_tools.binned_median_1sigma(x_attribute, glx_disc_fractions_IT20, bin_type='equal_width', n_bins=25,
                                                                            log=False)
-            median, = axis.plot(x_value, median, color='black', linewidth=3)
-            axis.fill_between(x_value, shigh, slow, color='black', alpha='0.3')
-            fill, = plt.fill(np.NaN, np.NaN, color='black', alpha=0.3)
+            median, = axis.plot(x_value, median, color='darkturquoise', linewidth=3)
+            axis.fill_between(x_value, shigh, slow, color='darkturquoise', alpha='0.3')
+            fill, = plt.fill(np.NaN, np.NaN, color='darkturquoise', alpha=0.3)
 
         # Plot a histogram of the disc to total ratio for centrals and satellites #
         centrals_mask, = np.where(subgroup_numbers == 0)
