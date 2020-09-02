@@ -311,7 +311,7 @@ class RAEl:
         angular_theta_from_densest = np.arccos(
             np.sin(lat_densest) * np.sin(np.arcsin(prc_unit_vector[:, 2])) + np.cos(lat_densest) * np.cos(np.arcsin(prc_unit_vector[:, 2])) * np.cos(
                 lon_densest - np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0])))  # In radians.
-        disc_mask = np.where(angular_theta_from_densest < np.divide(np.pi, 6.0))
+        disc_mask = np.where(angular_theta_from_densest < (np.pi / 6.0))
         disc_fraction_IT20 = np.divide(np.sum(stellar_data_tmp['Mass'][disc_mask]), np.sum(stellar_data_tmp['Mass']))
 
         # Plot the 2D surface density projection #

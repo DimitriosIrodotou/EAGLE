@@ -33,8 +33,8 @@ class SampleSpatialDistribution:
         :param simulation_path: simulation directory.
         :param tag: redshift directory.
         """
-        group_numbers = [25, 18, 2, 14]
         group_numbers = [34, 3, 5, 20]
+        group_numbers = [25, 39, 18, 14]
 
         # Generate the figure and define its parameters #
         plt.close()

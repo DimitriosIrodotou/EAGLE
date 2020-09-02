@@ -33,14 +33,14 @@ class SampleMultipleDecomposition:
         :param simulation_path: simulation directory.
         :param tag: redshift directory.
         """
-        group_numbers = [25, 18, 2, 14]
-        # group_numbers = [34 , 3, 5, 20]
+        group_numbers = [34 , 3, 5, 20]
+        group_numbers = [25, 39, 18, 14]
 
         # Generate the figure and define its parameters #
         plt.close()
         figure = plt.figure(figsize=(20, 20))
 
-        gs = gridspec.GridSpec(4, 4, wspace=0.3, hspace=0.3)
+        gs = gridspec.GridSpec(4, 4, wspace=0.4, hspace=0.4)
         axis00, axis01, axis02, axis03 = figure.add_subplot(gs[0, 0], projection='mollweide'), figure.add_subplot(gs[0, 1]), figure.add_subplot(
             gs[0, 2]), figure.add_subplot(gs[0, 3])
         axis10, axis11, axis12, axis13 = figure.add_subplot(gs[1, 0], projection='mollweide'), figure.add_subplot(gs[1, 1]), figure.add_subplot(

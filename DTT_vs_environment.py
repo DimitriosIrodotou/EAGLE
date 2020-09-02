@@ -79,34 +79,34 @@ class DTTVsEnvironment:
         axis10, axis11, axis12, axis13 = figure.add_subplot(gs[1, 0]), figure.add_subplot(gs[1, 1]), figure.add_subplot(gs[1, 2]), figure.add_subplot(
             gs[1, 3])
         for axis in [axis02, axis03]:
-            plot_tools.set_axis(axis, xlim=[-0.99, 1.01], ylim=[-1, 7], aspect=None, which='major')
+            plot_tools.set_axis(axis, xlim=[-1.15, 1.15], ylim=[-1, 7], aspect=None, which='major')
         axis02.set_ylabel(r'$\mathrm{PDF}$', size=16)
         axis03.set_yticklabels([])
         axis03.set_xticklabels([])
         plot_tools.set_axis(axis10, ylim=[0, 1], xlabel=r'$\mathrm{PDF}$', ylabel=r'$\mathrm{D/T_{\Delta \theta<30\degree}}$', aspect=None,
                             which='major')
         plot_tools.set_axis(axis11, xlim=[9e-1, 2e2], ylim=[0, 1], xlabel=r'$\mathrm{N_{satellites}}$', aspect=None, which='major')
-        plot_tools.set_axis(axis12, xlim=[-0.99, 1.01],
+        plot_tools.set_axis(axis12, xlim=[-1.15, 1.15],
                             xlabel=r'$\mathrm{(\vec{J}_{disc}\cdot\vec{J}_{spheroid})/(|\vec{J}_{disc}||\vec{J}_{spheroid}|)}$', ylim=[0, 1],
                             aspect=None, which='major')
-        plot_tools.set_axis(axis13, xlim=[-0.99, 1.01],
+        plot_tools.set_axis(axis13, xlim=[-1.15, 1.15],
                             xlabel=r'$\mathrm{(\vec{J}_{\bigstar}\cdot\vec{J}_{gas})/(|\vec{J}_{\bigstar}||\vec{J}_{gas}|)}$', ylim=[0, 1],
                             aspect=None, which='major')
         for axis in [axis11, axis12, axis13]:
             axis.set_yticklabels([])
 
-        # Calculate the cosine of angle between gaseous and stellar components #
-        angle = np.divide(np.sum(glx_stellar_angular_momenta * glx_gaseous_angular_momenta, axis=1),
+        # Calculate the cosine of the angle between gaseous and stellar components #
+        cos_angle = np.divide(np.sum(glx_stellar_angular_momenta * glx_gaseous_angular_momenta, axis=1),
                           np.linalg.norm(glx_stellar_angular_momenta, axis=1) * np.linalg.norm(glx_gaseous_angular_momenta, axis=1))
 
         # Calculate the cosine of angle between disc and spheroid components #
-        angle_components = np.divide(np.sum(disc_stellar_angular_momenta * spheroid_stellar_angular_momenta, axis=1),
+        cos_angle_components = np.divide(np.sum(disc_stellar_angular_momenta * spheroid_stellar_angular_momenta, axis=1),
                                      np.linalg.norm(disc_stellar_angular_momenta, axis=1) * np.linalg.norm(spheroid_stellar_angular_momenta, axis=1))
 
-        # Plot the angle between the angular momentum of gaseous and stellar components and disc and spheroid #
+        # Plot the cosinne of the angle between the angular momentum of gaseous and stellar components and disc and spheroid #
         axes = [axis12, axis13]
         axes_hist = [axis02, axis03]
-        x_attributes = [angle_components, angle]
+        x_attributes = [cos_angle_components, cos_angle]
         for axis, axis_hist, x_attribute in zip(axes, axes_hist, x_attributes):
             axis.scatter(x_attribute, glx_disc_fractions_IT20, color='black')
             axis_hist.hist(x_attribute, density=True, bins=20, histtype='step', color='black')
