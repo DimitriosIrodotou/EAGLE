@@ -73,7 +73,7 @@ class DTTVsEnvironment:
         :return: None
         """
         # Generate the figure and define its parameters #
-        figure = plt.figure(figsize=(25, 7.5))
+        figure = plt.figure(figsize=(25, 9))
         gs = gridspec.GridSpec(2, 4, wspace=0.0, hspace=0.0, height_ratios=[0.5, 1])
         axis02, axis03 = figure.add_subplot(gs[0, 2]), figure.add_subplot(gs[0, 3])
         axis10, axis11, axis12, axis13 = figure.add_subplot(gs[1, 0]), figure.add_subplot(gs[1, 1]), figure.add_subplot(gs[1, 2]), figure.add_subplot(
@@ -83,7 +83,7 @@ class DTTVsEnvironment:
         axis02.set_ylabel(r'$\mathrm{PDF}$', size=16)
         axis03.set_yticklabels([])
         axis03.set_xticklabels([])
-        plot_tools.set_axis(axis10, ylim=[0, 1], xlabel=r'$\mathrm{PDF}$', ylabel=r'$\mathrm{D/T_{\Delta \theta<30\degree}}$', aspect=None,
+        plot_tools.set_axis(axis10, xlim=[0, 2.7], ylim=[0, 1], xlabel=r'$\mathrm{PDF}$', ylabel=r'$\mathrm{D/T_{\Delta \theta<30\degree}}$', aspect=None,
                             which='major')
         plot_tools.set_axis(axis11, xlim=[9e-1, 2e2], ylim=[0, 1], xlabel=r'$\mathrm{N_{satellites}}$', aspect=None, which='major')
         plot_tools.set_axis(axis12, xlim=[-1.15, 1.15],

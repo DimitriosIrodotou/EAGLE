@@ -9,6 +9,7 @@ import access_database
 matplotlib.use('Agg')
 
 import numpy as np
+import healpy as hlp
 import seaborn as sns
 import matplotlib.cbook
 import astropy.units as u
@@ -278,13 +279,21 @@ class RAEl:
         el = np.degrees(np.arcsin(prc_unit_vector[:, 2]))
 
         # Plot a HEALPix histogram #
-        nside = 2 ** 5  # Define the resolution of the grid (number of divisions along the side of a base-resolution pixel).
+        nside = 2 ** 4  # Define the resolution of the grid (number of divisions along the side of a base-resolution pixel).
         hp = HEALPix(nside=nside)  # Initialise the HEALPix pixellisation class.
         indices = hp.lonlat_to_healpix(ra * u.deg, el * u.deg)  # Create list of HEALPix indices from particles' ra and el.
-        density = np.bincount(indices, minlength=hp.npix)  # Count number of points in each HEALPix pixel.
+        densities = np.bincount(indices, minlength=hp.npix)  # Count number of points in each HEALPix pixel.
+
+        # Perform a top-hat smoothing on the densities #
+        smoothed_densities = []
+        # Loop over all data points #
+        for i in range(len(densities)):
+            a = hlp.query_disc(nside, hlp.pix2vec(nside, i), np.pi / 6.0)  # Do a 30degree cone search around each grid cell.
+            smoothed_densities.append(np.mean(densities[a]))  # Average the densities of the ones inside.
+        smoothed_densities = np.array(smoothed_densities)  # Assign this averaged value to the central grid cell.
 
         # Find location of density maximum and plot its positions and the ra and el of the galactic angular momentum #
-        index_densest = np.argmax(density)
+        index_densest = np.argmax(smoothed_densities)
         lon_densest = (hp.healpix_to_lonlat([index_densest])[0].value + np.pi) % (2 * np.pi) - np.pi
         lat_densest = (hp.healpix_to_lonlat([index_densest])[1].value + np.pi / 2) % (2 * np.pi) - np.pi / 2
         axis00.annotate(r'Density maximum', xy=(lon_densest, lat_densest), xycoords='data', xytext=(0.78, 1.00), textcoords='axes fraction',
@@ -299,7 +308,7 @@ class RAEl:
 
         # Find density at each coordinate position #
         coordinate_index = hp.lonlat_to_healpix(ra_grid, el_grid)
-        density_map = density[coordinate_index]
+        density_map = densities[coordinate_index]
 
         # Display data on a 2D regular raster and create a pseudo-color plot #
         im = axis00.imshow(density_map, cmap='nipy_spectral_r', aspect='auto', norm=matplotlib.colors.LogNorm(vmin=1))

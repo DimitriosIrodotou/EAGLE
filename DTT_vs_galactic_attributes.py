@@ -99,7 +99,7 @@ class DiscToTotalVsGalacticAttributes:
             # Plot median and 1-sigma lines #
             x_value, median, shigh, slow = plot_tools.binned_median_1sigma(x_attribute, y_attribute, bin_type='equal_width', n_bins=15, log=True)
             median, = axis.plot(x_value, median, color='black', linewidth=3)
-            axis.fill_between(x_value, shigh, slow, color='black', alpha='0.3')
+            axis.fill_between(x_value, shigh, slow, color='black', alpha=0.3)
             fill, = plt.fill(np.NaN, np.NaN, color='black', alpha=0.3)
 
         # Read observational data from OG13 and FR18 #

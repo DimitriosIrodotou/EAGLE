@@ -33,7 +33,7 @@ class TestDTT:
         glx_disc_fractions_IT20 = np.load(data_path + 'glx_disc_fractions_IT20.npy')
 
         # Normalise disc fractions #
-        epsilon = 0.25# * (1 - np.cos(np.pi / 6))
+        epsilon = 0.5 * (1 - np.cos(np.pi / 6))
         glx_disc_fractions_IT20_prime = np.divide(1, 1 - epsilon) * (glx_disc_fractions_IT20 - epsilon)
 
         print('Loaded data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
@@ -61,13 +61,12 @@ class TestDTT:
         """
         # Generate the figure and define its parameters #
         figure, axis = plt.subplots(1, figsize=(10, 7.5))
-        plot_tools.set_axis(axis,  xlabel=r'$\mathrm{D/T_{\Delta \theta<30\degree}}$',
-                            ylabel=r'$\mathrm{D/T_{\Delta \theta<30\degree} - D^{\prime}/T^{\prime}}$',aspect=None)
-
+        plot_tools.set_axis(axis, xlim=[0, 1], ylim=[0, 1], xlabel=r'$\mathrm{D/T_{\Delta \theta<30\degree}}$',
+                            ylabel=r'$\mathrm{D^{\prime}/T^{\prime}}$', aspect=None)
 
         # Plot glx_disc_fractions_IT20 versus glx_disc_fractions_IT20_prime #
-        plt.scatter(glx_disc_fractions_IT20,(glx_disc_fractions_IT20_prime), color='black')
-        plt.axvline(x=0.5 * (1 - np.cos(np.pi / 6)), c='blue', lw=3, linestyle='dashed')  # Vertical line at 30 degrees.
+        plt.scatter(glx_disc_fractions_IT20, glx_disc_fractions_IT20_prime, color='black')
+        plt.plot([0,1], [0,1])
 
         # Create the legend, save and close the figure #
         # axis10.legend(loc='upper right', fontsize=12, frameon=False, numpoints=1)

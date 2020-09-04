@@ -4,6 +4,7 @@ import time
 import h5py
 
 import numpy as np
+import healpy as hlp
 import astropy.units as u
 import eagle_IO.eagle_IO.eagle_IO as E
 
@@ -366,8 +367,14 @@ class AddAttributes:
                     stellar_data_tmp['spheroid_weighted_a'] = np.average(component_birth_stellar_formation_time, weights=component_birth_mass,
                                                                          axis=0)  # Expansion factor at birth.
 
-            stellar_data_tmp['disc_mask_IT20_cr'], stellar_data_tmp['spheroid_mask_IT20_cr'] = self.decomposition_IT20_cr(stellar_data_tmp)
-            stellar_data_tmp['disc_fraction_IT20_cr'] = np.sum(stellar_data_tmp['Mass'][stellar_data_tmp['disc_mask_IT20_cr']]) / np.sum(
+            # Calculate galactic attributes #
+            stellar_data_tmp['disc_mask_IT20_cr_strict'], stellar_data_tmp['spheroid_mask_IT20_cr_strict'], stellar_data_tmp[
+                'disc_mask_IT20_cr_all'], \
+            stellar_data_tmp['spheroid_mask_IT20_cr_all'] = self.decomposition_IT20_cr(stellar_data_tmp)
+
+            stellar_data_tmp['disc_fraction_IT20_cr_strict'] = np.sum(
+                stellar_data_tmp['Mass'][stellar_data_tmp['disc_mask_IT20_cr_strict']]) / np.sum(stellar_data_tmp['Mass'])
+            stellar_data_tmp['disc_fraction_IT20_cr_all'] = np.sum(stellar_data_tmp['Mass'][stellar_data_tmp['disc_mask_IT20_cr_all']]) / np.sum(
                 stellar_data_tmp['Mass'])
 
             # Save data in numpy array #
@@ -439,13 +446,21 @@ class AddAttributes:
         el = np.degrees(np.arcsin(prc_unit_vector[:, 2]))
 
         # Plot a HEALPix histogram #
-        nside = 2 ** 5  # Define the resolution of the grid (number of divisions along the side of a base-resolution pixel).
+        nside = 2 ** 4  # Define the resolution of the grid (number of divisions along the side of a base-resolution pixel).
         hp = HEALPix(nside=nside)  # Initialise the HEALPix pixelisation class.
         indices = hp.lonlat_to_healpix(ra * u.deg, el * u.deg)  # Create list of HEALPix indices from particles' ra and el.
-        density = np.bincount(indices, minlength=hp.npix)  # Count number of data points in each HEALPix pixel.
+        densities = np.bincount(indices, minlength=hp.npix)  # Count number of data points in each HEALPix pixel.
+
+        # Perform a top-hat smoothing on the densities #
+        smoothed_densities = []
+        # Loop over all data points #
+        for i in range(len(densities)):
+            a = hlp.query_disc(nside, hlp.pix2vec(nside, i), np.pi / 6.0)  # Do a 30degree cone search around each grid cell.
+            smoothed_densities.append(np.mean(densities[a]))  # Average the densities of the ones inside.
+        smoothed_densities = np.array(smoothed_densities)  # Assign this averaged value to the central grid cell.
 
         # Find location of density maximum #
-        index_densest = np.argmax(density)
+        index_densest = np.argmax(smoothed_densities)
         lon_densest = (hp.healpix_to_lonlat([index_densest])[0].value + np.pi) % (2 * np.pi) - np.pi
         lat_densest = (hp.healpix_to_lonlat([index_densest])[1].value + np.pi / 2) % (2 * np.pi) - np.pi / 2
 
@@ -470,9 +485,9 @@ class AddAttributes:
     def decomposition_IT20_cr(stellar_data_tmp):
         """
         Find the particles that belong to the disc and spheroid based on the IT20 method and assign to the disc also particles with Delta Theta>150
-        degrees in galaxies with counter rotating components (150<angle<210)
+        degrees in galaxies with counter rotating components (150<angle<210) and in all
         :param stellar_data_tmp: from read_add_attributes.py.
-        :return: disc_mask_IT20_cr, spheroid_mask_IT20_cr
+        :return: disc_mask_IT20_cr_strict, spheroid_mask_IT20_cr_strict, disc_mask_IT20_cr_all, spheroid_mask_IT20_cr_all
         """
         # Calculate the angular momentum for each particle and for the galaxy and the unit vector parallel to the galactic angular momentum vector #
         prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
@@ -488,13 +503,21 @@ class AddAttributes:
         el = np.degrees(np.arcsin(prc_unit_vector[:, 2]))
 
         # Plot a HEALPix histogram #
-        nside = 2 ** 5  # Define the resolution of the grid (number of divisions along the side of a base-resolution pixel).
+        nside = 2 ** 4  # Define the resolution of the grid (number of divisions along the side of a base-resolution pixel).
         hp = HEALPix(nside=nside)  # Initialise the HEALPix pixelisation class.
         indices = hp.lonlat_to_healpix(ra * u.deg, el * u.deg)  # Create list of HEALPix indices from particles' ra and el.
-        density = np.bincount(indices, minlength=hp.npix)  # Count number of data points in each HEALPix pixel.
+        densities = np.bincount(indices, minlength=hp.npix)  # Count number of data points in each HEALPix pixel.
+
+        # Perform a top-hat smoothing on the densities #
+        smoothed_densities = []
+        # Loop over all data points #
+        for i in range(len(densities)):
+            a = hlp.query_disc(nside, hlp.pix2vec(nside, i), np.pi / 6.0)  # Do a 30degree cone search around each grid cell.
+            smoothed_densities.append(np.mean(densities[a]))  # Average the densities of the ones inside.
+        smoothed_densities = np.array(smoothed_densities)  # Assign this averaged value to the central grid cell.
 
         # Find location of density maximum #
-        index_densest = np.argmax(density)
+        index_densest = np.argmax(smoothed_densities)
         lon_densest = (hp.healpix_to_lonlat([index_densest])[0].value + np.pi) % (2 * np.pi) - np.pi
         lat_densest = (hp.healpix_to_lonlat([index_densest])[1].value + np.pi / 2) % (2 * np.pi) - np.pi / 2
 
@@ -511,14 +534,18 @@ class AddAttributes:
 
         # If the components are counter-rotating (cos_angle_components<cos(150)) then assign to the disc particles with
         # angular_theta_from_densest>150deg as well #
-        if cos_angle_components < np.cos(5 * (np.pi / 6.0)):
-            disc_mask_IT20_cr, = np.where((angular_theta_from_densest < (np.pi / 6.0)) | (angular_theta_from_densest > 5 * (np.pi / 6.0)))
-            spheroid_mask_IT20_cr, = np.where((angular_theta_from_densest > (np.pi / 6.0)) | (angular_theta_from_densest < 5 * (np.pi / 6.0)))
+        if cos_angle_components < np.cos(17 * (np.pi / 18.0)):
+            disc_mask_IT20_cr_strict, = np.where((angular_theta_from_densest < (np.pi / 6.0)) | (angular_theta_from_densest > 5 * (np.pi / 6.0)))
+            spheroid_mask_IT20_cr_strict, = np.where((angular_theta_from_densest > (np.pi / 6.0)) | (angular_theta_from_densest < 5 * (np.pi / 6.0)))
         else:
-            disc_mask_IT20_cr, = np.where(angular_theta_from_densest < (np.pi / 6.0))
-            spheroid_mask_IT20_cr, = np.where(angular_theta_from_densest > (np.pi / 6.0))
+            disc_mask_IT20_cr_strict, = np.where(angular_theta_from_densest < (np.pi / 6.0))
+            spheroid_mask_IT20_cr_strict, = np.where(angular_theta_from_densest > (np.pi / 6.0))
 
-        return disc_mask_IT20_cr, spheroid_mask_IT20_cr
+        # Assign to the disc particles with angular_theta_from_densest>150deg as well #
+        disc_mask_IT20_cr_all, = np.where((angular_theta_from_densest < (np.pi / 6.0)) | (angular_theta_from_densest > 5 * (np.pi / 6.0)))
+        spheroid_mask_IT20_cr_all, = np.where((angular_theta_from_densest > (np.pi / 6.0)) | (angular_theta_from_densest < 5 * (np.pi / 6.0)))
+
+        return disc_mask_IT20_cr_strict, spheroid_mask_IT20_cr_strict, disc_mask_IT20_cr_all, spheroid_mask_IT20_cr_all
 
 
     @staticmethod
@@ -732,8 +759,14 @@ class AppendAttributes:
         glx_stellar_angular_momenta, glx_stellar_masses, glx_concentration_indices, glx_kappas_corotation, glx_disc_fractions_IT20, \
         glx_disc_fractions, glx_circularities, glx_rotationals_over_dispersions, glx_Sersic_indices, glx_scale_lengths, glx_effective_radii, \
         glx_disk_fraction_profiles, glx_n_particles, glx_fitting_flags, glx_delta_thetas, glx_delta_rs, glx_deltas, glx_sigma_0s, glx_rotationals, \
-        glx_as, glx_CoP_flags, glx_sigma_0s_re, glx_rotationals_re, glx_disc_fractions_IT20_cr = [], [], [], [], [], [], [], [], [], [], [], [], \
-                                                                                                 [], [], [], [], [], [], [], [], [], [], [], []
+        glx_as, glx_CoP_flags, glx_sigma_0s_re, glx_rotationals_re, glx_disc_fractions_IT20_cr_all, glx_disc_fractions_IT20_cr_strict = [], [], [],\
+                                                                                                                                        [], [], [],\
+                                                                                                                                        [], [], [],\
+                                                                                                                                        [], [], [],\
+                                                                                                                                        [], [], [],\
+                                                                                                                                        [], [], [],\
+                                                                                                                                        [], [], [],\
+                                                                                                                                        [], [], [], []
         glx_gaseous_angular_momenta, glx_gaseous_masses, glx_star_formings, glx_non_star_formings, glx_star_formation_rates = [], [], [], [], []
         bh_masses = []
         dark_matter_masses = []
@@ -795,10 +828,11 @@ class AppendAttributes:
             glx_kappas_corotation.append(stellar_data_tmp['kappa_corotation'])
             glx_rotationals_re.append(stellar_data_tmp['rotational_velocity_re'])
             glx_disc_fractions_IT20.append(stellar_data_tmp['disc_fraction_IT20'])
-            glx_disc_fractions_IT20_cr.append(stellar_data_tmp['disc_fraction_IT20_cr'])
             glx_disk_fraction_profiles.append(stellar_data_tmp['disk_fraction_profile'])
+            glx_disc_fractions_IT20_cr_all.append(stellar_data_tmp['disc_fraction_IT20_cr_all'])
             glx_stellar_angular_momenta.append(stellar_data_tmp['glx_stellar_angular_momentum'])
             glx_rotationals_over_dispersions.append(stellar_data_tmp['rotational_over_dispersion'])
+            glx_disc_fractions_IT20_cr_strict.append(stellar_data_tmp['disc_fraction_IT20_cr_strict'])
 
             glx_gaseous_masses.append(np.sum(gaseous_data_tmp['Mass']))
             glx_star_formation_rates.append(np.sum(gaseous_data_tmp['StarFormationRate']))
@@ -838,11 +872,11 @@ class AppendAttributes:
             print('–––––––––––––––––––––––––––––––––––––––––––––')
 
         # Save data in numpy array #
-        box_data_tmp = np.load(data_path + 'box_data.npy')
-        box_data_tmp = box_data_tmp.item()
-        CoP_flags = self.CoP_flags(CoPs, box_data_tmp, glx_stellar_masses)
-        np.save(data_path + 'CoPs', CoPs)
-        np.save(data_path + 'CoP_flags', CoP_flags)
+        # box_data_tmp = np.load(data_path + 'box_data.npy')
+        # box_data_tmp = box_data_tmp.item()
+        # CoP_flags = self.CoP_flags(CoPs, box_data_tmp, glx_stellar_masses)
+        # np.save(data_path + 'CoPs', CoPs)
+        # np.save(data_path + 'CoP_flags', CoP_flags)
         np.save(data_path + 'group_numbers', group_numbers)
         np.save(data_path + 'subgroup_numbers', subgroup_numbers)
 
@@ -865,10 +899,11 @@ class AppendAttributes:
         np.save(data_path + 'glx_kappas_corotation', glx_kappas_corotation)
         np.save(data_path + 'glx_disc_fractions_IT20', glx_disc_fractions_IT20)
         np.save(data_path + 'glx_concentration_indices', glx_concentration_indices)
-        np.save(data_path + 'glx_disc_fractions_IT20_cr', glx_disc_fractions_IT20_cr)
         np.save(data_path + 'glx_disk_fraction_profiles', glx_disk_fraction_profiles)
         np.save(data_path + 'glx_stellar_angular_momenta', glx_stellar_angular_momenta)
+        np.save(data_path + 'glx_disc_fractions_IT20_cr_all', glx_disc_fractions_IT20_cr_all)
         np.save(data_path + 'glx_rotationals_over_dispersions', glx_rotationals_over_dispersions)
+        np.save(data_path + 'glx_disc_fractions_IT20_cr_strict', glx_disc_fractions_IT20_cr_strict)
 
         np.save(data_path + 'glx_star_forming', glx_star_formings)
         np.save(data_path + 'glx_gaseous_masses', glx_gaseous_masses)

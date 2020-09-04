@@ -42,6 +42,15 @@ class DiscToTotalCRVsMorphologicalParameters:
         print('Loaded data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
 
+        glx_group_numbers = np.load(data_path + 'group_numbers.npy')
+        glx_subgroup_numbers = np.load(data_path + 'subgroup_numbers.npy')
+        print(len(np.where(glx_disc_fractions_IT20_cr > glx_disc_fractions_IT20)[0]))
+        print(glx_group_numbers[glx_disc_fractions_IT20_cr > 2 * glx_disc_fractions_IT20])
+        print(glx_subgroup_numbers[glx_disc_fractions_IT20_cr > 2 * glx_disc_fractions_IT20])
+        print(glx_disc_fractions_IT20_cr[glx_disc_fractions_IT20_cr > 2 * glx_disc_fractions_IT20])
+        print(glx_disc_fractions_IT20[glx_disc_fractions_IT20_cr > 2 * glx_disc_fractions_IT20])
+        print(np.max(glx_disc_fractions_IT20_cr[glx_disc_fractions_IT20_cr > 2 * glx_disc_fractions_IT20] - glx_disc_fractions_IT20[glx_disc_fractions_IT20_cr > 2 * glx_disc_fractions_IT20]))
+
         # Plot the data #
         start_local_time = time.time()  # Start the local time.
 
@@ -104,7 +113,8 @@ class DiscToTotalCRVsMorphologicalParameters:
             fill, = plt.fill(np.NaN, np.NaN, color='black', alpha=0.3)
 
             axis.axvline(x=threshold, c='tab:red')  # Plot threshold lines.
-        axis10.plot([0,1],[0,2])
+        axis10.plot([0, 1], [0, 2], c='tab:green')
+
         # Create the legends, save and close the figure #
         axis11.legend([median], [r'$\mathrm{Median}$'], frameon=False, fontsize=16, loc='upper right')
         axis12.legend([fill], [r'$\mathrm{16^{th}-84^{th}\;\%ile}$'], frameon=False, fontsize=16, loc='upper left')

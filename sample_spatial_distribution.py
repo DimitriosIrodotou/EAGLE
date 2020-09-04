@@ -8,6 +8,7 @@ import plot_tools
 matplotlib.use('Agg')
 
 import numpy as np
+import healpy as hlp
 import matplotlib.cbook
 import astropy.units as u
 import matplotlib.pyplot as plt
@@ -33,8 +34,8 @@ class SampleSpatialDistribution:
         :param simulation_path: simulation directory.
         :param tag: redshift directory.
         """
-        group_numbers = [34, 3, 5, 20]
-        group_numbers = [25, 39, 18, 14]
+        group_numbers = [39, 25, 18, 14]
+        group_numbers = [2, 3, 5, 20]
 
         # Generate the figure and define its parameters #
         plt.close()
@@ -112,13 +113,21 @@ class SampleSpatialDistribution:
         dec = np.degrees(np.arcsin(prc_unit_vector[:, 2]))
 
         # Plot a HEALPix histogram #
-        nside = 2 ** 5  # Define the resolution of the grid (number of divisions along the side of a base-resolution pixel).
+        nside = 2 ** 4  # Define the resolution of the grid (number of divisions along the side of a base-resolution pixel).
         hp = HEALPix(nside=nside)  # Initialise the HEALPix pixelisation class.
         indices = hp.lonlat_to_healpix(ra * u.deg, dec * u.deg)  # Create list of HEALPix indices from particles' ra and dec.
-        density = np.bincount(indices, minlength=hp.npix)  # Count number of data points in each HEALPix pixel.
+        densities = np.bincount(indices, minlength=hp.npix)  # Count number of data points in each HEALPix pixel.
+
+        # Perform a top-hat smoothing on the densities #
+        smoothed_densities = []
+        # Loop over all data points #
+        for i in range(len(densities)):
+            a = hlp.query_disc(nside, hlp.pix2vec(nside, i), np.pi / 6.0)  # Do a 30degree cone search around each grid cell.
+            smoothed_densities.append(np.mean(densities[a]))  # Average the densities of the ones inside.
+        smoothed_densities = np.array(smoothed_densities)  # Assign this averaged value to the central grid cell.
 
         # Find location of density maximum and plot its positions and the ra (lon) and dec (lat) of the galactic angular momentum #
-        index_densest = np.argmax(density)
+        index_densest = np.argmax(smoothed_densities)
         lon_densest = (hp.healpix_to_lonlat([index_densest])[0].value + np.pi) % (2 * np.pi) - np.pi
         lat_densest = (hp.healpix_to_lonlat([index_densest])[1].value + np.pi / 2) % (2 * np.pi) - np.pi / 2
 
