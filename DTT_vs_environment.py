@@ -40,6 +40,10 @@ class DTTVsEnvironment:
         glx_gaseous_angular_momenta = np.load(data_path + 'glx_gaseous_angular_momenta.npy')
         disc_stellar_angular_momenta = np.load(data_path + 'disc_stellar_angular_momenta.npy')
         spheroid_stellar_angular_momenta = np.load(data_path + 'spheroid_stellar_angular_momenta.npy')
+
+        # Normalise disc fractions #
+        epsilon = 0.5 * (1 - np.cos(np.pi / 6))
+        glx_disc_fractions_IT20 = np.divide(1, 1 - epsilon) * (glx_disc_fractions_IT20 - epsilon)
         print('Loaded data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
 
@@ -115,7 +119,7 @@ class DTTVsEnvironment:
             x_value, median, shigh, slow = plot_tools.binned_median_1sigma(x_attribute, glx_disc_fractions_IT20, bin_type='equal_width', n_bins=25,
                                                                            log=False)
             median, = axis.plot(x_value, median, color='darkturquoise', linewidth=3)
-            axis.fill_between(x_value, shigh, slow, color='darkturquoise', alpha='0.3')
+            axis.fill_between(x_value, shigh, slow, color='darkturquoise', alpha=0.3)
             fill, = plt.fill(np.NaN, np.NaN, color='darkturquoise', alpha=0.3)
 
         # Plot a histogram of the disc to total ratio for centrals and satellites #

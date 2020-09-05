@@ -38,6 +38,10 @@ class DiscToTotalVsMorphologicalParameters:
         glx_kappas_corotation = np.load(data_path + 'glx_kappas_corotation.npy')
         glx_disc_fractions_IT20 = np.load(data_path + 'glx_disc_fractions_IT20.npy')
         glx_rotationals_over_dispersions = np.load(data_path + 'glx_rotationals_over_dispersions.npy')
+
+        # Normalise disc fractions #
+        epsilon = 0.5 * (1 - np.cos(np.pi / 6))
+        glx_disc_fractions_IT20 = np.divide(1, 1 - epsilon) * (glx_disc_fractions_IT20 - epsilon)
         print('Loaded data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
 
@@ -95,7 +99,7 @@ class DiscToTotalVsMorphologicalParameters:
             x_value, median, shigh, slow = plot_tools.binned_median_1sigma(x_attribute, glx_disc_fractions_IT20, bin_type='equal_width', n_bins=20,
                                                                            log=False)
             median, = axis.plot(x_value, median, color='black', linewidth=3)
-            axis.fill_between(x_value, shigh, slow, color='black', alpha='0.3')
+            axis.fill_between(x_value, shigh, slow, color='black', alpha=0.3)
             fill, = plt.fill(np.NaN, np.NaN, color='black', alpha=0.3)
 
             axis.axvline(x=threshold, c='tab:red')  # Plot threshold lines.
