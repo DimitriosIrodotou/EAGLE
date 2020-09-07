@@ -32,6 +32,10 @@ class ComponentBetaVsDTT:
 
         spheroid_deltas = np.load(data_path + 'spheroid_betas.npy')
         glx_disc_fractions_IT20 = np.load(data_path + 'glx_disc_fractions_IT20.npy')
+
+        # Normalise disc fractions #
+        epsilon = 0.5 * (1 - np.cos(np.pi / 6))
+        glx_disc_fractions_IT20 = np.divide(1, 1 - epsilon) * (glx_disc_fractions_IT20 - epsilon)
         print('Loaded data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
 
@@ -53,7 +57,7 @@ class ComponentBetaVsDTT:
         Plot the component delta as a function of disc to total ratio colour-coded by galaxy's delta.
         :param spheroid_deltas: defined as the anisotropy parameter for the spheroid component.
         :param glx_disc_fractions_IT20: where the disc consists of particles whose angular momentum angular separation is 30deg from the densest
-        pixel.
+        grid cell.
         :return: None
         """
         # Generate the figure and define its parameters #

@@ -271,7 +271,7 @@ class RAEl:
 
         # Rotate coordinates and velocities of stellar particles so the galactic angular momentum points along the x axis #
         glx_unit_vector = np.divide(glx_angular_momentum, np.linalg.norm(glx_angular_momentum))
-        stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_unit_vector, glx_unit_vector = RotateCoordinates.rotate_X(stellar_data_tmp,
+        coordinates, stellar_data_tmp['Velocity'], prc_unit_vector, glx_unit_vector = RotateCoordinates.rotate_X(stellar_data_tmp,
             glx_unit_vector)
 
         # Calculate the ra and el of the (unit vector of) angular momentum for each particle #
@@ -279,17 +279,17 @@ class RAEl:
         el = np.degrees(np.arcsin(prc_unit_vector[:, 2]))
 
         # Plot a HEALPix histogram #
-        nside = 2 ** 4  # Define the resolution of the grid (number of divisions along the side of a base-resolution pixel).
+        nside = 2 ** 4  # Define the resolution of the grid (number of divisions along the side of a base-resolution grid cell).
         hp = HEALPix(nside=nside)  # Initialise the HEALPix pixellisation class.
         indices = hp.lonlat_to_healpix(ra * u.deg, el * u.deg)  # Create list of HEALPix indices from particles' ra and el.
-        densities = np.bincount(indices, minlength=hp.npix)  # Count number of points in each HEALPix pixel.
+        densities = np.bincount(indices, minlength=hp.npix)  # Count number of points in each HEALPix grid cell.
 
         # Perform a top-hat smoothing on the densities #
         smoothed_densities = []
-        # Loop over all data points #
-        for i in range(len(densities)):
-            a = hlp.query_disc(nside, hlp.pix2vec(nside, i), np.pi / 6.0)  # Do a 30degree cone search around each grid cell.
-            smoothed_densities.append(np.mean(densities[a]))  # Average the densities of the ones inside.
+        # Loop over all grid cells #
+        for i in range(hp.npix):
+            mask = hlp.query_disc(nside, hlp.pix2vec(nside, i), np.pi / 6.0) # Do a 30degree cone search around each grid cell.
+            smoothed_densities.append(np.mean(densities[mask]))  # Average the densities of the ones inside.
         smoothed_densities = np.array(smoothed_densities)  # Assign this averaged value to the central grid cell.
 
         # Find location of density maximum and plot its positions and the ra and el of the galactic angular momentum #
@@ -297,7 +297,7 @@ class RAEl:
         lon_densest = (hp.healpix_to_lonlat([index_densest])[0].value + np.pi) % (2 * np.pi) - np.pi
         lat_densest = (hp.healpix_to_lonlat([index_densest])[1].value + np.pi / 2) % (2 * np.pi) - np.pi / 2
         axis00.annotate(r'Density maximum', xy=(lon_densest, lat_densest), xycoords='data', xytext=(0.78, 1.00), textcoords='axes fraction',
-            arrowprops=dict(arrowstyle='-', color='black', connectionstyle='arc3,rad=0'))  # Position of the densest pixel.
+            arrowprops=dict(arrowstyle='-', color='black', connectionstyle='arc3,rad=0'))  # Position of the densest grid cell.
         axis00.scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=300, color='black',
             marker='X')  # Position of the galactic angular momentum.
 
@@ -316,7 +316,7 @@ class RAEl:
         cbar.set_label('$\mathrm{Particles\; per\; grid\; cell}$')
         axis00.pcolormesh(np.radians(ra), np.radians(el), density_map, cmap='nipy_spectral_r')
 
-        # Calculate disc mass fraction as the mass within 30 degrees from the densest pixel #
+        # Calculate the disc mass fraction as the mass within 30 degrees from the densest grid cell #
         angular_theta_from_densest = np.arccos(
             np.sin(lat_densest) * np.sin(np.arcsin(prc_unit_vector[:, 2])) + np.cos(lat_densest) * np.cos(np.arcsin(prc_unit_vector[:, 2])) * np.cos(
                 lon_densest - np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0])))  # In radians.
@@ -366,7 +366,7 @@ class RAEl:
 
         # Calculate and plot the bar strength from Fourier modes of surface density as a function of radius plot #
         nbins = 40  # Number of radial bins.
-        r = np.sqrt(stellar_data_tmp['Coordinates'][:, 2] ** 2 + stellar_data_tmp['Coordinates'][:, 1] ** 2)  # Radius of each particle.
+        r = np.sqrt(coordinates[:, 2] ** 2 + coordinates[:, 1] ** 2)  # Radius of each particle.
 
         # Initialise Fourier components #
         r_m = np.zeros(nbins)

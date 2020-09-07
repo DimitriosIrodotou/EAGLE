@@ -35,10 +35,11 @@ class SampleMultipleDecomposition:
         :param tag: redshift directory.
         """
         group_numbers = [39, 25, 18, 14]
-        group_numbers = [10   ,24,  107,  181]
-        subgroup_numbers = [1 ,18,  3,  2]
+        group_numbers = [10, 24, 107, 181]
+        subgroup_numbers = [1, 18, 3, 2]
         group_numbers = [2775, 3117, 3411, 4181]
         group_numbers = [2, 3, 5, 20]
+        group_numbers = [16, 22, 45, 70]
 
         # Generate the figure and define its parameters #
         plt.close()
@@ -81,7 +82,7 @@ class SampleMultipleDecomposition:
                 stellar_data_tmp = stellar_data_tmp.item()
                 print('Loaded data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (time.time() - start_local_time))
                 print('–––––––––––––––––––––––––––––––––––––––––––––')
-                print(stellar_data_tmp['disc_fraction_IT20_cr'])
+
                 # Plot the data #
                 start_local_time = time.time()  # Start the local time.
 
@@ -114,7 +115,7 @@ class SampleMultipleDecomposition:
             np.sum(stellar_data_tmp['disc_stellar_angular_momentum'] * stellar_data_tmp['spheroid_stellar_angular_momentum']),
             np.linalg.norm(stellar_data_tmp['disc_stellar_angular_momentum']) * np.linalg.norm(
                 stellar_data_tmp['spheroid_stellar_angular_momentum']))  # In radians.
-        print(np.degrees(np.arccos(cos_angle_components)))
+        # print(np.degrees(np.arccos(cos_angle_components)))
         # Calculate the angular momentum for each particle and for the galaxy and the unit vector parallel to the galactic angular momentum vector #
         prc_angular_momentum = stellar_data_tmp['Mass'][:, np.newaxis] * np.cross(stellar_data_tmp['Coordinates'],
                                                                                   stellar_data_tmp['Velocity'])  # In Msun kpc km s^-1.
@@ -129,20 +130,19 @@ class SampleMultipleDecomposition:
         dec = np.degrees(np.arcsin(prc_unit_vector[:, 2]))
 
         # Plot a HEALPix histogram #
-        nside = 2 ** 4  # Define the resolution of the grid (number of divisions along the side of a base-resolution pixel).
-        hp = HEALPix(nside=nside)  # Initialise the HEALPix pixelisation class.
+        nside = 2 ** 4  # Define the resolution of the grid (number of divisions along the side of a base-resolution grid cell).
+        hp = HEALPix(nside=nside, order='ring')  # Initialise the HEALPix pixelisation class.
         indices = hp.lonlat_to_healpix(ra * u.deg, dec * u.deg)  # Create list of HEALPix indices from particles' ra and dec.
-        densities = np.bincount(indices, minlength=hp.npix)  # Count number of data points in each HEALPix pixel.
+        densities = np.bincount(indices, minlength=hp.npix)  # Count number of data points in each HEALPix grid cell.
 
         # Perform a top-hat smoothing on the densities #
-        smoothed_densities = []
-        # Loop over all data points #
-        for i in range(len(densities)):
-            a = hlp.query_disc(nside, hlp.pix2vec(nside, i), np.pi / 6.0)  # Do a 30degree cone search around each grid cell.
-            smoothed_densities.append(np.mean(densities[a]))  # Average the densities of the ones inside.
-        smoothed_densities = np.array(smoothed_densities)  # Assign this averaged value to the central grid cell.
+        smoothed_densities = np.zeros(hp.npix)
+        # Loop over all grid cells #
+        for i in range(hp.npix):
+            mask = hlp.query_disc(nside, hlp.pix2vec(nside, i), np.pi / 6.0)  # Do a 30degree cone search around each grid cell.
+            smoothed_densities[i] = np.mean(densities[mask])  # Average the densities of the ones inside and assign this value to the grid cell.
 
-        # Find location of density maximum and plot its positions and the ra (lon) and dec (lat) of the galactic angular momentum #
+        # Find the location of density maximum and plot its positions and the ra (lon) and dec (lat) of the galactic angular momentum #
         index_densest = np.argmax(smoothed_densities)
         lon_densest = (hp.healpix_to_lonlat([index_densest])[0].value + np.pi) % (2 * np.pi) - np.pi
         lat_densest = (hp.healpix_to_lonlat([index_densest])[1].value + np.pi / 2) % (2 * np.pi) - np.pi / 2
@@ -150,7 +150,7 @@ class SampleMultipleDecomposition:
                         facecolors='none', zorder=5)  # Position of the galactic angular momentum.
         axes[0].annotate(r'$\mathrm{Density\;maximum}$', xy=(lon_densest, lat_densest), xycoords='data', xytext=(0.2, 1.1),
                          textcoords='axes fraction', arrowprops=dict(arrowstyle='-', color='black', connectionstyle='arc3,rad=0'),
-                         size=20)  # Position of the densest pixel.
+                         size=20)  # Position of the densest grid cell.
 
         # Sample a 360x180 grid in ra/dec #
         ra = np.linspace(-180.0, 180.0, num=360) * u.deg
@@ -167,7 +167,7 @@ class SampleMultipleDecomposition:
         cbar.ax.tick_params(labelsize=20)
         cbar.set_label('$\mathrm{Particles\;per\;grid\;cell}$', size=20)
 
-        # Calculate disc mass fraction as the mass within 30 degrees from the densest pixel #
+        # Calculate the disc mass fraction as the mass within 30 degrees from the densest grid cell #
         angular_theta_from_densest = np.arccos(
             np.sin(lat_densest) * np.sin(np.arcsin(prc_unit_vector[:, 2])) + np.cos(lat_densest) * np.cos(np.arcsin(prc_unit_vector[:, 2])) * np.cos(
                 lon_densest - np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0])))  # In radians.

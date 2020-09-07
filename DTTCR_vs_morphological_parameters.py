@@ -37,27 +37,28 @@ class DiscToTotalCRVsMorphologicalParameters:
         glx_disc_fractions = np.load(data_path + 'glx_disc_fractions.npy')
         glx_kappas_corotation = np.load(data_path + 'glx_kappas_corotation.npy')
         glx_disc_fractions_IT20 = np.load(data_path + 'glx_disc_fractions_IT20.npy')
-        glx_disc_fractions_IT20_cr = np.load(data_path + 'glx_disc_fractions_IT20_cr_strict.npy')
+        glx_disc_fractions_IT20_cr = np.load(data_path + 'glx_disc_fractions_IT20_cr_all.npy')
         glx_rotationals_over_dispersions = np.load(data_path + 'glx_rotationals_over_dispersions.npy')
 
         # Normalise disc fractions #
-        # epsilon = 0.5 * (1 - np.cos(np.pi / 6))
-        # glx_disc_fractions_IT20 = np.divide(1, 1 - epsilon) * (glx_disc_fractions_IT20 - epsilon)
-        # epsilon = (1 - np.cos(np.pi / 6))
-        # glx_disc_fractions_IT20_cr = np.divide(1, 1 - epsilon) * (glx_disc_fractions_IT20_cr - epsilon)
+        epsilon = 0.5 * (1 - np.cos(np.pi / 6))
+        glx_disc_fractions_IT20 = np.divide(1, 1 - epsilon) * (glx_disc_fractions_IT20 - epsilon)
+        epsilon = (1 - np.cos(np.pi / 6))
+        glx_disc_fractions_IT20_cr = np.divide(1, 1 - epsilon) * (glx_disc_fractions_IT20_cr - epsilon)
         print('Loaded data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         print(min(glx_disc_fractions_IT20))
         print(min(glx_disc_fractions_IT20_cr))
-        # glx_group_numbers = np.load(data_path + 'group_numbers.npy')
-        # glx_subgroup_numbers = np.load(data_path + 'subgroup_numbers.npy')
+        glx_group_numbers = np.load(data_path + 'group_numbers.npy')
+        glx_subgroup_numbers = np.load(data_path + 'subgroup_numbers.npy')
         print(len(np.where(glx_disc_fractions_IT20_cr > glx_disc_fractions_IT20)[0]))
-        print(len(np.where(glx_disc_fractions_IT20_cr > 2* glx_disc_fractions_IT20)[0]))
-        # print(glx_group_numbers[glx_disc_fractions_IT20_cr > 2 * glx_disc_fractions_IT20])
-        # print(glx_subgroup_numbers[glx_disc_fractions_IT20_cr > 2 * glx_disc_fractions_IT20])
-        # print(glx_disc_fractions_IT20_cr[glx_disc_fractions_IT20_cr > 2 * glx_disc_fractions_IT20])
-        # print(glx_disc_fractions_IT20[glx_disc_fractions_IT20_cr > 2 * glx_disc_fractions_IT20])
-        # print(np.max(glx_disc_fractions_IT20_cr[glx_disc_fractions_IT20_cr > 2 * glx_disc_fractions_IT20] - glx_disc_fractions_IT20[glx_disc_fractions_IT20_cr > 2 * glx_disc_fractions_IT20]))
+        print(len(np.where(glx_disc_fractions_IT20_cr > 2 * glx_disc_fractions_IT20)[0]))
+        print(glx_group_numbers[glx_disc_fractions_IT20_cr > 2 * glx_disc_fractions_IT20])
+        print(glx_subgroup_numbers[glx_disc_fractions_IT20_cr > 2 * glx_disc_fractions_IT20])
+        print(glx_disc_fractions_IT20_cr[glx_disc_fractions_IT20_cr > 2 * glx_disc_fractions_IT20])
+        print(glx_disc_fractions_IT20[glx_disc_fractions_IT20_cr > 2 * glx_disc_fractions_IT20])
+        print(np.max(glx_disc_fractions_IT20_cr[glx_disc_fractions_IT20_cr > 2 * glx_disc_fractions_IT20] - glx_disc_fractions_IT20[
+            glx_disc_fractions_IT20_cr > 2 * glx_disc_fractions_IT20]))
 
         # Plot the data #
         start_local_time = time.time()  # Start the local time.
@@ -80,7 +81,7 @@ class DiscToTotalCRVsMorphologicalParameters:
         :param glx_disc_fractions: where the spheroid is assumed to have zero net angualr momentum.
         :param glx_kappas_corotation: defined as angular kinetic energy over kinetic energy.
         :param glx_disc_fractions_IT20: where the disc consists of particles whose angular momentum angular separation is 30deg from the densest
-        pixel.
+        grid cell.
         :param glx_circularities: defined as Jz/Jz,max(E).
         :param glx_rotationals_over_dispersions: defined as vrot/sigam
         :param , glx_disc_fractions_IT20_cr: defined as , glx_disc_fractions_IT20 but also includes in the disc counter-rotating structures.

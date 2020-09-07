@@ -104,8 +104,7 @@ class SampleSpatialDistribution:
         """
 
         # Rotate coordinates and velocities of stellar particles so the galactic angular momentum points along the x axis #
-        stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_angular_momentum, glx_angular_momentum = RotateCoordinates.rotate_Jz(
-            stellar_data_tmp)
+        coordinates, velocities, prc_angular_momentum, glx_angular_momentum = RotateCoordinates.rotate_Jz(stellar_data_tmp)
 
         # Calculate the ra and dec of the (unit vector of) angular momentum for each particle #
         prc_unit_vector = prc_angular_momentum / np.linalg.norm(prc_angular_momentum, axis=1)[:, np.newaxis]
@@ -113,25 +112,25 @@ class SampleSpatialDistribution:
         dec = np.degrees(np.arcsin(prc_unit_vector[:, 2]))
 
         # Plot a HEALPix histogram #
-        nside = 2 ** 4  # Define the resolution of the grid (number of divisions along the side of a base-resolution pixel).
+        nside = 2 ** 4  # Define the resolution of the grid (number of divisions along the side of a base-resolution grid cell).
         hp = HEALPix(nside=nside)  # Initialise the HEALPix pixelisation class.
         indices = hp.lonlat_to_healpix(ra * u.deg, dec * u.deg)  # Create list of HEALPix indices from particles' ra and dec.
-        densities = np.bincount(indices, minlength=hp.npix)  # Count number of data points in each HEALPix pixel.
+        densities = np.bincount(indices, minlength=hp.npix)  # Count number of data points in each HEALPix grid cell.
 
         # Perform a top-hat smoothing on the densities #
         smoothed_densities = []
-        # Loop over all data points #
-        for i in range(len(densities)):
-            a = hlp.query_disc(nside, hlp.pix2vec(nside, i), np.pi / 6.0)  # Do a 30degree cone search around each grid cell.
-            smoothed_densities.append(np.mean(densities[a]))  # Average the densities of the ones inside.
+        # Loop over all grid cells #
+        for i in range(hp.npix):
+            mask = hlp.query_disc(nside, hlp.pix2vec(nside, i), np.pi / 6.0)  # Do a 30degree cone search around each grid cell.
+            smoothed_densities.append(np.mean(densities[mask]))  # Average the densities of the ones inside.
         smoothed_densities = np.array(smoothed_densities)  # Assign this averaged value to the central grid cell.
 
-        # Find location of density maximum and plot its positions and the ra (lon) and dec (lat) of the galactic angular momentum #
+        # Find the location of density maximum and plot its positions and the ra (lon) and dec (lat) of the galactic angular momentum #
         index_densest = np.argmax(smoothed_densities)
         lon_densest = (hp.healpix_to_lonlat([index_densest])[0].value + np.pi) % (2 * np.pi) - np.pi
         lat_densest = (hp.healpix_to_lonlat([index_densest])[1].value + np.pi / 2) % (2 * np.pi) - np.pi / 2
 
-        # Calculate disc mass fraction as the mass within 30 degrees from the densest pixel #
+        # Calculate the disc mass fraction as the mass within 30 degrees from the densest grid cell #
         angular_theta_from_densest = np.arccos(
             np.sin(lat_densest) * np.sin(np.arcsin(prc_unit_vector[:, 2])) + np.cos(lat_densest) * np.cos(np.arcsin(prc_unit_vector[:, 2])) * np.cos(
                 lon_densest - np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0])))  # In radians.
@@ -142,25 +141,25 @@ class SampleSpatialDistribution:
         vmin, vmax = 6, 8
 
         cmap = matplotlib.cm.get_cmap('ocean')
-        count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][disc_mask, 0], stellar_data_tmp['Coordinates'][disc_mask, 1],
-                                               weights=weights, bins=500, range=[[-30, 30], [-30, 30]])
+        count, xedges, yedges = np.histogram2d(coordinates[disc_mask, 0], coordinates[disc_mask, 1], weights=weights, bins=500,
+                                               range=[[-30, 30], [-30, 30]])
         im = axes[0].imshow(np.log10(count.T), extent=[-30, 30, -30, 30], origin='lower', cmap=cmap, vmin=vmin, vmax=vmax, rasterized=True,
                             aspect='equal')
 
-        count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][disc_mask, 0], stellar_data_tmp['Coordinates'][disc_mask, 2],
-                                               weights=weights, bins=500, range=[[-30, 30], [-30, 30]])
+        count, xedges, yedges = np.histogram2d(coordinates[disc_mask, 0], coordinates[disc_mask, 2], weights=weights, bins=500,
+                                               range=[[-30, 30], [-30, 30]])
         axes[1].imshow(np.log10(count.T), extent=[-30, 30, -30, 30], origin='lower', cmap=cmap, vmin=vmin, vmax=vmax, rasterized=True, aspect='equal')
 
         # Plot the 2D surface density projection and scatter for the bulge #
         bulge_mask, = np.where(angular_theta_from_densest > (np.pi / 6.0))
 
         weights = stellar_data_tmp['Mass'][bulge_mask]
-        count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][bulge_mask, 0], stellar_data_tmp['Coordinates'][bulge_mask, 1],
-                                               weights=weights, bins=500, range=[[-30, 30], [-30, 30]])
+        count, xedges, yedges = np.histogram2d(coordinates[bulge_mask, 0], coordinates[bulge_mask, 1], weights=weights, bins=500,
+                                               range=[[-30, 30], [-30, 30]])
         axes[2].imshow(np.log10(count.T), extent=[-30, 30, -30, 30], origin='lower', cmap=cmap, vmin=vmin, vmax=vmax, rasterized=True, aspect='equal')
 
-        count, xedges, yedges = np.histogram2d(stellar_data_tmp['Coordinates'][bulge_mask, 0], stellar_data_tmp['Coordinates'][bulge_mask, 2],
-                                               weights=weights, bins=500, range=[[-30, 30], [-30, 30]])
+        count, xedges, yedges = np.histogram2d(coordinates[bulge_mask, 0], coordinates[bulge_mask, 2], weights=weights, bins=500,
+                                               range=[[-30, 30], [-30, 30]])
         axes[3].imshow(np.log10(count.T), extent=[-30, 30, -30, 30], origin='lower', cmap=cmap, vmin=vmin, vmax=vmax, rasterized=True, aspect='equal')
 
         plt.text(-0.2, 1.1, str(group_number), color='red', fontsize=20, transform=axes[0].transAxes)  # Add text.

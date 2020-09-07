@@ -37,6 +37,9 @@ class AngularMomentumVsMass:
         glx_disc_fractions_IT20 = np.load(data_path + 'glx_disc_fractions_IT20.npy')
         glx_stellar_angular_momenta = np.load(data_path + 'glx_stellar_angular_momenta.npy')
 
+        # Normalise disc fractions #
+        epsilon = 0.5 * (1 - np.cos(np.pi / 6))
+        glx_disc_fractions_IT20 = np.divide(1, 1 - epsilon) * (glx_disc_fractions_IT20 - epsilon)
         print('Loaded data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
 
@@ -58,7 +61,7 @@ class AngularMomentumVsMass:
         Plot galactic angular momentum as a function of stellar mass colour-coded by disc to total ratio.
         :param glx_stellar_masses: defined as the mass of all stellar particles within 30kpc from the most bound particle.
         :param glx_disc_fractions_IT20: where the disc consists of particles whose angular momentum angular separation is 30deg from the densest
-        pixel.
+        grid cell.
         :param glx_stellar_angular_momenta: defined as the sum of each stellar particle's angular momentum.
         :return: None
         """

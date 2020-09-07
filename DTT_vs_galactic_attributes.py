@@ -65,7 +65,7 @@ class DiscToTotalVsGalacticAttributes:
         :param glx_star_formation_rates: defined as the star formation rate of all gaseous particles within 30kpc from the most bound particle.
         :param glx_stellar_angular_momenta: defined as the sum of each stellar particle's angular momentum.
         :param glx_disc_fractions_IT20: where the disc consists of particles whose angular momentum angular separation is 30deg from the densest
-        pixel.
+        grid cell.
         :return: None
         """
         # Generate the figure and define its parameters #

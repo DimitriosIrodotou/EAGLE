@@ -64,7 +64,7 @@ class DiscToTotalVsMorphologicalParameters:
         :param glx_disc_fractions: where the spheroid is assumed to have zero net angualr momentum.
         :param glx_kappas_corotation: defined as angular kinetic energy over kinetic energy.
         :param glx_disc_fractions_IT20: where the disc consists of particles whose angular momentum angular separation is 30deg from the densest
-        pixel.
+        grid cell.
         :param glx_circularities: defined as Jz/Jz,max(E).
         :param glx_rotationals_over_dispersions: defined as vrot/sigam
         :return: None

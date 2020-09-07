@@ -135,8 +135,7 @@ class SampleSurfaceDensityProfiles:
                             yscale='log', aspect=None, which='major')
 
         # Rotate coordinates and velocities of stellar particles wrt galactic angular momentum #
-        stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_angular_momentum, glx_angular_momentum = RotateCoordinates.rotate_Jz(
-            stellar_data_tmp)
+        coordinates, velocities, prc_angular_momentum, glx_angular_momentum = RotateCoordinates.rotate_Jz(stellar_data_tmp)
 
         # Calculate the ra and el of the (unit vector of) angular momentum for each particle #
         prc_unit_vector = prc_angular_momentum / np.linalg.norm(prc_angular_momentum, axis=1)[:, np.newaxis]
@@ -144,17 +143,17 @@ class SampleSurfaceDensityProfiles:
         el = np.degrees(np.arcsin(prc_unit_vector[:, 2]))
 
         # Plot a HEALPix histogram #
-        nside = 2 ** 4  # Define the resolution of the grid (number of divisions along the side of a base-resolution pixel).
+        nside = 2 ** 4  # Define the resolution of the grid (number of divisions along the side of a base-resolution grid cell).
         hp = HEALPix(nside=nside)  # Initialise the HEALPix pixelisation class.
         indices = hp.lonlat_to_healpix(ra * u.deg, el * u.deg)  # Create list of HEALPix indices from particles' ra and el.
-        densities = np.bincount(indices, minlength=hp.npix)  # Count number of data points in each HEALPix pixel.
+        densities = np.bincount(indices, minlength=hp.npix)  # Count number of data points in each HEALPix grid cell.
 
         # Perform a top-hat smoothing on the densities #
         smoothed_densities = []
-        # Loop over all data points #
-        for i in range(len(densities)):
-            a = hlp.query_disc(nside, hlp.pix2vec(nside, i), np.pi / 6.0)  # Do a 30degree cone search around each grid cell.
-            smoothed_densities.append(np.mean(densities[a]))  # Average the densities of the ones inside.
+        # Loop over all grid cells #
+        for i in range(hp.npix):
+            mask = hlp.query_disc(nside, hlp.pix2vec(nside, i), np.pi / 6.0)  # Do a 30degree cone search around each grid cell.
+            smoothed_densities.append(np.mean(densities[mask]))  # Average the densities of the ones inside.
         smoothed_densities = np.array(smoothed_densities)  # Assign this averaged value to the central grid cell.
 
         # Find location of density maximum #
@@ -162,7 +161,7 @@ class SampleSurfaceDensityProfiles:
         lon_densest = (hp.healpix_to_lonlat([index_densest])[0].value + np.pi) % (2 * np.pi) - np.pi
         lat_densest = (hp.healpix_to_lonlat([index_densest])[1].value + np.pi / 2) % (2 * np.pi) - np.pi / 2
 
-        # Calculate and plot the disc (spheroid) mass surface density as the mass within (outside) 30 degrees from the densest pixel #
+        # Calculate and plot the disc (spheroid) mass surface density as the mass within (outside) 30 degrees from the densest grid cell #
         angular_theta_from_densest = np.arccos(
             np.sin(lat_densest) * np.sin(np.arcsin(prc_unit_vector[:, 2])) + np.cos(lat_densest) * np.cos(np.arcsin(prc_unit_vector[:, 2])) * np.cos(
                 lon_densest - np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0])))  # In radians.
@@ -175,8 +174,7 @@ class SampleSurfaceDensityProfiles:
         masks = [disc_mask, spheroid_mask]
         profiles = [exponential_profile, sersic_profile]
         for mask, color, profile, label, label2 in zip(masks, colors, profiles, labels, labels2):
-            cylindrical_distance = np.sqrt(
-                stellar_data_tmp['Coordinates'][mask, 0] ** 2 + stellar_data_tmp['Coordinates'][mask, 1] ** 2)  # Radius of each particle.
+            cylindrical_distance = np.sqrt(coordinates[mask, 0] ** 2 + coordinates[mask, 1] ** 2)  # Radius of each particle.
             component_mass = stellar_data_tmp['Mass'][mask]
 
             mass, edges = np.histogram(cylindrical_distance, bins=50, range=(0, 30), weights=component_mass)
@@ -208,8 +206,7 @@ class SampleSurfaceDensityProfiles:
             except RuntimeError:
                 print('Could not fit a Sersic or exponential profile')
 
-        cylindrical_distance = np.sqrt(
-            stellar_data_tmp['Coordinates'][:, 0] ** 2 + stellar_data_tmp['Coordinates'][:, 1] ** 2)  # Radius of each particle.
+        cylindrical_distance = np.sqrt(coordinates[:, 0] ** 2 + coordinates[:, 1] ** 2)  # Radius of each particle.
 
         mass, edges = np.histogram(cylindrical_distance, bins=50, range=(0, 30), weights=stellar_data_tmp['Mass'])
         centers = 0.5 * (edges[1:] + edges[:-1])

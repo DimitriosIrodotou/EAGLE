@@ -69,7 +69,7 @@ class DTTVsEnvironment:
         :param group_numbers: unique halo number.
         :param subgroup_numbers: unique subhalo number.
         :param glx_disc_fractions_IT20: where the disc consists of particles whose angular momentum angular separation is 30deg from the densest
-        pixel.
+        grid cell.
         :param glx_stellar_angular_momenta: defined as the sum of each stellar particle's angular momentum.
         :param glx_gaseous_angular_momenta: defined as the sum of each gaseous particle's angular momentum.
         :param disc_stellar_angular_momenta: defined as the sum of each disc particle's angular momentum.

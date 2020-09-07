@@ -41,6 +41,9 @@ class TullyFisherFaberJackson:
         glx_stellar_masses = np.load(data_path + 'glx_stellar_masses.npy')
         glx_disc_fractions_IT20 = np.load(data_path + 'glx_disc_fractions_IT20.npy')
 
+        # Normalise disc fractions #
+        epsilon = 0.5 * (1 - np.cos(np.pi / 6))
+        glx_disc_fractions_IT20 = np.divide(1, 1 - epsilon) * (glx_disc_fractions_IT20 - epsilon)
         print('Loaded data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
 
@@ -70,7 +73,7 @@ class TullyFisherFaberJackson:
         :param disc_sigma_0s: defined as the disc-plane velocity dispersion for the disc component.
         :param spheroid_sigma_0s: defined as the disc-plane velocity dispersion for the spheroid component.
         :param glx_disc_fractions_IT20: where the disc consists of particles whose angular momentum angular separation is 30deg from the densest
-        pixel.
+        grid cell.
         :return: None
         """
         # Generate the figure and define its parameters #

@@ -82,18 +82,17 @@ class SampleRAEl:
         glx_unit_vector = glx_angular_momentum / np.linalg.norm(glx_angular_momentum)
 
         # Rotate coordinates and velocities of stellar particles so the galactic angular momentum points along the x axis #
-        stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_unit_vector, glx_unit_vector = RotateCoordinates.rotate_X(stellar_data_tmp,
-                                                                                                                                     glx_unit_vector)
+        coordinates, velocities, prc_unit_vector, glx_unit_vector = RotateCoordinates.rotate_X(stellar_data_tmp, glx_unit_vector)
 
         # Calculate the ra and el of the (unit vector of) angular momentum for each particle #
         ra = np.degrees(np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0]))
         el = np.degrees(np.arcsin(prc_unit_vector[:, 2]))
 
         # Plot a HEALPix histogram #
-        nside = 2 ** 4  # Define the resolution of the grid (number of divisions along the side of a base-resolution pixel).
+        nside = 2 ** 4  # Define the resolution of the grid (number of divisions along the side of a base-resolution grid cell).
         hp = HEALPix(nside=nside)  # Initialise the HEALPix pixelisation class.
         indices = hp.lonlat_to_healpix(ra * u.deg, el * u.deg)  # Create list of HEALPix indices from particles' ra and el.
-        density = np.bincount(indices, minlength=hp.npix)  # Count number of data points in each HEALPix pixel.
+        density = np.bincount(indices, minlength=hp.npix)  # Count number of data points in each HEALPix grid cell.
 
         # Sample a 360x180 grid in ra/el #
         ra = np.linspace(-180.0, 180.0, num=360) * u.deg
