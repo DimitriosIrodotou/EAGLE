@@ -141,9 +141,10 @@ class SampleMultipleDecomposition:
         for i in range(hp.npix):
             mask = hlp.query_disc(nside, hlp.pix2vec(nside, i), np.pi / 6.0)  # Do a 30degree cone search around each grid cell.
             smoothed_densities[i] = np.mean(densities[mask])  # Average the densities of the ones inside and assign this value to the grid cell.
-
+        densities = smoothed_densities
         # Find the location of density maximum and plot its positions and the ra (lon) and dec (lat) of the galactic angular momentum #
         index_densest = np.argmax(smoothed_densities)
+
         lon_densest = (hp.healpix_to_lonlat([index_densest])[0].value + np.pi) % (2 * np.pi) - np.pi
         lat_densest = (hp.healpix_to_lonlat([index_densest])[1].value + np.pi / 2) % (2 * np.pi) - np.pi / 2
         axes[0].scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=100, color='black', marker='X',
