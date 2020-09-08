@@ -38,9 +38,9 @@ class DiscToTotalVsGalacticAttributes:
         glx_star_formation_rates = np.load(data_path + 'glx_star_formation_rates.npy')
         glx_stellar_angular_momenta = np.load(data_path + 'glx_stellar_angular_momenta.npy')
 
-        # Normalise disc fractions #
-        epsilon = 0.5 * (1 - np.cos(np.pi / 6))
-        glx_disc_fractions_IT20 = np.divide(1, 1 - epsilon) * (glx_disc_fractions_IT20 - epsilon)
+        # Normalise the disc fractions #
+        chi = 0.5 * (1 - np.cos(np.pi / 6))
+        glx_disc_fractions_IT20 = np.divide(1, 1 - chi) * (glx_disc_fractions_IT20 - chi)
         print('Loaded data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
 
@@ -69,7 +69,6 @@ class DiscToTotalVsGalacticAttributes:
         :return: None
         """
         # Generate the figure and define its parameters #
-        plt.close()
         figure = plt.figure(figsize=(25, 7.5))
         gs = gridspec.GridSpec(2, 4, wspace=0.0, hspace=0.0, height_ratios=[0.05, 1])
         axis00, axis01, axis02, axis03 = figure.add_subplot(gs[0, 0]), figure.add_subplot(gs[0, 1]), figure.add_subplot(gs[0, 2]), figure.add_subplot(
@@ -117,6 +116,7 @@ class DiscToTotalVsGalacticAttributes:
         axis11.legend([median], [r'$\mathrm{Median}$'], frameon=False, fontsize=16, loc='upper right')
         axis12.legend([fill], [r'$\mathrm{16^{th}-84^{th}\;\%ile}$'], frameon=False, fontsize=16, loc='upper left')
         plt.savefig(plots_path + 'DTT_GP' + '-' + date + '.png', bbox_inches='tight')
+        plt.close()
         return None
 
 

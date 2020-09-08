@@ -38,7 +38,6 @@ class SampleSpatialDistribution:
         group_numbers = [2, 3, 5, 20]
 
         # Generate the figure and define its parameters #
-        plt.close()
         figure = plt.figure(figsize=(20, 20))
 
         gs = gridspec.GridSpec(5, 4, wspace=0.3, hspace=0.3, height_ratios=[0.1, 1, 1, 1, 1])
@@ -86,7 +85,9 @@ class SampleSpatialDistribution:
         plt.text(0.05, 1.1, r'$\mathrm{Spheroid\;face-on}$', fontsize=20, transform=axis12.transAxes)
         plt.text(0.05, 1.1, r'$\mathrm{Spheroid\;edge-on}$', fontsize=20, transform=axis13.transAxes)
 
+        # Save and close the figure #
         plt.savefig(plots_path + 'SSD' + '-' + date + '.png', bbox_inches='tight')
+        plt.close()
         print('Finished MultipleDecomposition for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (
             time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
@@ -118,12 +119,11 @@ class SampleSpatialDistribution:
         densities = np.bincount(indices, minlength=hp.npix)  # Count number of data points in each HEALPix grid cell.
 
         # Perform a top-hat smoothing on the densities #
-        smoothed_densities = []
+        smoothed_densities = np.zeros(hp.npix)
         # Loop over all grid cells #
         for i in range(hp.npix):
             mask = hlp.query_disc(nside, hlp.pix2vec(nside, i), np.pi / 6.0)  # Do a 30degree cone search around each grid cell.
-            smoothed_densities.append(np.mean(densities[mask]))  # Average the densities of the ones inside.
-        smoothed_densities = np.array(smoothed_densities)  # Assign this averaged value to the central grid cell.
+            smoothed_densities[i] = np.mean(densities[mask])  # Average the densities of the ones inside and assign this value to the grid cell.
 
         # Find the location of density maximum and plot its positions and the ra (lon) and dec (lat) of the galactic angular momentum #
         index_densest = np.argmax(smoothed_densities)
@@ -140,13 +140,13 @@ class SampleSpatialDistribution:
         weights = stellar_data_tmp['Mass'][disc_mask]
         vmin, vmax = 6, 8
 
-        cmap = matplotlib.cm.get_cmap('ocean')
-        count, xedges, yedges = np.histogram2d(coordinates[disc_mask, 0], coordinates[disc_mask, 1], weights=weights, bins=500,
+        cmap = matplotlib.cm.get_cmap('nipy_spectral_r')
+        count, xedges, yedges = np.histogram2d(coordinates[disc_mask, 0], coordinates[disc_mask, 1], weights=weights, bins=250,
                                                range=[[-30, 30], [-30, 30]])
         im = axes[0].imshow(np.log10(count.T), extent=[-30, 30, -30, 30], origin='lower', cmap=cmap, vmin=vmin, vmax=vmax, rasterized=True,
                             aspect='equal')
 
-        count, xedges, yedges = np.histogram2d(coordinates[disc_mask, 0], coordinates[disc_mask, 2], weights=weights, bins=500,
+        count, xedges, yedges = np.histogram2d(coordinates[disc_mask, 0], coordinates[disc_mask, 2], weights=weights, bins=250,
                                                range=[[-30, 30], [-30, 30]])
         axes[1].imshow(np.log10(count.T), extent=[-30, 30, -30, 30], origin='lower', cmap=cmap, vmin=vmin, vmax=vmax, rasterized=True, aspect='equal')
 
@@ -154,11 +154,11 @@ class SampleSpatialDistribution:
         bulge_mask, = np.where(angular_theta_from_densest > (np.pi / 6.0))
 
         weights = stellar_data_tmp['Mass'][bulge_mask]
-        count, xedges, yedges = np.histogram2d(coordinates[bulge_mask, 0], coordinates[bulge_mask, 1], weights=weights, bins=500,
+        count, xedges, yedges = np.histogram2d(coordinates[bulge_mask, 0], coordinates[bulge_mask, 1], weights=weights, bins=250,
                                                range=[[-30, 30], [-30, 30]])
         axes[2].imshow(np.log10(count.T), extent=[-30, 30, -30, 30], origin='lower', cmap=cmap, vmin=vmin, vmax=vmax, rasterized=True, aspect='equal')
 
-        count, xedges, yedges = np.histogram2d(coordinates[bulge_mask, 0], coordinates[bulge_mask, 2], weights=weights, bins=500,
+        count, xedges, yedges = np.histogram2d(coordinates[bulge_mask, 0], coordinates[bulge_mask, 2], weights=weights, bins=250,
                                                range=[[-30, 30], [-30, 30]])
         axes[3].imshow(np.log10(count.T), extent=[-30, 30, -30, 30], origin='lower', cmap=cmap, vmin=vmin, vmax=vmax, rasterized=True, aspect='equal')
 

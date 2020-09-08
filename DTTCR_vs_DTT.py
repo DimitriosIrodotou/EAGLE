@@ -10,14 +10,16 @@ import numpy as np
 import matplotlib.cbook
 import matplotlib.pyplot as plt
 
+from matplotlib import gridspec
+
 date = time.strftime('%d_%m_%y_%H%M')  # Date.
 start_global_time = time.time()  # Start the global time.
 warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
 
 
-class ComponentBetaVsDTT:
+class DiscToTotalCRVsDiscToTotal:
     """
-    For all components create: a component delta as a function of disc to total ratio colour-coded by galaxy's delta plot.
+    For all galaxies create: a disc to total ratio including counter-rotating particles as a function of original disc to total ratio plot.
     """
 
 
@@ -30,57 +32,61 @@ class ComponentBetaVsDTT:
         # Load the data #
         start_local_time = time.time()  # Start the local time.
 
-        spheroid_deltas = np.load(data_path + 'spheroid_betas.npy')
         glx_disc_fractions_IT20 = np.load(data_path + 'glx_disc_fractions_IT20.npy')
+        glx_disc_fractions_IT20_cr = np.load(data_path + 'glx_disc_fractions_IT20_cr_all.npy')
 
         # Normalise the disc fractions #
         chi = 0.5 * (1 - np.cos(np.pi / 6))
         glx_disc_fractions_IT20 = np.divide(1, 1 - chi) * (glx_disc_fractions_IT20 - chi)
+        chi = (1 - np.cos(np.pi / 6))
+        glx_disc_fractions_IT20_cr = np.divide(1, 1 - chi) * (glx_disc_fractions_IT20_cr - chi)
         print('Loaded data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
 
         # Plot the data #
         start_local_time = time.time()  # Start the local time.
 
-        self.plot(spheroid_deltas, glx_disc_fractions_IT20)
+        self.plot(glx_disc_fractions_IT20, glx_disc_fractions_IT20_cr)
         print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
 
-        print('Finished ComponentBetaVsDTT for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (
+        print('Finished DiscToTotalVsMorphologicalParameters for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (
             time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
 
 
     @staticmethod
-    def plot(spheroid_deltas, glx_disc_fractions_IT20):
+    def plot(glx_disc_fractions_IT20, glx_disc_fractions_IT20_cr):
         """
-        Plot the component delta as a function of disc to total ratio colour-coded by galaxy's delta.
-        :param spheroid_deltas: defined as the anisotropy parameter for the spheroid component.
+        Plot the disc to total ratio including counter-rotating particles as a function of original disc to total.
         :param glx_disc_fractions_IT20: where the disc consists of particles whose angular momentum angular separation is 30deg from the densest
         grid cell.
+        :param , glx_disc_fractions_IT20_cr: defined as , glx_disc_fractions_IT20 but also includes in the disc counter-rotating structures.
         :return: None
         """
         # Generate the figure and define its parameters #
-        figure, axis = plt.subplots(1, figsize=(10, 7.5))
-        plot_tools.set_axis(axis, xlim=[0, 1], ylim=[-0.1, 1.1], xlabel=r'$\mathrm{D/T_{\Delta \theta<30\degree}}$', ylabel=r'$\mathrm{\tau}$',
-                            aspect=None)
+        figure = plt.figure(figsize=(10, 7.5))
+        gs = gridspec.GridSpec(2, 1, wspace=0.0, hspace=0.05, height_ratios=[0.05, 1])
+        axis00 = figure.add_subplot(gs[0, 0])
+        axis10 = figure.add_subplot(gs[1, 0])
 
-        # Plot the component delta as a function of disc to total ratio colour-coded by galaxy's delta #
-        axis.scatter(glx_disc_fractions_IT20, np.exp(spheroid_deltas - 1), c='tab:red', s=8, label=r'$\mathrm{Spheroids}$')
+        plot_tools.set_axis(axis10, xlim=[-0.1, 1], ylim=[-0.1, 1], xlabel=r'$\mathrm{D/T_{\Delta \theta<30\degree}}$', ylabel=r'$\mathrm{D/T_{CR}}$',
+                            aspect=None, which='major')
+        # Plot disc to total ratio including counter-rotating particles as a function of original disc to total #
+        hb = axis10.hexbin(glx_disc_fractions_IT20, glx_disc_fractions_IT20_cr, bins='log', gridsize=50, cmap='terrain_r')
+        plot_tools.create_colorbar(axis00, hb, r'$\mathrm{Counts\;per\;hexbin}$', 'horizontal')
+        axis10.plot([0, 1], [0, 2], c='tab:green', label=r'$\mathrm{1:2}$')
 
         # Plot median and 1-sigma lines #
-        x_value, median, shigh, slow = plot_tools.binned_median_1sigma(glx_disc_fractions_IT20, np.exp(spheroid_deltas - 1), bin_type='equal_width',
-                                                                       n_bins=25, log=False)
-        axis.plot(x_value, median, color='black', linewidth=3, label=r'$\mathrm{Median}$')
-        axis.fill_between(x_value, shigh, slow, color='black', alpha=0.3)
-        plt.fill(np.NaN, np.NaN, color='black', alpha=0.3, label=r'$\mathrm{16^{th}-84^{th}\;\%ile}$')
-
-        # Plot horizontal lines for different delta values #
-        axis.axhline(y=np.exp(0 - 1), c='black', lw=3, linestyle='dashed', label=r'$\mathrm{e^{-1}}$')
+        x_value, median, shigh, slow = plot_tools.binned_median_1sigma(glx_disc_fractions_IT20, glx_disc_fractions_IT20_cr, bin_type='equal_width',
+                                                                       n_bins=20, log=False)
+        axis10.plot(x_value, median, color='black', linewidth=3, label=r'$\mathrm{Median}$')
+        axis10.fill_between(x_value, shigh, slow, color='black', alpha=0.3, label=r'$\mathrm{16^{th}-84^{th}\;\%ile}$')
+        plt.fill(np.NaN, np.NaN, color='black', alpha=0.3)
 
         # Create the legends, save and close the figure #
-        plt.legend(loc='upper right', fontsize=16, frameon=False, numpoints=1)
-        plt.savefig(plots_path + 'C_B_DTT' + '-' + date + '.png', bbox_inches='tight')
+        axis10.legend(frameon=False, fontsize=16, loc='upper right')
+        plt.savefig(plots_path + 'DTTCR_DTT' + '-' + date + '.png', bbox_inches='tight')
         plt.close()
         return None
 
@@ -90,4 +96,4 @@ if __name__ == '__main__':
     simulation_path = '/cosma7/data/Eagle/ScienceRuns/Planck1/L0100N1504/PE/REFERENCE/data/'  # Path to EAGLE data.
     plots_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/plots/'  # Path to save plots.
     data_path = '/cosma7/data/dp004/dc-irod1/EAGLE/python/data/'  # Path to save/load data.
-    x = ComponentBetaVsDTT(simulation_path, tag)
+    x = DiscToTotalCRVsDiscToTotal(simulation_path, tag)

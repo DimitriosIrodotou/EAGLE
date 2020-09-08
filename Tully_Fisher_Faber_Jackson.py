@@ -41,9 +41,9 @@ class TullyFisherFaberJackson:
         glx_stellar_masses = np.load(data_path + 'glx_stellar_masses.npy')
         glx_disc_fractions_IT20 = np.load(data_path + 'glx_disc_fractions_IT20.npy')
 
-        # Normalise disc fractions #
-        epsilon = 0.5 * (1 - np.cos(np.pi / 6))
-        glx_disc_fractions_IT20 = np.divide(1, 1 - epsilon) * (glx_disc_fractions_IT20 - epsilon)
+        # Normalise the disc fractions #
+        chi = 0.5 * (1 - np.cos(np.pi / 6))
+        glx_disc_fractions_IT20 = np.divide(1, 1 - chi) * (glx_disc_fractions_IT20 - chi)
         print('Loaded data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
 
@@ -77,7 +77,6 @@ class TullyFisherFaberJackson:
         :return: None
         """
         # Generate the figure and define its parameters #
-        plt.close()
         figure = plt.figure(figsize=(10, 10))
         gs = gridspec.GridSpec(3, 2, wspace=0.05, hspace=0.05, height_ratios=[0.05, 1, 1])
         axiscbar = figure.add_subplot(gs[0, :])
@@ -128,6 +127,7 @@ class TullyFisherFaberJackson:
         for axis in [axis11, axis20, axis21]:
             axis.legend(loc='upper left', fontsize=12, frameon=False, numpoints=1, ncol=2)
         plt.savefig(plots_path + 'TFFJ' + '-' + date + '.png', bbox_inches='tight')
+        plt.close()
         return None
 
 

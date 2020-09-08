@@ -222,7 +222,6 @@ class RAEl:
         sns.set_context('notebook', font_scale=1.6)
 
         # Generate the figure and define its parameters #
-        plt.close()
         figure = plt.figure(figsize=(20, 22.5))
 
         gs = gridspec.GridSpec(3, 2)
@@ -285,12 +284,11 @@ class RAEl:
         densities = np.bincount(indices, minlength=hp.npix)  # Count number of points in each HEALPix grid cell.
 
         # Perform a top-hat smoothing on the densities #
-        smoothed_densities = []
+        smoothed_densities = np.zeros(hp.npix)
         # Loop over all grid cells #
         for i in range(hp.npix):
-            mask = hlp.query_disc(nside, hlp.pix2vec(nside, i), np.pi / 6.0) # Do a 30degree cone search around each grid cell.
-            smoothed_densities.append(np.mean(densities[mask]))  # Average the densities of the ones inside.
-        smoothed_densities = np.array(smoothed_densities)  # Assign this averaged value to the central grid cell.
+            mask = hlp.query_disc(nside, hlp.pix2vec(nside, i), np.pi / 6.0)  # Do a 30degree cone search around each grid cell.
+            smoothed_densities[i] = np.mean(densities[mask])  # Average the densities of the ones inside and assign this value to the grid cell.
 
         # Find location of density maximum and plot its positions and the ra and el of the galactic angular momentum #
         index_densest = np.argmax(smoothed_densities)
@@ -397,6 +395,7 @@ class RAEl:
         axis10.legend(loc='upper center', fontsize=12, frameon=False, scatterpoints=3)
         axis20.legend(loc='upper left', fontsize=12, frameon=False, scatterpoints=3)
         plt.savefig(plots_path + str(group_number) + '_' + str(subgroup_number) + '-' + 'RD' + '-' + date + '.png', bbox_inches='tight')
+        plt.close()
         return None
 
 

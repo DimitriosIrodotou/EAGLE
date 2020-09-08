@@ -39,9 +39,9 @@ class ComponentAgeMetallicityVsMass:
         spheroid_metallicities = np.load(data_path + 'spheroid_metallicities.npy')
         glx_disc_fractions_IT20 = np.load(data_path + 'glx_disc_fractions_IT20.npy')
 
-        # Normalise disc fractions #
-        epsilon = 0.5 * (1 - np.cos(np.pi / 6))
-        glx_disc_fractions_IT20 = np.divide(1, 1 - epsilon) * (glx_disc_fractions_IT20 - epsilon)
+        # Normalise the disc fractions #
+        chi = 0.5 * (1 - np.cos(np.pi / 6))
+        glx_disc_fractions_IT20 = np.divide(1, 1 - chi) * (glx_disc_fractions_IT20 - chi)
         print('Loaded data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
 
@@ -90,7 +90,7 @@ class ComponentAgeMetallicityVsMass:
             x_value, median, shigh, slow = plot_tools.binned_median_1sigma(ratio * glx_stellar_masses, component, bin_type='equal_width', n_bins=25,
                                                                            log=True)
             axis00.plot(x_value, median, color='black', linewidth=3)
-            axis00.fill_between(x_value, shigh, slow, color='black', alpha='0.3')
+            axis00.fill_between(x_value, shigh, slow, color='black', alpha=0.3)
 
         # Plot the component metallicity-mass relation colour-coded by disc to total ratio #
         d = axis10.scatter(glx_disc_fractions_IT20 * glx_stellar_masses, disc_metallicities, c='tab:blue', s=8)
@@ -101,7 +101,7 @@ class ComponentAgeMetallicityVsMass:
             x_value, median, shigh, slow = plot_tools.binned_median_1sigma(ratio * glx_stellar_masses, component, bin_type='equal_width', n_bins=25,
                                                                            log=True)
             median, = axis10.plot(x_value, median, color='black', linewidth=3)
-            axis10.fill_between(x_value, shigh, slow, color='black', alpha='0.3')
+            axis10.fill_between(x_value, shigh, slow, color='black', alpha=0.3)
             fill, = plt.fill(np.NaN, np.NaN, color='black', alpha=0.3)
 
         # Create a legend, save and close the figure #

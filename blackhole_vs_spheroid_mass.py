@@ -34,9 +34,9 @@ class BlackholeVsSpheroidMass:
         glx_stellar_masses = np.load(data_path + 'glx_stellar_masses.npy')
         glx_disc_fractions_IT20 = np.load(data_path + 'glx_disc_fractions_IT20.npy')
 
-        # Normalise disc fractions #
-        epsilon = 0.5 * (1 - np.cos(np.pi / 6))
-        glx_disc_fractions_IT20 = np.divide(1, 1 - epsilon) * (glx_disc_fractions_IT20 - epsilon)
+        # Normalise the disc fractions #
+        chi = 0.5 * (1 - np.cos(np.pi / 6))
+        glx_disc_fractions_IT20 = np.divide(1, 1 - chi) * (glx_disc_fractions_IT20 - chi)
         print('Loaded data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
 

@@ -38,7 +38,6 @@ class SampleSurfaceDensityProfiles:
         group_numbers = [10, 12, 17, 23, 25, 34, 39, 42, 53, 60, 62, 66, 82, 91, 93, 100]
 
         # Generate the figure and define its parameters #
-        plt.close()
         figure, axes = plt.subplots(nrows=4, ncols=4, figsize=(20, 20))
         plt.subplots_adjust(wspace=0.31)
 
@@ -60,7 +59,9 @@ class SampleSurfaceDensityProfiles:
                 print('Plotted data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (time.time() - start_local_time))
                 print('–––––––––––––––––––––––––––––––––––––––––––––')
 
+        # Save and close the figure #
         plt.savefig(plots_path + 'SSDP' + '-' + date + '.png', bbox_inches='tight')
+        plt.close()
         print('Finished SampleSurfaceDensityProfiles for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (
             time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
@@ -149,12 +150,11 @@ class SampleSurfaceDensityProfiles:
         densities = np.bincount(indices, minlength=hp.npix)  # Count number of data points in each HEALPix grid cell.
 
         # Perform a top-hat smoothing on the densities #
-        smoothed_densities = []
+        smoothed_densities = np.zeros(hp.npix)
         # Loop over all grid cells #
         for i in range(hp.npix):
             mask = hlp.query_disc(nside, hlp.pix2vec(nside, i), np.pi / 6.0)  # Do a 30degree cone search around each grid cell.
-            smoothed_densities.append(np.mean(densities[mask]))  # Average the densities of the ones inside.
-        smoothed_densities = np.array(smoothed_densities)  # Assign this averaged value to the central grid cell.
+            smoothed_densities[i] = np.mean(densities[mask])  # Average the densities of the ones inside and assign this value to the grid cell.
 
         # Find location of density maximum #
         index_densest = np.argmax(smoothed_densities)

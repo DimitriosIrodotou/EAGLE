@@ -33,7 +33,6 @@ class SampleRAEl:
         :param tag: redshift directory.
         """
         # Generate the figure and define its parameters #
-        plt.close()
         figure, axes = plt.subplots(nrows=10, ncols=10, figsize=(20, 20), subplot_kw={'projection':'mollweide'})
 
         # Select a random sample from all group numbers #
@@ -59,8 +58,9 @@ class SampleRAEl:
             self.plot(axis, stellar_data_tmp, group_number)
             print('Plotted data for halo ' + str(group_number) + '_' + str(subgroup_number) + ' in %.4s s' % (time.time() - start_local_time))
             print('–––––––––––––––––––––––––––––––––––––––––––––')
-
+        # Save and close the figure #
         plt.savefig(plots_path + 'SRAEl' + '-' + date + '.png', bbox_inches='tight')
+        plt.close()
         print('Finished SampleRAEl for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (
             time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')

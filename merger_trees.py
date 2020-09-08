@@ -54,7 +54,6 @@ class MergerTree:
         :return: None
         """
         # Generate the figure and define its parameters #
-        plt.close()
         figure, axis = plt.subplots(1, figsize=(10, 7.5))
         
         # Get the merger tree information from the database and display it in a hierarchical tree structure #
@@ -87,8 +86,9 @@ class MergerTree:
         plt.text(0.1, 1, r'$\mathrm{Flag: }$' + str(merger_flag), fontsize=12, transform=axis.transAxes)
         axis.set_yticklabels(('', '0.27', '', '0.18', '', '0.1', '', '0.0', ''))
         
-        # Save the figure #
+        # Save and close the figure #
         plt.savefig(plots_path + str(group_number) + '_' + str(subgroup_number) + '-' + 'MT' + '-' + date + '.png', bbox_inches='tight')
+        plt.close()
         return None
     
     

@@ -35,14 +35,13 @@ class SampleMultipleDecomposition:
         :param tag: redshift directory.
         """
         group_numbers = [39, 25, 18, 14]
-        group_numbers = [10, 24, 107, 181]
-        subgroup_numbers = [1, 18, 3, 2]
-        group_numbers = [2775, 3117, 3411, 4181]
         group_numbers = [2, 3, 5, 20]
-        group_numbers = [16, 22, 45, 70]
+        # group_numbers = [10, 24, 107, 181]
+        # subgroup_numbers = [1, 18, 3, 2]
+        # group_numbers = [2775, 3117, 3411, 4181]
+        # group_numbers = [16, 22, 45, 70]
 
         # Generate the figure and define its parameters #
-        plt.close()
         figure = plt.figure(figsize=(20, 20))
 
         gs = gridspec.GridSpec(4, 4, wspace=0.4, hspace=0.4)
@@ -95,7 +94,9 @@ class SampleMultipleDecomposition:
         plt.text(0.25, 1.1, r'$\mathrm{D/T_{\vec{J}_{b}=0}}$', fontsize=30, transform=axis02.transAxes)
         plt.text(0.25, 1.1, r'$\mathrm{D/T_{\epsilon>0.7}}$', fontsize=30, transform=axis03.transAxes)
 
+        # Save and close the figure #
         plt.savefig(plots_path + 'SMD' + '-' + date + '.png', bbox_inches='tight')
+        plt.close()
         print('Finished MultipleDecomposition for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (
             time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
@@ -141,7 +142,7 @@ class SampleMultipleDecomposition:
         for i in range(hp.npix):
             mask = hlp.query_disc(nside, hlp.pix2vec(nside, i), np.pi / 6.0)  # Do a 30degree cone search around each grid cell.
             smoothed_densities[i] = np.mean(densities[mask])  # Average the densities of the ones inside and assign this value to the grid cell.
-        densities = smoothed_densities
+
         # Find the location of density maximum and plot its positions and the ra (lon) and dec (lat) of the galactic angular momentum #
         index_densest = np.argmax(smoothed_densities)
 
