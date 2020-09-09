@@ -36,6 +36,7 @@ class SampleSurfaceDensityProfiles:
         :param tag: redshift directory.
         """
         group_numbers = [10, 12, 17, 23, 25, 34, 39, 42, 53, 60, 62, 66, 82, 91, 93, 100]
+        group_numbers = [17, 82, 62, 34, 42, 53, 12, 60, 91, 10, 23, 66, 100, 39, 93, 25]
 
         # Generate the figure and define its parameters #
         figure, axes = plt.subplots(nrows=4, ncols=4, figsize=(20, 20))

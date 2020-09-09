@@ -24,7 +24,7 @@ warnings.filterwarnings('ignore', category=matplotlib.cbook.mplDeprecation)  # I
 
 class SampleSpatialDistribution:
     """
-    For a sample of galaxies create: a HEALPix histogram from the angular momentum of particles and angular distance plots.
+    For a sample of galaxies create: a spatial distribution of the face-on and edge-on projections plot.
     """
 
 
@@ -96,7 +96,7 @@ class SampleSpatialDistribution:
     @staticmethod
     def plot(axes, stellar_data_tmp, group_number):
         """
-        Plot a HEALPix histogram from the angular momentum of particles - an angular distance plot - a surface density plot / gri mock image - a
+        Plot the spatial distribution of the face-on and edge-on projections.
         circularity distribution.
         :param axes: set of axes
         :param stellar_data_tmp: from read_add_attributes.py.
