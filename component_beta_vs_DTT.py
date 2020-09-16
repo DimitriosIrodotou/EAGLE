@@ -76,7 +76,7 @@ class ComponentBetaVsDTT:
         plt.fill(np.NaN, np.NaN, color='black', alpha=0.3, label=r'$\mathrm{16^{th}-84^{th}\;\%ile}$')
 
         # Plot horizontal lines for different delta values #
-        axis.axhline(y=np.exp(0 - 1), c='black', lw=3, linestyle='dashed', label=r'$\mathrm{e^{-1}}$')
+        axis.axhline(y=np.exp(0 - 1), c='black', lw=3, linestyle='dashed', label=r'$\mathrm{Isotropic}$')
 
         # Create the legends, save and close the figure #
         plt.legend(loc='upper right', fontsize=16, frameon=False, numpoints=1)

@@ -40,7 +40,7 @@ class SampleDecompositionSpatialDistribution:
         # Generate the figure and define its parameters #
         figure = plt.figure(figsize=(25, 25))
 
-        gs = gridspec.GridSpec(6, 5, wspace=0.4, hspace=0.4, height_ratios=[0.1, 1, 1, 1, 1,1])
+        gs = gridspec.GridSpec(6, 5, wspace=0.4, hspace=0.4, height_ratios=[0.1, 1, 1, 1, 1, 1])
         axiscbar = figure.add_subplot(gs[0, :])
         axis10, axis11, axis12, axis13, axis14 = figure.add_subplot(gs[1, 0], projection='mollweide'), figure.add_subplot(
             gs[1, 1]), figure.add_subplot(gs[1, 2]), figure.add_subplot(gs[1, 3]), figure.add_subplot(gs[1, 4])
@@ -168,28 +168,27 @@ class SampleDecompositionSpatialDistribution:
         disc_fraction_IT20_cr = np.sum(stellar_data_tmp['Mass'][disc_cr_mask]) / np.sum(stellar_data_tmp['Mass'])
 
         # Plot the 2D surface density projection and scatter for the disc #
-        coordinates, velocities, prc_angular_momentum, glx_angular_momentum = RotateCoordinates.rotate_Jz(stellar_data_tmp)
-        weights = stellar_data_tmp['Mass'][disc_mask]
+        # Rotate coordinates and velocities of the disc component so it appears face-on and edge-on #
+        coordinates, velocities, component_data = RotateCoordinates.rotate_component(stellar_data_tmp, disc_mask)
         vmin, vmax = 6, 8
-
+        weights = component_data['Mass']
         cmap = matplotlib.cm.get_cmap('nipy_spectral_r')
-        count, xedges, yedges = np.histogram2d(coordinates[disc_mask, 0], coordinates[disc_mask, 1], weights=weights, bins=200,
-                                               range=[[-30, 30], [-30, 30]])
+
+        count, xedges, yedges = np.histogram2d(coordinates[:, 0], coordinates[:, 1], weights=weights, bins=200, range=[[-30, 30], [-30, 30]])
         im = axes[1].imshow(np.log10(count.T), extent=[-30, 30, -30, 30], origin='lower', cmap=cmap, vmin=vmin, vmax=vmax, rasterized=True,
                             aspect='equal')
 
-        count, xedges, yedges = np.histogram2d(coordinates[disc_mask, 0], coordinates[disc_mask, 2], weights=weights, bins=200,
-                                               range=[[-30, 30], [-30, 30]])
+        count, xedges, yedges = np.histogram2d(coordinates[:, 0], coordinates[:, 2], weights=weights, bins=200, range=[[-30, 30], [-30, 30]])
         axes[2].imshow(np.log10(count.T), extent=[-30, 30, -30, 30], origin='lower', cmap=cmap, vmin=vmin, vmax=vmax, rasterized=True, aspect='equal')
 
         # Plot the 2D surface density projection and scatter for the bulge #
-        weights = stellar_data_tmp['Mass'][disc_cr_mask]
-        count, xedges, yedges = np.histogram2d(coordinates[disc_cr_mask, 0], coordinates[disc_cr_mask, 1], weights=weights, bins=200,
-                                               range=[[-30, 30], [-30, 30]])
+        # Rotate coordinates and velocities of the disc component so it appears face-on and edge-on #
+        coordinates, velocities, component_data = RotateCoordinates.rotate_component(stellar_data_tmp, disc_cr_mask)
+        weights = component_data['Mass']
+        count, xedges, yedges = np.histogram2d(coordinates[:, 0], coordinates[:, 1], weights=weights, bins=200, range=[[-30, 30], [-30, 30]])
         axes[3].imshow(np.log10(count.T), extent=[-30, 30, -30, 30], origin='lower', cmap=cmap, vmin=vmin, vmax=vmax, rasterized=True, aspect='equal')
 
-        count, xedges, yedges = np.histogram2d(coordinates[disc_cr_mask, 0], coordinates[disc_cr_mask, 2], weights=weights, bins=200,
-                                               range=[[-30, 30], [-30, 30]])
+        count, xedges, yedges = np.histogram2d(coordinates[:, 0], coordinates[:, 2], weights=weights, bins=200, range=[[-30, 30], [-30, 30]])
         axes[4].imshow(np.log10(count.T), extent=[-30, 30, -30, 30], origin='lower', cmap=cmap, vmin=vmin, vmax=vmax, rasterized=True, aspect='equal')
 
         # Add text and create the legend #

@@ -95,7 +95,7 @@ class RotateCoordinates:
         """
         Rotate a galaxy such that its angular momentum is along the z axis.
         :param stellar_data_tmp: from read_add_attributes.py.
-        :return: stellar_data_tmp['Coordinates'], stellar_data_tmp['Velocity'], prc_angular_momentum, glx_angular_momentum
+        :return: coordinates, velocities, prc_angular_momentum, glx_angular_momentum
         """
 
         # Calculate the angular momentum of the galaxy #
@@ -123,6 +123,40 @@ class RotateCoordinates:
         glx_angular_momentum = np.sum(prc_angular_momentum, axis=0)  # In Msun kpc km s^-1.
 
         return coordinates, velocities, prc_angular_momentum, glx_angular_momentum
+
+
+    @staticmethod
+    def rotate_component(stellar_data_tmp, mask):
+        """
+        Rotate a component such that its angular momentum is along the z axis.
+        :param stellar_data_tmp: from read_add_attributes.py.
+        :return: coordinates, velocities, component_data
+        """
+        # Select on particles that belong to the component #
+        component_data = {}
+        for attribute in ['Coordinates', 'Mass', 'Velocity']:
+            component_data[attribute] = np.copy(stellar_data_tmp[attribute])[mask]
+
+        # Calculate the angular momentum of the component #
+        prc_angular_momentum = component_data['Mass'][:, np.newaxis] * np.cross(component_data['Coordinates'],
+                                                                                component_data['Velocity'])  # In Msun kpc km s^-1.
+        component_angular_momentum = np.sum(prc_angular_momentum, axis=0)  # In Msun kpc km s^-1.
+
+        # Define the rotation matrices #
+        a = np.matrix([component_angular_momentum[0], component_angular_momentum[1], component_angular_momentum[2]]) / np.linalg.norm(
+            [component_angular_momentum[0], component_angular_momentum[1], component_angular_momentum[2]])
+        b = np.matrix([0, 0, 1])
+        v = np.cross(a, b)
+        s = np.linalg.norm(v)
+        c = np.dot(a, b.T)
+        vx = np.matrix([[0, -v[0, 2], v[0, 1]], [v[0, 2], 0, -v[0, 0]], [-v[0, 1], v[0, 0], 0]])
+        transform = np.eye(3, 3) + vx + (vx * vx) * ((1 - c[0, 0]) / s ** 2)
+
+        # Rotate the coordinates and velocities #
+        coordinates = np.array([np.matmul(transform, component_data['Coordinates'][i].T) for i in range(0, len(component_data['Coordinates']))])[:, 0]
+        velocities = np.array([np.matmul(transform, component_data['Velocity'][i].T) for i in range(0, len(component_data['Velocity']))])[:, 0]
+
+        return coordinates, velocities, component_data
 
 
 def median_1sigma(x_data, y_data, delta, log):
@@ -314,7 +348,7 @@ def circularity(stellar_data_tmp, method):
 
         # Calculate the circularity parameter ε as the ratio between the z component of the angular momentum and the angular momentum of the
         # corresponding circular orbit #
-        specific_circular_angular_momentum = prc_spherical_radius[sort] * circular_velocity   # In kpc km s^-1.
+        specific_circular_angular_momentum = prc_spherical_radius[sort] * circular_velocity  # In kpc km s^-1.
         epsilon = specific_angular_momentum_z / specific_circular_angular_momentum
         stellar_masses = stellar_data_tmp['Mass'][sort]
 

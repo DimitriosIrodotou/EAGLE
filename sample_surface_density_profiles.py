@@ -36,10 +36,10 @@ class SampleSurfaceDensityProfiles:
         :param tag: redshift directory.
         """
         group_numbers = [10, 12, 17, 23, 25, 34, 39, 42, 53, 60, 62, 66, 82, 91, 93, 100]
-        group_numbers = [17, 82, 62, 34, 42, 53, 12, 60, 91, 10, 23, 66, 100, 39, 93, 25]
+        group_numbers = [5, 2, 20, 14, 3, 18, 39, 25]
 
         # Generate the figure and define its parameters #
-        figure, axes = plt.subplots(nrows=4, ncols=4, figsize=(20, 20))
+        figure, axes = plt.subplots(nrows=2, ncols=4, figsize=(20, 10))
         plt.subplots_adjust(wspace=0.31)
 
         for group_number, axis in zip(group_numbers, axes.flatten()):
@@ -175,15 +175,15 @@ class SampleSurfaceDensityProfiles:
         masks = [disc_mask, spheroid_mask]
         profiles = [exponential_profile, sersic_profile]
         for mask, color, profile, label, label2 in zip(masks, colors, profiles, labels, labels2):
-            cylindrical_distance = np.sqrt(coordinates[mask, 0] ** 2 + coordinates[mask, 1] ** 2)  # Radius of each particle.
-            component_mass = stellar_data_tmp['Mass'][mask]
+            component_coordinates, component_velocities, component_data = RotateCoordinates.rotate_component(stellar_data_tmp, mask)
+            cylindrical_distance = np.sqrt(component_coordinates[:, 0] ** 2 + component_coordinates[:, 1] ** 2)  # Radius of each particle.
 
-            mass, edges = np.histogram(cylindrical_distance, bins=50, range=(0, 30), weights=component_mass)
+            mass, edges = np.histogram(cylindrical_distance, bins=50, range=(0, 30), weights=component_data['Mass'])
             centers = 0.5 * (edges[1:] + edges[:-1])
             surface = np.pi * (edges[1:] ** 2 - edges[:-1] ** 2)
             sden = mass / surface
 
-            axis.errorbar(centers, sden, yerr=0.1 * sden, c=color, marker='.', linestyle="None", elinewidth=1, capsize=2, capthick=1, label=label)
+            axis.scatter(centers, sden, c=color, marker='.', linestyle="None", label=label)
 
             try:
                 if mask is disc_mask:
@@ -214,7 +214,7 @@ class SampleSurfaceDensityProfiles:
         surface = np.pi * (edges[1:] ** 2 - edges[:-1] ** 2)
         sden = mass / surface
 
-        axis.errorbar(centers, sden, yerr=0.1 * sden, c='k', marker='.', linestyle="None", elinewidth=1, capsize=2, capthick=1, label='Total')
+        axis.scatter(centers, sden, c='k', marker='.', linestyle="None", label='Total')
 
         try:
             popt, pcov = curve_fit(total_profile, centers, sden, sigma=0.1 * sden, p0=[sden_tmp[0], 2, sden[0], 2, 4])  # p0 = [I_0d, R_d, I_0b, b, n]

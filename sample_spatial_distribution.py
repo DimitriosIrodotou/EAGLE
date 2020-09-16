@@ -34,8 +34,8 @@ class SampleSpatialDistribution:
         :param simulation_path: simulation directory.
         :param tag: redshift directory.
         """
-        group_numbers = [39, 25, 18, 14]
         group_numbers = [2, 3, 5, 20]
+        group_numbers = [39, 25, 18, 14]
 
         # Generate the figure and define its parameters #
         figure = plt.figure(figsize=(20, 20))
@@ -137,29 +137,30 @@ class SampleSpatialDistribution:
 
         # Plot the 2D surface density projection and scatter for the disc #
         disc_mask, = np.where(angular_theta_from_densest < (np.pi / 6.0))
-        weights = stellar_data_tmp['Mass'][disc_mask]
+        # Rotate coordinates and velocities of the disc component so it appears face-on and edge-on #
+        coordinates, velocities, component_data = RotateCoordinates.rotate_component(stellar_data_tmp, disc_mask)
         vmin, vmax = 6, 8
-
+        weights = component_data['Mass']
         cmap = matplotlib.cm.get_cmap('nipy_spectral_r')
-        count, xedges, yedges = np.histogram2d(coordinates[disc_mask, 0], coordinates[disc_mask, 1], weights=weights, bins=250,
-                                               range=[[-30, 30], [-30, 30]])
+
+        count, xedges, yedges = np.histogram2d(coordinates[:,0], coordinates[:,1], weights=weights, bins=250, range=[[-30, 30], [-30, 30]])
         im = axes[0].imshow(np.log10(count.T), extent=[-30, 30, -30, 30], origin='lower', cmap=cmap, vmin=vmin, vmax=vmax, rasterized=True,
                             aspect='equal')
 
-        count, xedges, yedges = np.histogram2d(coordinates[disc_mask, 0], coordinates[disc_mask, 2], weights=weights, bins=250,
-                                               range=[[-30, 30], [-30, 30]])
+        count, xedges, yedges = np.histogram2d(coordinates[:,0], coordinates[:,2], weights=weights, bins=250, range=[[-30, 30], [-30, 30]])
         axes[1].imshow(np.log10(count.T), extent=[-30, 30, -30, 30], origin='lower', cmap=cmap, vmin=vmin, vmax=vmax, rasterized=True, aspect='equal')
 
         # Plot the 2D surface density projection and scatter for the bulge #
-        bulge_mask, = np.where(angular_theta_from_densest > (np.pi / 6.0))
+        spheroid_mask, = np.where(angular_theta_from_densest > (np.pi / 6.0))
 
-        weights = stellar_data_tmp['Mass'][bulge_mask]
-        count, xedges, yedges = np.histogram2d(coordinates[bulge_mask, 0], coordinates[bulge_mask, 1], weights=weights, bins=250,
-                                               range=[[-30, 30], [-30, 30]])
+        # Rotate coordinates and velocities of the spheroid component so it appears face-on and edge-on #
+        coordinates, velocities, component_data = RotateCoordinates.rotate_component(stellar_data_tmp, spheroid_mask)
+        weights = component_data['Mass']
+
+        count, xedges, yedges = np.histogram2d(coordinates[:,0], coordinates[:,1], weights=weights, bins=250, range=[[-30, 30], [-30, 30]])
         axes[2].imshow(np.log10(count.T), extent=[-30, 30, -30, 30], origin='lower', cmap=cmap, vmin=vmin, vmax=vmax, rasterized=True, aspect='equal')
 
-        count, xedges, yedges = np.histogram2d(coordinates[bulge_mask, 0], coordinates[bulge_mask, 2], weights=weights, bins=250,
-                                               range=[[-30, 30], [-30, 30]])
+        count, xedges, yedges = np.histogram2d(coordinates[:,0], coordinates[:,2], weights=weights, bins=250, range=[[-30, 30], [-30, 30]])
         axes[3].imshow(np.log10(count.T), extent=[-30, 30, -30, 30], origin='lower', cmap=cmap, vmin=vmin, vmax=vmax, rasterized=True, aspect='equal')
 
         plt.text(-0.2, 1.1, str(group_number), color='red', fontsize=20, transform=axes[0].transAxes)  # Add text.
