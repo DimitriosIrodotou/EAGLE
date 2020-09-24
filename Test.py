@@ -280,7 +280,7 @@ class RAEl:
         # Plot a HEALPix histogram #
         nside = 2 ** 4  # Define the resolution of the grid (number of divisions along the side of a base-resolution grid cell).
         hp = HEALPix(nside=nside)  # Initialise the HEALPix pixellisation class.
-        indices = hp.lonlat_to_healpix(ra * u.deg, el * u.deg)  # Create list of HEALPix indices from particles' ra and el.
+        indices = hp.lonlat_to_healpix(ra * u.deg, el * u.deg)  # Create a list of HEALPix indices from particles' ra and el.
         densities = np.bincount(indices, minlength=hp.npix)  # Count number of points in each HEALPix grid cell.
 
         # Perform a top-hat smoothing on the densities #
@@ -290,7 +290,7 @@ class RAEl:
             mask = hlp.query_disc(nside, hlp.pix2vec(nside, i), np.pi / 6.0)  # Do a 30degree cone search around each grid cell.
             smoothed_densities[i] = np.mean(densities[mask])  # Average the densities of the ones inside and assign this value to the grid cell.
 
-        # Find location of density maximum and plot its positions and the ra and el of the galactic angular momentum #
+        # Find the location of the density maximum and plot its positions and the ra and el of the galactic angular momentum #
         index_densest = np.argmax(smoothed_densities)
         lon_densest = (hp.healpix_to_lonlat([index_densest])[0].value + np.pi) % (2 * np.pi) - np.pi
         lat_densest = (hp.healpix_to_lonlat([index_densest])[1].value + np.pi / 2) % (2 * np.pi) - np.pi / 2

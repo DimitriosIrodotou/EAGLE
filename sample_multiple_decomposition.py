@@ -133,7 +133,7 @@ class SampleMultipleDecomposition:
         # Plot a HEALPix histogram #
         nside = 2 ** 4  # Define the resolution of the grid (number of divisions along the side of a base-resolution grid cell).
         hp = HEALPix(nside=nside, order='ring')  # Initialise the HEALPix pixelisation class.
-        indices = hp.lonlat_to_healpix(ra * u.deg, dec * u.deg)  # Create list of HEALPix indices from particles' ra and dec.
+        indices = hp.lonlat_to_healpix(ra * u.deg, dec * u.deg)  # Create a list of HEALPix indices from particles' ra and dec.
         densities = np.bincount(indices, minlength=hp.npix)  # Count number of data points in each HEALPix grid cell.
 
         # Perform a top-hat smoothing on the densities #
