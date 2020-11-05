@@ -254,7 +254,7 @@ def binned_median_1sigma(x_data, y_data, bin_type, n_bins, log=False):
         return x_value, median, shigh, slow
 
 
-def create_colorbar(axis, plot, label, orientation='vertical', top=True, ticks=None, size=16, extend='neither'):
+def create_colorbar(axis, plot, label, orientation='vertical', top=True, ticks=None, size=30, extend='neither'):
     """
     Generate a colorbar.
     :param axis: colorbar axis.
@@ -278,7 +278,7 @@ def create_colorbar(axis, plot, label, orientation='vertical', top=True, ticks=N
     return None
 
 
-def set_axis(axis, xlim=None, ylim=None, xscale=None, yscale=None, xlabel=None, ylabel=None, aspect='equal', which='both', size=16):
+def set_axis(axis, xlim=None, ylim=None, xscale=None, yscale=None, xlabel=None, ylabel=None, aspect='equal', which='both', size=30):
     """
     Set axis parameters.
     :param axis: name of the axis.

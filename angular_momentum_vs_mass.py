@@ -71,28 +71,30 @@ class AngularMomentumVsMass:
         axis00 = figure.add_subplot(gs[0, 0])
         axis10 = figure.add_subplot(gs[1, 0])
         plot_tools.set_axis(axis10, xlim=[5e9, 1e12], ylim=[1e0, 1e5], xscale='log', yscale='log',
-            xlabel=r'$\mathrm{log_{10}(M_{\bigstar}/M_{\odot})}$', ylabel=r'$\mathrm{(|\vec{J}_{\bigstar}|/M_{\bigstar})/(kpc\;km\;s^{-1})}$',
-            aspect=None, which='major')
+                            xlabel=r'$\mathrm{log_{10}(M_{\bigstar}/M_{\odot})}$',
+                            ylabel=r'$\mathrm{(|\vec{J}_{\bigstar}|/M_{\bigstar})/(kpc\;km\;s^{-1})}$', aspect=None, which='major')
 
         # Plot the specific galactic angular momentum as a function of stellar mass colour-coded by disc to total ratio #
         spc_stellar_angular_momenta = np.linalg.norm(glx_stellar_angular_momenta, axis=1) / glx_stellar_masses
         sc = axis10.scatter(glx_stellar_masses, spc_stellar_angular_momenta, c=glx_disc_fractions_IT20, s=8, cmap='seismic_r', vmin=0, vmax=1)
         plot_tools.create_colorbar(axis00, sc, r'$\mathrm{D/T_{\Delta \theta<30\degree}}$', 'horizontal')
 
-        # Read observational data from OG13 and FR18 #
+        # Read observational data from OG13, FR18 and PPF20 #
         OG13 = np.genfromtxt('./observational_data/OG_1312.4543/Figure7_stars.csv', delimiter=',', names=['Mstar', 'jstar'])
         FR18_table1 = np.genfromtxt('./observational_data/FR_1808.02525/Table1.txt', delimiter='\t', names=['Mstar', 'jstar', 'BTT'])
+        PPF20 = np.genfromtxt('./observational_data/PPF_2009.06645/Figure5_MJ_stars.txt', names=['Mstar', 'jstar'])
 
-        # Plot observational data from OG13 and FR18 #
-        axis10.scatter(np.power(10, OG13['Mstar']), np.power(10, OG13['jstar']), edgecolor='black', color='cyan', s=50, marker='^',
-            label=r'$\mathrm{OG14}$', zorder=5)
+        # Plot observational data from OG13, FR18 and PPF20 #
+        axis10.scatter(PPF20['Mstar'], PPF20['jstar'], edgecolor='black', color='grey', s=75, marker='P', label=r'$\mathrm{PPF20}$', zorder=5)
+        axis10.scatter(np.power(10, OG13['Mstar']), np.power(10, OG13['jstar']), edgecolor='black', color='grey', s=75, marker='s',
+                       label=r'$\mathrm{OG14}$', zorder=5)
         sc2 = axis10.scatter(np.power(10, FR18_table1['Mstar']), np.power(10, FR18_table1['jstar']), edgecolor='black', cmap='seismic_r',
-            c=1 - FR18_table1['BTT'], marker='*', s=150, vmin=0, vmax=1)
+                             c=1 - FR18_table1['BTT'], marker='*', s=200, vmin=0, vmax=1)
         axiscbar = inset_axes(axis10, width='30%', height='3%', loc='upper center')
-        plot_tools.create_colorbar(axiscbar, sc2, r'$\mathrm{FR18:D/T}$', 'horizontal', top=False, ticks=[0, 0.5, 1], size=12)
+        plot_tools.create_colorbar(axiscbar, sc2, r'$\mathrm{FR18:D/T}$', 'horizontal', top=False, ticks=[0, 0.5, 1], size=20)
 
         # Create the legend, save and close the figure #
-        axis10.legend(loc='upper right', fontsize=12, frameon=False, numpoints=1)
+        axis10.legend(loc='upper right', fontsize=20, frameon=False, numpoints=1)
         plt.savefig(plots_path + 'AM_M' + '-' + date + '.png', bbox_inches='tight')
         plt.close()
         return None

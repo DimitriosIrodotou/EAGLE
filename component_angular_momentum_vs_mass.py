@@ -79,7 +79,7 @@ class ComponentAngularMomentumVsMass:
         d = plt.scatter(glx_disc_fractions_IT20 * glx_stellar_masses, spc_disc_angular_momenta, c='tab:blue', s=8)
         b = plt.scatter((1 - glx_disc_fractions_IT20) * glx_stellar_masses, spc_spheroid_angular_momenta, c='tab:red', s=8)
 
-        # Read observational data from FR13 and OG14 #
+        # Read observational data from FR13 and TMS19 #
         FR13_D = np.genfromtxt('./observational_data/FR_1305.1626/Figure2_D.csv', delimiter=',', names=['Md', 'jd'])
         FR13_E = np.genfromtxt('./observational_data/FR_1305.1626/Figure2_E.csv', delimiter=',', names=['Mb', 'jb'])
         TMS19 = np.genfromtxt('./observational_data/TMS_1902.03792/Figure4_middleright_bulge.csv', delimiter=',', names=['Mb', 'jb'])
@@ -93,9 +93,9 @@ class ComponentAngularMomentumVsMass:
             label=r'$\mathrm{Tabor+19:Bulges}$', zorder=4)
 
         # Create the legends, save and close the figure #
-        legend = plt.legend([d, b], [r'$\mathrm{Discs}$', r'$\mathrm{Spheroids}$'], loc='upper left', fontsize=12, frameon=False, numpoints=1)
+        legend = plt.legend([d, b], [r'$\mathrm{Discs}$', r'$\mathrm{Spheroids}$'], loc='upper left', fontsize=20, frameon=False, numpoints=1)
         plt.gca().add_artist(legend)
-        plt.legend(loc='upper right', fontsize=12, frameon=False, numpoints=1)
+        plt.legend(loc='upper right', fontsize=20, frameon=False, numpoints=1)
         plt.savefig(plots_path + 'C_AM_M' + '-' + date + '.png', bbox_inches='tight')
         plt.close()
         return None
