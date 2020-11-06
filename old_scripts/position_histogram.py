@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import eagle_IO.eagle_IO.eagle_IO as E
 
 from matplotlib import gridspec
-from rotate_galaxies import RotateCoordinates
+from plot_tools import RotateCoordinates
 
 # Create a parser and add argument to read data #
 parser = argparse.ArgumentParser(description='Create 2 dimensional histograms of the position of stellar particles.')
@@ -192,7 +192,7 @@ class PositionHistogram:
         
         # Generate the figures #
         plt.close()
-        figure, axis = plt.subplots(1, figsize=(20, 7.5))
+        figure = plt.figure(figsize=(20, 7.5))
         
         gs = gridspec.GridSpec(2, 3, height_ratios=(0.03, 1))
         gs.update(hspace=0.4, wspace=0.3)

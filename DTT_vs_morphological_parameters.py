@@ -9,9 +9,12 @@ matplotlib.use('Agg')
 import numpy as np
 import matplotlib.cbook
 import matplotlib.pyplot as plt
+import matplotlib.style as style
 
 from matplotlib import gridspec
 
+style.use("classic")
+plt.rcParams.update({'font.family':'serif'})
 date = time.strftime('%d_%m_%y_%H%M')  # Date.
 start_global_time = time.time()  # Start the global time.
 warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
@@ -80,8 +83,8 @@ class DiscToTotalVsMorphologicalParameters:
         plot_tools.set_axis(axis10, xlim=[0, 0.95], ylim=[0, 1], xlabel=r'$\mathrm{D/T_{\vec{J}_{b}=0}}$',
                             ylabel=r'$\mathrm{D/T_{\Delta \theta<30\degree}}$', aspect=None, which='major')
         plot_tools.set_axis(axis11, xlim=[0, 0.95], ylim=[0, 1], xlabel=r'$\mathrm{\overline{\epsilon}}$', aspect=None, which='major')
-        plot_tools.set_axis(axis12, xlim=[0, 4.50], ylim=[0, 1], xlabel=r'$\mathrm{V_{rot}/\sigma}$', aspect=None, which='major')
-        plot_tools.set_axis(axis13, xlim=[0, 0.95], ylim=[0, 1], xlabel=r'$\mathrm{\kappa_{co}}$', aspect=None, which='major')
+        plot_tools.set_axis(axis12, xlim=[0, 4.20], ylim=[0, 1], xlabel=r'$\mathrm{V_{rot}/\sigma}$', aspect=None, which='major')
+        plot_tools.set_axis(axis13, xlim=[0.05, 0.95], ylim=[0, 1], xlabel=r'$\mathrm{\kappa_{co}}$', aspect=None, which='major')
         for axis in [axis11, axis12, axis13]:
             axis.set_yticklabels([])
 
@@ -104,8 +107,8 @@ class DiscToTotalVsMorphologicalParameters:
             axis.axvline(x=threshold, c='tab:red')  # Plot threshold lines.
 
         # Create the legends, save and close the figure #
-        axis11.legend([median], [r'$\mathrm{Median}$'], frameon=False, fontsize=16, loc='upper right')
-        axis12.legend([fill], [r'$\mathrm{16^{th}-84^{th}\;\%ile}$'], frameon=False, fontsize=16, loc='upper left')
+        axis11.legend([median], [r'$\mathrm{Median}$'], frameon=False, fontsize=20, loc='upper right')
+        axis12.legend([fill], [r'$\mathrm{16^{th}-84^{th}\;\%ile}$'], frameon=False, fontsize=20, loc='upper left')
         plt.savefig(plots_path + 'DTT_MP' + '-' + date + '.png', bbox_inches='tight')
         plt.close()
         return None

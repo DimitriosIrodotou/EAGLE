@@ -9,7 +9,10 @@ matplotlib.use('Agg')
 import numpy as np
 import matplotlib.cbook
 import matplotlib.pyplot as plt
+import matplotlib.style as style
 
+style.use("classic")
+plt.rcParams.update({'font.family':'serif'})
 date = time.strftime('%d_%m_%y_%H%M')  # Date.
 start_global_time = time.time()  # Start the global time.
 warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
@@ -66,7 +69,7 @@ class ComponentBetaVsDTT:
                             aspect=None)
 
         # Plot the component delta as a function of disc to total ratio colour-coded by galaxy's delta #
-        axis.scatter(glx_disc_fractions_IT20, np.exp(spheroid_deltas - 1), c='tab:red', s=8, label=r'$\mathrm{Spheroids}$')
+        axis.scatter(glx_disc_fractions_IT20, np.exp(spheroid_deltas - 1), c='tab:red', s=20, label=r'$\mathrm{Spheroids}$', edgecolor='none')
 
         # Plot median and 1-sigma lines #
         x_value, median, shigh, slow = plot_tools.binned_median_1sigma(glx_disc_fractions_IT20, np.exp(spheroid_deltas - 1), bin_type='equal_width',
@@ -79,7 +82,7 @@ class ComponentBetaVsDTT:
         axis.axhline(y=np.exp(0 - 1), c='black', lw=3, linestyle='dashed', label=r'$\mathrm{Isotropic}$')
 
         # Create the legends, save and close the figure #
-        plt.legend(loc='upper right', fontsize=16, frameon=False, numpoints=1)
+        plt.legend(loc='upper center', fontsize=20, frameon=False, numpoints=1, scatterpoints=1, ncol=2)
         plt.savefig(plots_path + 'C_B_DTT' + '-' + date + '.png', bbox_inches='tight')
         plt.close()
         return None

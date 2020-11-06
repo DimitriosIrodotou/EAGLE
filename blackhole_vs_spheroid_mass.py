@@ -5,11 +5,13 @@ import matplotlib
 import plot_tools
 
 matplotlib.use('Agg')
-
 import numpy as np
 import matplotlib.cbook
 import matplotlib.pyplot as plt
+import matplotlib.style as style
 
+style.use("classic")
+plt.rcParams.update({'font.family':'serif'})
 date = time.strftime('%d_%m_%y_%H%M')  # Date.
 start_global_time = time.time()  # Start the global time.
 warnings.filterwarnings('ignore', category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
@@ -68,7 +70,7 @@ class BlackholeVsSpheroidMass:
                             ylabel=r'$\mathrm{log_{10}(M_{\bullet}/M_{\odot})}$', aspect=None, which='major')
 
         # Plot the black hole mass as a function of spheroid mass #
-        plt.scatter(np.log10((1 - glx_disc_fractions_IT20) * glx_stellar_masses), np.log10(bh_masses), c='tab:red', s=8,
+        plt.scatter(np.log10((1 - glx_disc_fractions_IT20) * glx_stellar_masses), np.log10(bh_masses), c='tab:red', s=20, edgecolor='none',
                     label=r'$\mathrm{Spheroids}$')
 
         # Read and  observational data from HR04 #
@@ -78,7 +80,7 @@ class BlackholeVsSpheroidMass:
                      label=r'$\mathrm{HR04}$')
 
         # Create the legends, save and close the figure #
-        plt.legend(loc='upper right', fontsize=12, frameon=False, numpoints=1)
+        plt.legend(loc='upper center', fontsize=20, frameon=False, numpoints=1, scatterpoints=1, ncol=2)
         plt.savefig(plots_path + 'B_B_M' + '-' + date + '.png', bbox_inches='tight')
         plt.close()
         return None

@@ -12,11 +12,14 @@ import healpy as hlp
 import matplotlib.cbook
 import astropy.units as u
 import matplotlib.pyplot as plt
+import matplotlib.style as style
 
 from matplotlib import gridspec
 from astropy_healpix import HEALPix
 from plot_tools import RotateCoordinates
 
+style.use("classic")
+plt.rcParams.update({'font.family':'serif'})
 date = time.strftime('%d_%m_%y_%H%M')  # Date.
 start_global_time = time.time()  # Start the global time.
 warnings.filterwarnings('ignore', category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
@@ -38,7 +41,7 @@ class SampleDecompositionSpatialDistribution:
         group_numbers = [355, 364, 696, 1009, 1182]
 
         # Generate the figure and define its parameters #
-        figure = plt.figure(figsize=(25, 25))
+        figure = plt.figure(figsize=(20, 20))
 
         gs = gridspec.GridSpec(6, 5, wspace=0.4, hspace=0.4, height_ratios=[0.1, 1, 1, 1, 1, 1])
         axiscbar = figure.add_subplot(gs[0, :])
@@ -57,12 +60,15 @@ class SampleDecompositionSpatialDistribution:
             axis.set_xlabel(r'$\mathrm{\alpha/\degree}$', size=20)
             axis.set_ylabel(r'$\mathrm{\delta/\degree}$', size=20)
             axis.set_yticklabels(['', '-60', '', '-30', '', '0', '', '30', '', '60', ''], size=20)
-            axis.set_xticklabels(['', '-120', '', '-60', '', '0', '', '60', '', '120', ''], size=20)
+            axis.set_xticklabels(['', '', '-90', '', '', '0', '', '', '90', '', ''], size=20)
         for axis in [axis11, axis21, axis31, axis41, axis51, axis13, axis23, axis33, axis43, axis53]:
             plot_tools.set_axis(axis, xlabel=r'$\mathrm{x/kpc}$', ylabel=r'$\mathrm{y/kpc}$', aspect=None, size=20)
+            axis.set_xticklabels(['', '-20', '', '0', '', '20', ''], size=20)
+            axis.set_yticklabels(['', '-20', '', '0', '', '20', ''], size=20)
         for axis in [axis12, axis22, axis32, axis42, axis52, axis14, axis24, axis34, axis44, axis54]:
             plot_tools.set_axis(axis, xlabel=r'$\mathrm{x/kpc}$', ylabel=r'$\mathrm{z/kpc}$', aspect=None, size=20)
-
+            axis.set_xticklabels(['', '-20', '', '0', '', '20', ''], size=20)
+            axis.set_yticklabels(['', '-20', '', '0', '', '20', ''], size=20)
         all_axes = [[axis10, axis11, axis12, axis13, axis14], [axis20, axis21, axis22, axis23, axis24], [axis30, axis31, axis32, axis33, axis34],
                     [axis40, axis41, axis42, axis43, axis44], [axis50, axis51, axis52, axis53, axis54]]
 
@@ -154,7 +160,7 @@ class SampleDecompositionSpatialDistribution:
 
         # Display data on a 2D regular raster and create a pseudo-color plot #
         pcm = axes[0].pcolormesh(np.radians(ra), np.radians(dec), density_map, cmap='nipy_spectral_r')
-        cbar = plt.colorbar(pcm, ax=axes[0], orientation='horizontal')
+        cbar = plt.colorbar(pcm, ax=axes[0], ticks=[0, 50, 100, 150, 200], orientation='horizontal')
         cbar.ax.tick_params(labelsize=20)
         cbar.set_label('$\mathrm{Particles\;per\;grid\;cell}$', size=20)
 

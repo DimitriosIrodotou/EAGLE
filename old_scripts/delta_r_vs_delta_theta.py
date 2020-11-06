@@ -20,7 +20,7 @@ warnings.filterwarnings('ignore', category=matplotlib.cbook.mplDeprecation)  # I
 
 class DeltaRVsDeltaTheta:
     """
-    For all galaxies create: an angular separation between the densest pixel and the angular momentum versus the distance between the centre of
+    For all galaxies create: an angular separation between the densest pixel and the angular momentum as a function of the distance between the centre of
     mass and the centre of potential normalised wrt the half-mass plot.
     
     """
@@ -36,14 +36,18 @@ class DeltaRVsDeltaTheta:
         
         delta_rs = np.load(data_path + 'glx_delta_rs.npy')
         delta_thetas = np.load(data_path + 'glx_delta_thetas.npy')
-        disc_fractions_IT20 = np.load(data_path + 'glx_disc_fractions_IT20.npy')
+        glx_disc_fractions_IT20 = np.load(data_path + 'glx_disc_fractions_IT20.npy')
+
+        # Normalise disc fractions #
+        chi = 0.5 * (1 - np.cos(np.pi / 6))
+        glx_disc_fractions_IT20 = np.divide(1, 1 - chi) * (glx_disc_fractions_IT20 - chi)
         print('Loaded data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
         # Plot the data #
         start_local_time = time.time()  # Start the local time.
         
-        self.plot(delta_rs, delta_thetas, disc_fractions_IT20)
+        self.plot(delta_rs, delta_thetas, glx_disc_fractions_IT20)
         print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
@@ -53,24 +57,24 @@ class DeltaRVsDeltaTheta:
     
     
     @staticmethod
-    def plot(delta_rs, delta_thetas, disc_fractions_IT20):
+    def plot(delta_rs, delta_thetas, glx_disc_fractions_IT20):
         """
-        Plot the angular separation between the densest pixel and the angular momentum versus the distance between the centre of mass and
+        Plot the angular separation between the densest pixel and the angular momentum as a function of the distance between the centre of mass and
         the centre of potential normalised wrt the half-mass.
         :param delta_rs: from read_add_attributes.py.
         :param delta_thetas: from read_add_attributes.py.
-        :param disc_fractions_IT20: where the disc consists of particles whose angular momentum angular separation is 30deg from the densest pixel.
+        :param glx_disc_fractions_IT20: where the disc consists of particles whose angular momentum angular separation is 30deg from the densest pixel.
         :return: None
         """
         # Generate the figure and define its parameters #
         plt.close()
-        figure, axis = plt.subplots(1, figsize=(10, 7.5))
+        figure = plt.figure(figsize=(10, 7.5))
         gs = gridspec.GridSpec(1, 2, wspace=0.0, width_ratios=[1, 0.05])
         axis00 = figure.add_subplot(gs[0, 0])
         axis10 = figure.add_subplot(gs[0, 1])
         plot_tools.set_axis(axis00, xlim=[0, 2], ylim=[0, 180], xlabel=r'$\mathrm{\delta_{r}/R_{hm}}$', ylabel=r'$\mathrm{\delta_{\theta}/\degree}$')
         
-        # sc = axis00.scatter(delta_rs, delta_thetas[:, 0], c=disc_fractions_IT20, cmap='coolwarm_r', vmin=0, vmax=1, s=5)
+        # sc = axis00.scatter(delta_rs, delta_thetas[:, 0], c=glx_disc_fractions_IT20, cmap='coolwarm_r', vmin=0, vmax=1, s=5)
         hb = axis00.hexbin(delta_rs, delta_thetas[:, 0], gridsize=100, cmap='nipy_spectral_r')
         plot_tools.create_colorbar(axis10, hb, r'$\mathrm{Counts\;per\;hexbin}$', 'vertical')
         # plot_tools.create_colorbar(axis10, sc, r'$\mathrm{D/T_{30\degree}}$', 'vertical')

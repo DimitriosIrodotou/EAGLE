@@ -9,10 +9,13 @@ matplotlib.use('Agg')
 import numpy as np
 import matplotlib.cbook
 import matplotlib.pyplot as plt
+import matplotlib.style as style
 
 from matplotlib import gridspec
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
+style.use("classic")
+plt.rcParams.update({'font.family':'serif'})
 date = time.strftime('%d_%m_%y_%H%M')  # Date.
 start_global_time = time.time()  # Start the global time.
 warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
@@ -76,16 +79,18 @@ class AngularMomentumVsMass:
 
         # Plot the specific galactic angular momentum as a function of stellar mass colour-coded by disc to total ratio #
         spc_stellar_angular_momenta = np.linalg.norm(glx_stellar_angular_momenta, axis=1) / glx_stellar_masses
-        sc = axis10.scatter(glx_stellar_masses, spc_stellar_angular_momenta, c=glx_disc_fractions_IT20, s=8, cmap='seismic_r', vmin=0, vmax=1)
+        sc = axis10.scatter(glx_stellar_masses, spc_stellar_angular_momenta, c=glx_disc_fractions_IT20, s=20, cmap='seismic_r', vmin=0, vmax=1,
+                            edgecolor='none')
         plot_tools.create_colorbar(axis00, sc, r'$\mathrm{D/T_{\Delta \theta<30\degree}}$', 'horizontal')
 
-        # Read observational data from OG13, FR18 and PPF20 #
+        # Read observational data from OG13, FR18 and MPPF20 #
         OG13 = np.genfromtxt('./observational_data/OG_1312.4543/Figure7_stars.csv', delimiter=',', names=['Mstar', 'jstar'])
         FR18_table1 = np.genfromtxt('./observational_data/FR_1808.02525/Table1.txt', delimiter='\t', names=['Mstar', 'jstar', 'BTT'])
-        PPF20 = np.genfromtxt('./observational_data/PPF_2009.06645/Figure5_MJ_stars.txt', names=['Mstar', 'jstar'])
+        MPPF20 = np.genfromtxt('./observational_data/MPPF_2009.06645/Figure5_MJ_stars.txt', names=['Mstar', 'jstar'])
 
-        # Plot observational data from OG13, FR18 and PPF20 #
-        axis10.scatter(PPF20['Mstar'], PPF20['jstar'], edgecolor='black', color='grey', s=75, marker='P', label=r'$\mathrm{PPF20}$', zorder=5)
+        # Plot observational data from OG13, FR18 and MPPF20 #
+        axis10.scatter(MPPF20['Mstar'], MPPF20['jstar'], edgecolor='black', color='grey', s=75, marker='P',
+                       label=r'$\mathrm{Mancera\,Pi\tilde{n}a\!+\!20}$', zorder=5)
         axis10.scatter(np.power(10, OG13['Mstar']), np.power(10, OG13['jstar']), edgecolor='black', color='grey', s=75, marker='s',
                        label=r'$\mathrm{OG14}$', zorder=5)
         sc2 = axis10.scatter(np.power(10, FR18_table1['Mstar']), np.power(10, FR18_table1['jstar']), edgecolor='black', cmap='seismic_r',
@@ -94,7 +99,7 @@ class AngularMomentumVsMass:
         plot_tools.create_colorbar(axiscbar, sc2, r'$\mathrm{FR18:D/T}$', 'horizontal', top=False, ticks=[0, 0.5, 1], size=20)
 
         # Create the legend, save and close the figure #
-        axis10.legend(loc='upper right', fontsize=20, frameon=False, numpoints=1)
+        axis10.legend(loc='lower right', fontsize=20, frameon=False, numpoints=1, scatterpoints=1)
         plt.savefig(plots_path + 'AM_M' + '-' + date + '.png', bbox_inches='tight')
         plt.close()
         return None

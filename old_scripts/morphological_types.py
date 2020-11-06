@@ -31,14 +31,18 @@ class MorphologicalTypes:
         start_local_time = time.time()  # Start the local time.
         
         stellar_masses = np.load(data_path + 'glx_stellar_masses.npy')
-        disc_fractions_IT20 = np.load(data_path + 'glx_disc_fractions_IT20.npy')
+        glx_disc_fractions_IT20 = np.load(data_path + 'glx_disc_fractions_IT20.npy')
+
+        # Normalise disc fractions #
+        chi = 0.5 * (1 - np.cos(np.pi / 6))
+        glx_disc_fractions_IT20 = np.divide(1, 1 - chi) * (glx_disc_fractions_IT20 - chi)
         print('Loaded data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
         # Plot the data #
         start_local_time = time.time()  # Start the local time.
         
-        self.plot(disc_fractions_IT20, stellar_masses)
+        self.plot(glx_disc_fractions_IT20, stellar_masses)
         print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
         
@@ -46,10 +50,10 @@ class MorphologicalTypes:
         print('–––––––––––––––––––––––––––––––––––––––––––––')
     
     
-    def plot(self, disc_fractions_IT20, stellar_masses):
+    def plot(self, glx_disc_fractions_IT20, stellar_masses):
         """
         Plot the a fractional breakdown into different morphological types.
-        :param disc_fractions_IT20: where the disc consists of particles whose angular momentum angular separation is 30deg from the densest pixel.
+        :param glx_disc_fractions_IT20: where the disc consists of particles whose angular momentum angular separation is 30deg from the densest pixel.
         :param stellar_masses: defined as the mass of all stellar particles within 30kpc from the most bound particle.
         :return: None
         """
@@ -66,7 +70,7 @@ class MorphologicalTypes:
         # ax10.set_ylabel(r'$\mathrm{(|\vec{J}_{\odot}|/M_{\odot})/(kpc\;km\;s^{-1})}$', size=16)
         # ax10.tick_params(direction='out', which='both', top='on', right='on',  labelsize=16)
         
-        bulge_fractions_IT20 = 1 - disc_fractions_IT20
+        bulge_fractions_IT20 = 1 - glx_disc_fractions_IT20
         stellar_masses = np.log10(stellar_masses) + np.log10(0.673)
         bulge_masses = bulge_fractions_IT20 * stellar_masses
         
@@ -106,9 +110,9 @@ class MorphologicalTypes:
         plt.plot(x, yDisk, color='green', lw=2)
         
         # Read observational data from C06 and ﻿KDR14 #
-        obsBulge = np.loadtxt('./Obs_Data/Conselice06_Bulge_Frac.txt')
-        obsDisk = np.loadtxt('./Obs_Data/Conselice06_Disk_Frac.txt')
-        obsIrr = np.loadtxt('./Obs_Data/Conselice06_Irr_Frac.txt')
+        obsBulge = np.loadtxt('./observational_data/Conselice06_Bulge_Frac.txt')
+        obsDisk = np.loadtxt('./observational_data/Conselice06_Disk_Frac.txt')
+        obsIrr = np.loadtxt('./observational_data/Conselice06_Irr_Frac.txt')
         
         x = [9, 9.5, 10, 10.5, 11, 11.5]
         yE = [0.23, 0.25, 0.24, 0.31, 0.72, 1.00]

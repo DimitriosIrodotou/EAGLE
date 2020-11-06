@@ -127,7 +127,7 @@ class MassSize:
 
         # Generate the figure and define its parameters #
         plt.close()
-        figure, axis = plt.subplots(1, figsize=(10, 10))
+        figure = plt.figure(figsize=(10, 10))
 
         gs = gridspec.GridSpec(2, 2, height_ratios=[2, 1], width_ratios=(20, 1))
         gs.update(hspace=0.2)

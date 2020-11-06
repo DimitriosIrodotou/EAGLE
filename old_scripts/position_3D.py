@@ -192,7 +192,7 @@ class Position3D:
         
         # Generate the figure and define its parameters #
         plt.close()
-        figure, axis = plt.subplots(1, figsize=(20, 15))
+        figure = plt.figure(figsize=(20, 15))
         gs = gridspec.GridSpec(2, 1)
         axupper = plt.subplot(gs[0, 0], projection='3d')
         axlower = plt.subplot(gs[1, 0], projection='3d')

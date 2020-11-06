@@ -9,9 +9,12 @@ matplotlib.use('Agg')
 import numpy as np
 import matplotlib.cbook
 import matplotlib.pyplot as plt
+import matplotlib.style as style
 
 from matplotlib import gridspec
 
+style.use("classic")
+plt.rcParams.update({'font.family':'serif'})
 date = time.strftime('%d_%m_%y_%H%M')  # Date.
 start_global_time = time.time()  # Start the global time.
 warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
@@ -82,8 +85,9 @@ class ComponentAgeMetallicityVsMass:
         axis00.set_xticklabels([])
 
         # Plot the average birth scale factor as a function of galaxy mass colour-coded by disc to total ratio #
-        axis00.scatter(glx_disc_fractions_IT20 * glx_stellar_masses, disc_weighted_as, c='tab:blue', s=8, cmap='seismic_r')
-        axis00.scatter((1 - glx_disc_fractions_IT20) * glx_stellar_masses, spheroid_weighted_as, c='tab:red', s=8, cmap='seismic_r')
+        axis00.scatter(glx_disc_fractions_IT20 * glx_stellar_masses, disc_weighted_as, c='tab:blue', s=20, cmap='seismic_r', edgecolor='none')
+        axis00.scatter((1 - glx_disc_fractions_IT20) * glx_stellar_masses, spheroid_weighted_as, c='tab:red', s=20, cmap='seismic_r',
+                       edgecolor='none')
 
         # Plot median and 1-sigma lines #
         for component, ratio in zip([disc_weighted_as, spheroid_weighted_as], [glx_disc_fractions_IT20, 1 - glx_disc_fractions_IT20]):
@@ -93,8 +97,8 @@ class ComponentAgeMetallicityVsMass:
             axis00.fill_between(x_value, shigh, slow, color='black', alpha=0.3)
 
         # Plot the component metallicity-mass relation colour-coded by disc to total ratio #
-        d = axis10.scatter(glx_disc_fractions_IT20 * glx_stellar_masses, disc_metallicities, c='tab:blue', s=8)
-        b = axis10.scatter((1 - glx_disc_fractions_IT20) * glx_stellar_masses, spheroid_metallicities, c='tab:red', s=8)
+        d = axis10.scatter(glx_disc_fractions_IT20 * glx_stellar_masses, disc_metallicities, c='tab:blue', s=20, edgecolor='none')
+        b = axis10.scatter((1 - glx_disc_fractions_IT20) * glx_stellar_masses, spheroid_metallicities, c='tab:red', s=20, edgecolor='none')
 
         # Plot median and 1-sigma lines #
         for component, ratio in zip([disc_metallicities, spheroid_metallicities], [glx_disc_fractions_IT20, 1 - glx_disc_fractions_IT20]):
@@ -107,7 +111,7 @@ class ComponentAgeMetallicityVsMass:
         # Create a legend, save and close the figure #
         axis10.legend([d, b, median, fill],
                       [r'$\mathrm{Discs}$', r'$\mathrm{Spheroids}$', r'$\mathrm{Median}$', r'$\mathrm{16^{th}-84^{th}\;\%ile}$'], frameon=False,
-                      fontsize=16, loc='upper center', ncol=2)
+                      fontsize=20, loc='upper center', ncol=2, numpoints=1, scatterpoints=1)
         plt.savefig(plots_path + 'C_A_M_M' + '-' + date + '.png', bbox_inches='tight')
         plt.close()
         return None

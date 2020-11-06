@@ -9,7 +9,10 @@ matplotlib.use('Agg')
 import numpy as np
 import matplotlib.cbook
 import matplotlib.pyplot as plt
+import matplotlib.style as style
 
+style.use("classic")
+plt.rcParams.update({'font.family':'serif'})
 date = time.strftime('%d_%m_%y_%H%M')  # Date.
 start_global_time = time.time()  # Start the global time.
 warnings.filterwarnings('ignore', category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
@@ -67,17 +70,17 @@ class ComponentAngularMomentumVsMass:
         # Generate the figure and define its parameters #
         figure, axis = plt.subplots(1, figsize=(10, 7.5))
         plot_tools.set_axis(axis, xlim=[1e8, 1e12], ylim=[1e-1, 1e6], xscale='log', yscale='log',
-            xlabel=r'$\mathrm{log_{10}(M_{\bigstar,comp}/M_{\odot})}$',
-            ylabel=r'$\mathrm{(|\vec{J}_{\bigstar,comp}|/M_{\bigstar, comp})/(kpc\;km\;s^{-1})}$', aspect=None, which='major')
+                            xlabel=r'$\mathrm{log_{10}(M_{\bigstar,comp}/M_{\odot})}$',
+                            ylabel=r'$\mathrm{(|\vec{J}_{\bigstar,comp}|/M_{\bigstar, comp})/(kpc\;km\;s^{-1})}$', aspect=None, which='major')
 
         # Calculate component specific angular momentum #
         spc_disc_angular_momenta = np.divide(np.linalg.norm(disc_stellar_angular_momenta, axis=1), glx_disc_fractions_IT20 * glx_stellar_masses)
         spc_spheroid_angular_momenta = np.divide(np.linalg.norm(spheroid_stellar_angular_momenta, axis=1),
-            (1 - glx_disc_fractions_IT20) * glx_stellar_masses)
+                                                 (1 - glx_disc_fractions_IT20) * glx_stellar_masses)
 
         # Plot galactic angular momentum as a function of stellar mass colour-coded by disc to total ratio #
-        d = plt.scatter(glx_disc_fractions_IT20 * glx_stellar_masses, spc_disc_angular_momenta, c='tab:blue', s=8)
-        b = plt.scatter((1 - glx_disc_fractions_IT20) * glx_stellar_masses, spc_spheroid_angular_momenta, c='tab:red', s=8)
+        d = plt.scatter(glx_disc_fractions_IT20 * glx_stellar_masses, spc_disc_angular_momenta, c='tab:blue', s=20, edgecolor='none')
+        b = plt.scatter((1 - glx_disc_fractions_IT20) * glx_stellar_masses, spc_spheroid_angular_momenta, c='tab:red', s=20, edgecolor='none')
 
         # Read observational data from FR13 and TMS19 #
         FR13_D = np.genfromtxt('./observational_data/FR_1305.1626/Figure2_D.csv', delimiter=',', names=['Md', 'jd'])
@@ -86,16 +89,17 @@ class ComponentAngularMomentumVsMass:
 
         # Plot observational data from FR13 and OG14 #
         plt.scatter(np.power(10, FR13_D['Md']), np.power(10, FR13_D['jd']), edgecolor='black', color='grey', s=150, marker='*',
-            label=r'$\mathrm{FR13:Discs}$', zorder=4)
+                    label=r'$\mathrm{FR13:Discs}$', zorder=4)
         plt.scatter(np.power(10, FR13_E['Mb']), np.power(10, FR13_E['jb']), edgecolor='black', color='grey', s=50, marker='s',
-            label=r'$\mathrm{FR13:Bulges}$', zorder=4)
+                    label=r'$\mathrm{FR13:Bulges}$', zorder=4)
         plt.scatter(np.power(10, TMS19['Mb']), np.power(10, TMS19['jb']), edgecolor='black', color='grey', s=50, marker='^',
-            label=r'$\mathrm{Tabor+19:Bulges}$', zorder=4)
+                    label=r'$\mathrm{Tabor\!+\!19:Bulges}$', zorder=4)
 
         # Create the legends, save and close the figure #
-        legend = plt.legend([d, b], [r'$\mathrm{Discs}$', r'$\mathrm{Spheroids}$'], loc='upper left', fontsize=20, frameon=False, numpoints=1)
+        legend = plt.legend([d, b], [r'$\mathrm{Discs}$', r'$\mathrm{Spheroids}$'], loc='upper left', fontsize=20, frameon=False, numpoints=1,
+                            scatterpoints=1)
         plt.gca().add_artist(legend)
-        plt.legend(loc='upper right', fontsize=20, frameon=False, numpoints=1)
+        plt.legend(loc='upper right', fontsize=20, frameon=False, numpoints=1, scatterpoints=1)
         plt.savefig(plots_path + 'C_AM_M' + '-' + date + '.png', bbox_inches='tight')
         plt.close()
         return None

@@ -5,13 +5,14 @@ import warnings
 import matplotlib
 
 import numpy as np
+import healpy as hlp
 import matplotlib.cbook
 import astropy.units as u
 import matplotlib.pyplot as plt
 
 from matplotlib import gridspec
 from astropy_healpix import HEALPix
-from rotate_galaxies import RotateCoordinates
+from plot_tools import RotateCoordinates
 
 date = time.strftime('%d_%m_%y_%H%M')  # Date.
 start_global_time = time.time()  # Start the global time.
@@ -66,7 +67,7 @@ class TestResolution:
         """
         # Generate the figure and define its parameters #
         plt.close()
-        figure, axis = plt.subplots(1, figsize=(16, 9))
+        figure = plt.figure(figsize=(16, 9))
         
         gs = gridspec.GridSpec(2, 3)
         axis00 = figure.add_subplot(gs[0, 0], projection='mollweide')
@@ -102,11 +103,18 @@ class TestResolution:
             # Plot a HEALPix histogram #
             nside = 2 ** power  # Define the resolution of the grid (number of divisions along the side of a base-resolution pixel).
             hp = HEALPix(nside=nside)  # Initialise the HEALPix pixelisation class.
-            indices = hp.lonlat_to_healpix(ra * u.deg, dec * u.deg)  # Create list of HEALPix indices from particles' ra and dec.
-            density = np.bincount(indices, minlength=hp.npix)  # Count number of data points in each HEALPix pixel.
+            indices = hp.lonlat_to_healpix(ra * u.deg, dec * u.deg)  # Create a list of HEALPix indices from particles' ra and dec.
+            densities = np.bincount(indices, minlength=hp.npix)  # Count number of data points in each HEALPix pixel.
+
+        # Perform a top-hat smoothing on the densities #
+        smoothed_densities = np.zeros(hp.npix)
+        # Loop over all grid cells #
+        for i in range(hp.npix):
+            mask = hlp.query_disc(nside, hlp.pix2vec(nside, i), np.pi / 6.0)  # Do a 30degree cone search around each grid cell.
+            smoothed_densities[i] = np.mean(densities[mask])  # Average the densities of the ones inside and assign this value to the grid cell.
             
-            # Find location of density maximum and plot its positions and the ra (lon) and dec (lat) of the galactic angular momentum #
-            index_densest = np.argmax(density)
+            # Find the location of the density maximum and plot its positions and the ra (lon) and dec (lat) of the galactic angular momentum #
+            index_densest = np.argmax(smoothed_densities)
             lon_densest = (hp.healpix_to_lonlat([index_densest])[0].value + np.pi) % (2 * np.pi) - np.pi
             lat_densest = (hp.healpix_to_lonlat([index_densest])[1].value + np.pi / 2) % (2 * np.pi) - np.pi / 2
             axis.annotate(r'$\mathrm{Density\;maximum}$', xy=(lon_densest, lat_densest), xycoords='data', xytext=(0.78, 1.00),
@@ -130,12 +138,12 @@ class TestResolution:
             cbar.set_label('$\mathrm{Particles\; per\; grid\; cell}$', size=12)
             axis.pcolormesh(np.radians(ra), np.radians(dec), density_map, cmap='nipy_spectral_r')
             
-            # Calculate disc mass fraction as the mass within 30 degrees from the densest pixel #
+            # Calculate the disc mass fraction as the mass within 30 degrees from the densest pixel #
             angular_theta_from_densest = np.arccos(np.sin(lat_densest) * np.sin(np.arcsin(prc_unit_vector[:, 2])) + np.cos(lat_densest) * np.cos(
                 np.arcsin(prc_unit_vector[:, 2])) * np.cos(lon_densest - np.arctan2(prc_unit_vector[:, 1], prc_unit_vector[:, 0])))  # In radians.
             disc_mask = np.where(angular_theta_from_densest < (np.pi / 6.0))
             disc_fraction_IT20 = np.sum(stellar_data_tmp['Mass'][disc_mask]) / np.sum(stellar_data_tmp['Mass'])
-            axis.text(0.3, 1.01, r'$\mathrm{DTT = %.3f}$' % disc_fraction_IT20, c='black', fontsize=12, transform=axis.transAxes)
+            axis.text(0.3, 1.01, r'$\mathrm{DTT= %.3f}$' % disc_fraction_IT20, c='black', fontsize=12, transform=axis.transAxes)
         
         plt.savefig(plots_path + str(group_number) + '_' + str(subgroup_number) + '-' + 'TR' + '-' + date + '.png', bbox_inches='tight')
         return None

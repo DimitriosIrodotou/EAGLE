@@ -64,7 +64,7 @@ class PositionHistogram:
         # Convert to astronomical units #
         particle_data['Coordinates'] *= u.cm.to(u.Mpc)
 
-        # Periodic wrap coordinates around centre #
+        # Periodically wrap coordinates around centre #
         # boxsize = self.boxsize / self.h
         # particle_data['Coordinates'] = np.mod(particle_data['Coordinates'] - subhalo_data['CentreOfMass'] + 0.5 * boxsize, boxsize) + subhalo_data[
         #     'CentreOfMass'] - 0.5 * boxsize

@@ -106,11 +106,11 @@ class SampleRAEl:
         # Display data on a 2D regular raster and create a pseudo-color plot #
         pcm = axis.pcolormesh(np.radians(ra), np.radians(el), density_map, cmap='nipy_spectral_r')
         cbar = plt.colorbar(pcm, ax=axis, orientation='horizontal')
-        cbar.ax.tick_params(labelsize=14)
+        cbar.ax.tick_params(labelsize=15)
 
         # Define the figure parameters #
         axis.axis('off')
-        plt.text(0.0, 0.95, str(group_number), color='red', fontsize=14, transform=axis.transAxes)
+        plt.text(0.0, 0.95, str(group_number), color='red', fontsize=20, transform=axis.transAxes)
 
         return pcm
 

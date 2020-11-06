@@ -9,9 +9,12 @@ matplotlib.use('Agg')
 import numpy as np
 import matplotlib.cbook
 import matplotlib.pyplot as plt
+import matplotlib.style as style
 
 from matplotlib import gridspec
 
+style.use("classic")
+plt.rcParams.update({'font.family':'serif'})
 date = time.strftime('%d_%m_%y_%H%M')  # Date.
 start_global_time = time.time()  # Start the global time.
 warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
@@ -83,12 +86,12 @@ class DTTVsEnvironment:
         axis10, axis11, axis12, axis13 = figure.add_subplot(gs[1, 0]), figure.add_subplot(gs[1, 1]), figure.add_subplot(gs[1, 2]), figure.add_subplot(
             gs[1, 3])
         for axis in [axis02, axis03]:
-            plot_tools.set_axis(axis, xlim=[-1.15, 1.15], ylim=[-1, 7], aspect=None, which='major')
-        axis02.set_ylabel(r'$\mathrm{PDF}$', size=16)
+            plot_tools.set_axis(axis, xlim=[-1.15, 1.15], ylim=[-0.5, 7], aspect=None, which='major')
+        axis02.set_ylabel(r'$\mathrm{PDF}$', size=20)
         axis03.set_yticklabels([])
         axis03.set_xticklabels([])
-        plot_tools.set_axis(axis10, xlim=[0, 2.7], ylim=[0, 1], xlabel=r'$\mathrm{PDF}$', ylabel=r'$\mathrm{D/T_{\Delta \theta<30\degree}}$', aspect=None,
-                            which='major')
+        plot_tools.set_axis(axis10, xlim=[0, 2.7], ylim=[0, 1], xlabel=r'$\mathrm{PDF}$', ylabel=r'$\mathrm{D/T_{\Delta \theta<30\degree}}$',
+                            aspect=None, which='major')
         plot_tools.set_axis(axis11, xlim=[9e-1, 2e2], ylim=[0, 1], xlabel=r'$\mathrm{N_{satellites}}$', aspect=None, which='major')
         plot_tools.set_axis(axis12, xlim=[-1.15, 1.15],
                             xlabel=r'$\mathrm{(\vec{J}_{disc}\cdot\vec{J}_{spheroid})/(|\vec{J}_{disc}||\vec{J}_{spheroid}|)}$', ylim=[0, 1],
@@ -101,32 +104,34 @@ class DTTVsEnvironment:
 
         # Calculate the cosine of the angle between gaseous and stellar components #
         cos_angle = np.divide(np.sum(glx_stellar_angular_momenta * glx_gaseous_angular_momenta, axis=1),
-                          np.linalg.norm(glx_stellar_angular_momenta, axis=1) * np.linalg.norm(glx_gaseous_angular_momenta, axis=1))
+                              np.linalg.norm(glx_stellar_angular_momenta, axis=1) * np.linalg.norm(glx_gaseous_angular_momenta, axis=1))
 
         # Calculate the cosine of angle between disc and spheroid components #
         cos_angle_components = np.divide(np.sum(disc_stellar_angular_momenta * spheroid_stellar_angular_momenta, axis=1),
-                                     np.linalg.norm(disc_stellar_angular_momenta, axis=1) * np.linalg.norm(spheroid_stellar_angular_momenta, axis=1))
+                                         np.linalg.norm(disc_stellar_angular_momenta, axis=1) * np.linalg.norm(spheroid_stellar_angular_momenta,
+                                                                                                               axis=1))
 
         # Plot the cosinne of the angle between the angular momentum of gaseous and stellar components and disc and spheroid #
         axes = [axis12, axis13]
         axes_hist = [axis02, axis03]
         x_attributes = [cos_angle_components, cos_angle]
         for axis, axis_hist, x_attribute in zip(axes, axes_hist, x_attributes):
-            axis.scatter(x_attribute, glx_disc_fractions_IT20, color='black')
+            axis.scatter(x_attribute, glx_disc_fractions_IT20, color='black',s=20)
             axis_hist.hist(x_attribute, density=True, bins=20, histtype='step', color='black')
 
             # Plot median and 1-sigma lines #
             x_value, median, shigh, slow = plot_tools.binned_median_1sigma(x_attribute, glx_disc_fractions_IT20, bin_type='equal_width', n_bins=25,
                                                                            log=False)
-            median, = axis.plot(x_value, median, color='darkturquoise', linewidth=3)
-            axis.fill_between(x_value, shigh, slow, color='darkturquoise', alpha=0.3)
-            fill, = plt.fill(np.NaN, np.NaN, color='darkturquoise', alpha=0.3)
+            median, = axis.plot(x_value, median, color='tab:orange', linewidth=3)
+            axis.fill_between(x_value, shigh, slow, color='tab:orange', alpha=0.3)
+            fill, = plt.fill(np.NaN, np.NaN, color='tab:orange', alpha=0.3)
 
         # Plot a histogram of the disc to total ratio for centrals and satellites #
         centrals_mask, = np.where(subgroup_numbers == 0)
         satellites_mask, = np.where(subgroup_numbers > 0)
-        for mask, label in zip([centrals_mask, satellites_mask], [r'$\mathrm{Centrals}$', r'$\mathrm{Satellites}$']):
-            axis10.hist(glx_disc_fractions_IT20[mask], density=True, bins=20, histtype='step', orientation='horizontal', label=label)
+        for mask, label, color in zip([centrals_mask, satellites_mask], [r'$\mathrm{Centrals}$', r'$\mathrm{Satellites}$'],
+                                      ['tab:brown', 'tab:cyan']):
+            axis10.hist(glx_disc_fractions_IT20[mask], density=True, bins=20, histtype='step', orientation='horizontal', label=label, color=color)
             axis10.invert_xaxis()
 
         # Plot the disc to total ratio as a function of number of satellites #
@@ -134,13 +139,13 @@ class DTTVsEnvironment:
         for i in range(len(unique_elements)):
             mask, = np.where((subgroup_numbers == 0) & (group_numbers == unique_elements[i]))
             if len(mask) > 0:  # Avoid lone satellites.
-                axis11.scatter(counts_elements[i], glx_disc_fractions_IT20[mask], color='black')
+                axis11.scatter(counts_elements[i], glx_disc_fractions_IT20[mask], color='black',s=20)
                 axis11.set_xscale('log')
 
         # Create the legends, save and close the figure #
-        axis12.legend([median], [r'$\mathrm{Median}$'], frameon=False, fontsize=16, loc='upper right')
-        axis13.legend([fill], [r'$\mathrm{16^{th}-84^{th}\;\%ile}$'], frameon=False, fontsize=16, loc='upper left')
-        axis10.legend(loc='upper center', fontsize=16, frameon=False, ncol=2)
+        axis12.legend([median], [r'$\mathrm{Median}$'], frameon=False, fontsize=20, loc='upper right')
+        axis13.legend([fill], [r'$\mathrm{16^{th}-84^{th}\;\%ile}$'], frameon=False, fontsize=20, loc='upper left')
+        axis10.legend(loc='upper center', fontsize=20, frameon=False, ncol=2)
         plt.savefig(plots_path + 'DTT_E' + '-' + date + '.png', bbox_inches='tight')
         plt.close()
         return None

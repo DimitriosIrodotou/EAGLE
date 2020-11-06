@@ -114,13 +114,13 @@ class TullyFisherFaberJackson:
         OCB20_FJ_discs = np.genfromtxt('./observational_data/OCB_2005.06474/Figure8_FJ_discs.csv', delimiter=',', names=['sigma', 'Mstar'])
         OCB20_FJ_bulges = np.genfromtxt('./observational_data/OCB_2005.06474/Figure8_FJ_bulges.csv', delimiter=',', names=['sigma', 'Mstar'])
 
-        axis10.scatter(AZF08['Mstar'], AZF08['Vrot'], color='cyan', marker='s', s=15, label=r'$\mathrm{Avila-Reese+08}$')
-        axis10.plot(OCB20_TF_DD['Vrot'], OCB20_TF_DD['Mstar'], color='cyan', label=r'$\mathrm{Oh+20:B/T<0.2}$')
-        axis11.plot(OCB20_FJ_BD['sigma'], OCB20_FJ_BD['Mstar'], color='orange', label=r'$\mathrm{Oh+20:B/T>0.8}$')
-        axis20.plot(OCB20_TF_discs['Vrot'], OCB20_TF_discs['Mstar'], color='cyan', label=r'$\mathrm{Oh+20:discs}$')
-        axis20.plot(OCB20_TF_bulges['Vrot'], OCB20_TF_bulges['Mstar'], color='orange', label=r'$\mathrm{Oh+20:bulges}$')
-        axis21.plot(OCB20_FJ_discs['sigma'], OCB20_FJ_discs['Mstar'], color='cyan', label=r'$\mathrm{Oh+20:discs}$')
-        axis21.plot(OCB20_FJ_bulges['sigma'], OCB20_FJ_bulges['Mstar'], color='orange', label=r'$\mathrm{Oh+20:bulges}$')
+        axis10.scatter(AZF08['Mstar'], AZF08['Vrot'], color='cyan', marker='s', s=15, label=r'$\mathrm{Avila-Reese\!+\!08}$')
+        axis10.plot(OCB20_TF_DD['Vrot'], OCB20_TF_DD['Mstar'], color='cyan', label=r'$\mathrm{Oh\!+\!20:B/T<0.2}$')
+        axis11.plot(OCB20_FJ_BD['sigma'], OCB20_FJ_BD['Mstar'], color='orange', label=r'$\mathrm{Oh\!+\!20:B/T>0.8}$')
+        axis20.plot(OCB20_TF_discs['Vrot'], OCB20_TF_discs['Mstar'], color='cyan', label=r'$\mathrm{Oh\!+\!20:discs}$')
+        axis20.plot(OCB20_TF_bulges['Vrot'], OCB20_TF_bulges['Mstar'], color='orange', label=r'$\mathrm{Oh\!+\!20:bulges}$')
+        axis21.plot(OCB20_FJ_discs['sigma'], OCB20_FJ_discs['Mstar'], color='cyan', label=r'$\mathrm{Oh\!+\!20:discs}$')
+        axis21.plot(OCB20_FJ_bulges['sigma'], OCB20_FJ_bulges['Mstar'], color='orange', label=r'$\mathrm{Oh\!+\!20:bulges}$')
 
         # Create the legend and save the figure #
         axis10.legend(loc='upper left', fontsize=12, frameon=False, numpoints=1)

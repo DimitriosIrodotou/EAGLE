@@ -186,7 +186,7 @@ def make_plot(x, y, figure, style, xscale, yscale):
         # Calculate and plot median and 1-sigma lines #
         x_median, y_median, slow, shigh = median(x, y)
         plt.plot(x_median, y_median, color='grey', lw=lw)
-        plt.fill_between(x_median, shigh, slow, color='grey', alpha='0.3', zorder=2)
+        plt.fill_between(x_median, shigh, slow, color='grey', alpha=0.3, zorder=2)
         plt.fill(np.NaN, np.NaN, color='grey', alpha=0.3)
 
     if style is 'h':  # Make a hexbin plot.
@@ -200,7 +200,7 @@ def make_plot(x, y, figure, style, xscale, yscale):
         # Calculate and plot median and 1-sigma lines #
         x_median, y_median, slow, shigh = median(x, y)
         plt.plot(x_median, y_median, color='maroon', lw=lw)
-        plt.fill_between(x_median, shigh, slow, color='maroon', alpha='0.3', zorder=2)
+        plt.fill_between(x_median, shigh, slow, color='maroon', alpha=0.3, zorder=2)
         plt.fill(np.NaN, np.NaN, color='maroon', alpha=0.3)
     # Save the figure #
     plt.savefig('./plots/' + 'X_Vs_Y' + '-' + date, bbox_inches='tight')
@@ -231,7 +231,7 @@ def make_subplots(x, y, figure, ax1, ax2, style, xscale, yscale):
         # Calculate and plot median and 1-sigma lines #
         x_median, y_median, slow, shigh = median(x, y)
         ax2.plot(x_median, y_median, color='grey', lw=lw)
-        ax2.fill_between(x_median, shigh, slow, color='grey', alpha='0.3', zorder=2)
+        ax2.fill_between(x_median, shigh, slow, color='grey', alpha=0.3, zorder=2)
         ax2.fill(np.NaN, np.NaN, color='grey', alpha=0.3)
 
     # Make a hexbin plot #
@@ -246,7 +246,7 @@ def make_subplots(x, y, figure, ax1, ax2, style, xscale, yscale):
         # Calculate and plot median and 1-sigma lines #
         x_median, y_median, slow, shigh = median(x, y)
         ax2.plot(x_median, y_median, color='maroon', lw=lw)
-        ax2.fill_between(x_median, shigh, slow, color='maroon', alpha='0.3', zorder=2)
+        ax2.fill_between(x_median, shigh, slow, color='maroon', alpha=0.3, zorder=2)
         ax2.fill(np.NaN, np.NaN, color='maroon', alpha=0.3)
 
     # Save the figure #

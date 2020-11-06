@@ -29,8 +29,7 @@ sns.set_context('notebook', font_scale=1.6)
 
 # Generate the figure and define its parameters #
 plt.close()
-figure, axis = plt.subplots(1, figsize=(20, 15))
-
+figure = plt.figure(figsize=(20, 15))
 gs = gridspec.GridSpec(2, 2)
 ax00 = plt.subplot(gs[0, 0], projection="mollweide")
 ax01 = plt.subplot(gs[0, 1])

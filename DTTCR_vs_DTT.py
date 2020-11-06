@@ -9,9 +9,12 @@ matplotlib.use('Agg')
 import numpy as np
 import matplotlib.cbook
 import matplotlib.pyplot as plt
+import matplotlib.style as style
 
 from matplotlib import gridspec
 
+style.use("classic")
+plt.rcParams.update({'font.family':'serif'})
 date = time.strftime('%d_%m_%y_%H%M')  # Date.
 start_global_time = time.time()  # Start the global time.
 warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
@@ -66,7 +69,7 @@ class DiscToTotalCRVsDiscToTotal:
         """
         # Generate the figure and define its parameters #
         figure = plt.figure(figsize=(10, 7.5))
-        gs = gridspec.GridSpec(2, 1, wspace=0.0, hspace=0.05, height_ratios=[0.05, 1])
+        gs = gridspec.GridSpec(2, 1, wspace=0.0, hspace=0.0, height_ratios=[0.05, 1])
         axis00 = figure.add_subplot(gs[0, 0])
         axis10 = figure.add_subplot(gs[1, 0])
 
@@ -85,7 +88,7 @@ class DiscToTotalCRVsDiscToTotal:
         plt.fill(np.NaN, np.NaN, color='black', alpha=0.3)
 
         # Create the legends, save and close the figure #
-        axis10.legend(frameon=False, fontsize=16, loc='upper right')
+        axis10.legend(loc='lower right', frameon=False, fontsize=20)
         plt.savefig(plots_path + 'DTTCR_DTT' + '-' + date + '.png', bbox_inches='tight')
         plt.close()
         return None

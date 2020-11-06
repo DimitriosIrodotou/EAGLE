@@ -57,7 +57,7 @@ class DiscToTotalVsBaryons:
         """
         # Generate the figure and define its parameters #
         plt.close()
-        figure, axis = plt.subplots(1, figsize=(10, 7.5))
+        figure = plt.figure(figsize=(10, 7.5))
         # gs = gridspec.GridSpec(2, 1, wspace=0.0, hspace=0.0, height_ratios=[0.05, 1])
         # axcbar = figure.add_subplot(gs[0, 0])
         # ax10 = figure.add_subplot(gs[1, 0])
@@ -76,10 +76,10 @@ class DiscToTotalVsBaryons:
         # s_m = matplotlib.cm.ScalarMappable(cmap='copper', norm=norm)
         for i in np.arange(0, 1, 0.2):
             mask, = np.where((disc_fractions_IT20 < i) & (disc_fractions_IT20 > i - 0.2))
-            x_value, median, shigh, slow = plot_tools.median_1sigma(stellar_masses[mask], disc_fractions_IT20[mask], 0.17, log=True)
+            x_value, median, shigh, slow = plot_tools.binned_median_1sigma(stellar_masses[mask], disc_fractions_IT20[mask], 0.17, log=True)
             pl = plt.plot(x_value, median, color=next(colors), linewidth=5, zorder=5)
             
-            # plt.fill_between(x_value, shigh, slow, color=s_m.to_rgba(i), alpha='0.5', zorder=5)
+            # plt.fill_between(x_value, shigh, slow, color=s_m.to_rgba(i), alpha=0.5, zorder=5)
             # plot_tools.create_colorbar(axcbar, pl, r'$\mathrm{Counts\;per\;hexbin}$', 'horizontal')
         
         # Save the figure #
