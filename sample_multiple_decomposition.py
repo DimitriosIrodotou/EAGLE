@@ -12,11 +12,14 @@ import healpy as hlp
 import matplotlib.cbook
 import astropy.units as u
 import matplotlib.pyplot as plt
+import matplotlib.style as style
 
 from matplotlib import gridspec
 from astropy_healpix import HEALPix
 from plot_tools import RotateCoordinates
 
+style.use("classic")
+plt.rcParams.update({'font.family':'serif'})
 date = time.strftime('%d_%m_%y_%H%M')  # Date.
 start_global_time = time.time()  # Start the global time.
 warnings.filterwarnings('ignore', category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
@@ -44,7 +47,7 @@ class SampleMultipleDecomposition:
         # Generate the figure and define its parameters #
         figure = plt.figure(figsize=(20, 20))
 
-        gs = gridspec.GridSpec(4, 4, wspace=0.4, hspace=0.4)
+        gs = gridspec.GridSpec(4, 4, wspace=0.51, hspace=0.4)
         axis00, axis01, axis02, axis03 = figure.add_subplot(gs[0, 0], projection='mollweide'), figure.add_subplot(gs[0, 1]), figure.add_subplot(
             gs[0, 2]), figure.add_subplot(gs[0, 3])
         axis10, axis11, axis12, axis13 = figure.add_subplot(gs[1, 0], projection='mollweide'), figure.add_subplot(gs[1, 1]), figure.add_subplot(
@@ -55,18 +58,22 @@ class SampleMultipleDecomposition:
             gs[3, 2]), figure.add_subplot(gs[3, 3])
 
         for axis in [axis00, axis10, axis20, axis30]:
-            axis.set_xlabel(r'$\mathrm{\alpha/\degree}$', size=20)
-            axis.set_ylabel(r'$\mathrm{\delta/\degree}$', size=20)
-            axis.set_yticklabels(['', '-60', '', '-30', '', '0', '', '30', '', '60', ''], size=20)
-            axis.set_xticklabels(['', '-120', '', '-60', '', '0', '', '60', '', '120', ''], size=20)
+            axis.set_xlabel(r'$\mathrm{\alpha/\degree}$', size=25)
+            axis.set_ylabel(r'$\mathrm{\delta/\degree}$', size=25)
+            axis.set_yticklabels(['', '-60', '', '-30', '', '0', '', '30', '', '60', ''], size=25)
+            axis.set_xticklabels(['', '', '-90', '', '', '0', '', '', '90', '', ''], size=25)
         for axis in [axis01, axis11, axis21, axis31]:
-            plot_tools.set_axis(axis, xlabel=r'$\mathrm{\Delta \theta/\degree}$', ylabel=r'$\mathrm{Particles\;per\;grid\;cell}$', aspect=None,
-                                size=20)
+            plot_tools.set_axis(axis, xlim=[-10, 200], xlabel=r'$\mathrm{\Delta \theta/\degree}$', ylabel=r'$\mathrm{Particles\;per\;grid\;cell}$',
+                                aspect=None, size=25)
+            axis.set_xticklabels(['', '0', '', '100', '', '200'], size=25)
         for axis in [axis02, axis12, axis22, axis32]:
-            plot_tools.set_axis(axis, xlabel=r'$\mathrm{(Angular\;distance\;from\;\vec{J}_{gal})/\degree}$',
-                                ylabel=r'$\mathrm{Particles\;per\;grid\;cell}$', aspect=None, size=20)
+            plot_tools.set_axis(axis, xlim=[-10, 200], xlabel=r'$\mathrm{(Angular\;distance\;from\;\vec{J}_{gal})/\degree}$',
+                                ylabel=r'$\mathrm{Particles\;per\;grid\;cell}$', aspect=None, size=25)
+            axis.set_xticklabels(['', '0', '', '100', '', '200'], size=25)
         for axis in [axis03, axis13, axis23, axis33]:
-            plot_tools.set_axis(axis, xlabel=r'$\mathrm{\epsilon}$', ylabel=r'$\mathrm{f(\epsilon)}$', aspect=None, size=20)
+            plot_tools.set_axis(axis, xlim=[-1.3, 1.3], ylim=[0, 3], xlabel=r'$\mathrm{\epsilon}$', ylabel=r'$\mathrm{f(\epsilon)}$', aspect=None,
+                                size=25)
+            axis.set_xticklabels(['', '-1', '', '0', '', '1', ''], size=25)
 
         all_axes = [[axis00, axis01, axis02, axis03], [axis10, axis11, axis12, axis13], [axis20, axis21, axis22, axis23],
                     [axis30, axis31, axis32, axis33]]
@@ -150,9 +157,9 @@ class SampleMultipleDecomposition:
         lat_densest = (hp.healpix_to_lonlat([index_densest])[1].value + np.pi / 2) % (2 * np.pi) - np.pi / 2
         axes[0].scatter(np.arctan2(glx_unit_vector[1], glx_unit_vector[0]), np.arcsin(glx_unit_vector[2]), s=100, color='black', marker='X',
                         facecolors='none', zorder=5)  # Position of the galactic angular momentum.
-        axes[0].annotate(r'$\mathrm{Density\;maximum}$', xy=(lon_densest, lat_densest), xycoords='data', xytext=(0.2, 1.1),
+        axes[0].annotate(r'$\mathrm{Density\;maximum}$', xy=(lon_densest, lat_densest), xycoords='data', xytext=(0.0, 1.3),
                          textcoords='axes fraction', arrowprops=dict(arrowstyle='-', color='black', connectionstyle='arc3,rad=0'),
-                         size=20)  # Position of the densest grid cell.
+                         size=25)  # Position of the densest grid cell.
 
         # Sample a 360x180 grid in ra/dec #
         ra = np.linspace(-180.0, 180.0, num=360) * u.deg
@@ -165,9 +172,13 @@ class SampleMultipleDecomposition:
 
         # Display data on a 2D regular raster and create a pseudo-color plot #
         pcm = axes[0].pcolormesh(np.radians(ra), np.radians(dec), density_map, cmap='nipy_spectral_r')
-        cbar = plt.colorbar(pcm, ax=axes[0], orientation='horizontal')
-        cbar.ax.tick_params(labelsize=20)
-        cbar.set_label('$\mathrm{Particles\;per\;grid\;cell}$', size=20)
+        if group_number == 39 or group_number == 25:
+            cbar = plt.colorbar(pcm, ax=axes[0], ticks=[0, 1000, 2000], orientation='horizontal')
+        else:
+            cbar = plt.colorbar(pcm, ax=axes[0], ticks=[0, 50, 100, 150, 200], orientation='horizontal')
+
+        cbar.ax.tick_params(labelsize=25)
+        cbar.set_label('$\mathrm{Particles\;per\;grid\;cell}$', size=25)
 
         # Calculate the disc mass fraction as the mass within 30 degrees from the densest grid cell #
         angular_theta_from_densest = np.arccos(
@@ -197,8 +208,6 @@ class SampleMultipleDecomposition:
         y_data, edges = np.histogram(epsilon, weights=stellar_masses / np.sum(stellar_masses), bins=50, range=[-1, 1])
         x_data = 0.5 * (edges[1:] + edges[:-1])
         y_data /= edges[1:] - edges[:-1]
-        axes[3].set_xlim(-1.3, 1.3)
-        axes[3].set_ylim(0, 1.4 * max(y_data))
         axes[3].plot(x_data, y_data, color='black')
 
         # # Add hatches for the bulge and disc component #
@@ -233,11 +242,11 @@ class SampleMultipleDecomposition:
         axes[2].axvspan(90, 180, facecolor='0.2', alpha=0.5)  # Draw a vertical span.
 
         # Add text and create the legend #
-        plt.text(-0.2, 1.1, str(group_number), color='red', fontsize=20, transform=axes[0].transAxes)
-        plt.text(0.8, 0.9, r'$\mathrm{%.2f }$' % disc_fraction_IT20, fontsize=20, transform=axes[1].transAxes)
-        plt.text(0.8, 0.9, r'$\mathrm{%.2f }$' % np.abs(disc_fraction_00), fontsize=20, transform=axes[2].transAxes)
-        plt.text(0.8, 0.9, r'$\mathrm{%.2f }$' % disc_fraction_07, fontsize=20, transform=axes[3].transAxes)
-        axes[3].legend(loc='upper left', fontsize=20, frameon=False)
+        plt.text(-0.2, 1.1, str(group_number), color='red', fontsize=25, transform=axes[0].transAxes)
+        plt.text(0.7, 0.9, r'$\mathrm{%.2f }$' % disc_fraction_IT20, fontsize=25, transform=axes[1].transAxes)
+        plt.text(0.7, 0.9, r'$\mathrm{%.2f }$' % np.abs(disc_fraction_00), fontsize=25, transform=axes[2].transAxes)
+        plt.text(0.7, 0.9, r'$\mathrm{%.2f }$' % disc_fraction_07, fontsize=25, transform=axes[3].transAxes)
+        axes[3].legend(loc='upper left', fontsize=25, frameon=False)
         return None
 
 

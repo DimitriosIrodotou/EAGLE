@@ -11,10 +11,13 @@ import numpy as np
 import matplotlib.cbook
 import astropy.units as u
 import matplotlib.pyplot as plt
+import matplotlib.style as style
 
 from astropy_healpix import HEALPix
 from plot_tools import RotateCoordinates
 
+style.use("classic")
+plt.rcParams.update({'font.family':'serif'})
 date = time.strftime('%d_%m_%y_%H%M')  # Date.
 start_global_time = time.time()  # Start the global time.
 warnings.filterwarnings('ignore', category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
@@ -33,7 +36,7 @@ class SampleRAEl:
         :param tag: redshift directory.
         """
         # Generate the figure and define its parameters #
-        figure, axes = plt.subplots(nrows=10, ncols=10, figsize=(20, 20), subplot_kw={'projection':'mollweide'})
+        figure, axes = plt.subplots(nrows=10, ncols=10, figsize=(20, 15), subplot_kw={'projection':'mollweide'})
 
         # Select a random sample from all group numbers #
         group_numbers = np.load(data_path + '/group_numbers.npy')
@@ -105,8 +108,8 @@ class SampleRAEl:
 
         # Display data on a 2D regular raster and create a pseudo-color plot #
         pcm = axis.pcolormesh(np.radians(ra), np.radians(el), density_map, cmap='nipy_spectral_r')
-        cbar = plt.colorbar(pcm, ax=axis, orientation='horizontal')
-        cbar.ax.tick_params(labelsize=15)
+        # cbar = plt.colorbar(pcm, ax=axis, orientation='horizontal')
+        # cbar.ax.tick_params(labelsize=20)
 
         # Define the figure parameters #
         axis.axis('off')

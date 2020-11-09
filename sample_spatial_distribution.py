@@ -12,11 +12,14 @@ import healpy as hlp
 import matplotlib.cbook
 import astropy.units as u
 import matplotlib.pyplot as plt
+import matplotlib.style as style
 
 from matplotlib import gridspec
 from astropy_healpix import HEALPix
 from plot_tools import RotateCoordinates
 
+style.use("classic")
+plt.rcParams.update({'font.family':'serif'})
 date = time.strftime('%d_%m_%y_%H%M')  # Date.
 start_global_time = time.time()  # Start the global time.
 warnings.filterwarnings('ignore', category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
@@ -34,13 +37,13 @@ class SampleSpatialDistribution:
         :param simulation_path: simulation directory.
         :param tag: redshift directory.
         """
-        group_numbers = [2, 3, 5, 20]
         group_numbers = [39, 25, 18, 14]
+        group_numbers = [2, 3, 5, 20]
 
         # Generate the figure and define its parameters #
         figure = plt.figure(figsize=(20, 20))
 
-        gs = gridspec.GridSpec(5, 4, wspace=0.3, hspace=0.3, height_ratios=[0.1, 1, 1, 1, 1])
+        gs = gridspec.GridSpec(5, 4, wspace=0.4, hspace=0.4, height_ratios=[0.1, 1, 1, 1, 1])
         axiscbar = figure.add_subplot(gs[0, :])
         axis10, axis11, axis12, axis13 = figure.add_subplot(gs[1, 0]), figure.add_subplot(gs[1, 1]), figure.add_subplot(gs[1, 2]), figure.add_subplot(
             gs[1, 3])
@@ -52,9 +55,13 @@ class SampleSpatialDistribution:
             gs[4, 3])
 
         for axis in [axis10, axis12, axis20, axis22, axis30, axis32, axis40, axis42]:
-            plot_tools.set_axis(axis, xlabel=r'$\mathrm{x/kpc}$', ylabel=r'$\mathrm{y/kpc}$', aspect=None, size=20)
+            plot_tools.set_axis(axis, xlabel=r'$\mathrm{x/kpc}$', ylabel=r'$\mathrm{y/kpc}$', aspect=None)
+            axis.set_xticklabels(['', '-20', '', '0', '', '20', ''], size=20)
+            axis.set_yticklabels(['', '-20', '', '0', '', '20', ''], size=20)
         for axis in [axis11, axis13, axis21, axis23, axis31, axis33, axis41, axis43]:
-            plot_tools.set_axis(axis, xlabel=r'$\mathrm{x/kpc}$', ylabel=r'$\mathrm{z/kpc}$', aspect=None, size=20)
+            plot_tools.set_axis(axis, xlabel=r'$\mathrm{x/kpc}$', ylabel=r'$\mathrm{z/kpc}$', aspect=None)
+            axis.set_xticklabels(['', '-20', '', '0', '', '20', ''], size=20)
+            axis.set_yticklabels(['', '-20', '', '0', '', '20', ''], size=20)
 
         all_axes = [[axis10, axis11, axis12, axis13], [axis20, axis21, axis22, axis23], [axis30, axis31, axis32, axis33],
                     [axis40, axis41, axis42, axis43]]

@@ -12,12 +12,15 @@ import healpy as hlp
 import matplotlib.cbook
 import astropy.units as u
 import matplotlib.pyplot as plt
+import matplotlib.style as style
 
 from scipy.special import gamma
 from astropy_healpix import HEALPix
 from scipy.optimize import curve_fit
 from plot_tools import RotateCoordinates
 
+style.use("classic")
+plt.rcParams.update({'font.family':'serif'})
 date = time.strftime('%d_%m_%y_%H%M')  # Date.
 start_global_time = time.time()  # Start the global time.
 warnings.filterwarnings('ignore', category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
@@ -40,7 +43,7 @@ class SampleSurfaceDensityProfiles:
 
         # Generate the figure and define its parameters #
         figure, axes = plt.subplots(nrows=2, ncols=4, figsize=(20, 10))
-        plt.subplots_adjust(wspace=0.31)
+        plt.subplots_adjust(wspace=0.4, hspace=0.4)
 
         for group_number, axis in zip(group_numbers, axes.flatten()):
             for subgroup_number in range(0, 1):  # Get centrals only.
@@ -133,7 +136,7 @@ class SampleSurfaceDensityProfiles:
 
 
         # Generate the figure and define its parameters #
-        plot_tools.set_axis(axis, xlim=[0.0, 30.0], ylim=[1e6, 1e10], xlabel=r'$\mathrm{R/kpc}$', ylabel=r'$\mathrm{\Sigma/(M_{\odot}\;kpc^{-2})}$',
+        plot_tools.set_axis(axis, xlim=[0.0, 30.0], ylim=[1e6, 1e11], xlabel=r'$\mathrm{R/kpc}$', ylabel=r'$\mathrm{\Sigma/(M_{\odot}\;kpc^{-2})}$',
                             yscale='log', aspect=None, which='major')
 
         # Rotate coordinates and velocities of stellar particles wrt galactic angular momentum #
@@ -170,8 +173,8 @@ class SampleSurfaceDensityProfiles:
         spheroid_mask, = np.where(angular_theta_from_densest > (np.pi / 6.0))
 
         colors = ['tab:blue', 'tab:red']
-        labels = ['Disc', 'Spheroid']
-        labels2 = ['Exponential', 'Sersic']
+        labels = [r'$\mathrm{Disc}$', r'$\mathrm{Spheroid}$']
+        labels2 = [r'$\mathrm{Exp.}$', r'$\mathrm{Sersic}$']
         masks = [disc_mask, spheroid_mask]
         profiles = [exponential_profile, sersic_profile]
         for mask, color, profile, label, label2 in zip(masks, colors, profiles, labels, labels2):
@@ -183,7 +186,7 @@ class SampleSurfaceDensityProfiles:
             surface = np.pi * (edges[1:] ** 2 - edges[:-1] ** 2)
             sden = mass / surface
 
-            axis.scatter(centers, sden, c=color, marker='.', linestyle="None", label=label)
+            axis.scatter(centers, sden, color=color, marker='.', linestyle="None", label=label)
 
             try:
                 if mask is disc_mask:
@@ -214,7 +217,7 @@ class SampleSurfaceDensityProfiles:
         surface = np.pi * (edges[1:] ** 2 - edges[:-1] ** 2)
         sden = mass / surface
 
-        axis.scatter(centers, sden, c='k', marker='.', linestyle="None", label='Total')
+        axis.scatter(centers, sden, c='k', marker='.', linestyle="None", label=r'$\mathrm{Total}$')
 
         try:
             popt, pcov = curve_fit(total_profile, centers, sden, sigma=0.1 * sden, p0=[sden_tmp[0], 2, sden[0], 2, 4])  # p0 = [I_0d, R_d, I_0b, b, n]
@@ -234,9 +237,9 @@ class SampleSurfaceDensityProfiles:
         #          transform=axis.transAxes, size=14)
 
         # Create the legend and save the figure #
-        axis.legend(loc='upper centre', fontsize=12, frameon=False, numpoints=1, ncol=2)
-        plt.text(0.0, 1.05, str(group_number), color='red', fontsize=14, transform=axis.transAxes)
-        plt.text(0.3, 0.7, r'$\mathrm{D/T_{\Delta \theta<30\degree}=%.2f}$' % stellar_data_tmp['disc_fraction_IT20'], fontsize=14,
+        axis.legend(loc='upper centre', fontsize=14, frameon=False, numpoints=1, scatterpoints=1, ncol=2)
+        plt.text(0.0, 1.05, str(group_number), color='red', fontsize=20, transform=axis.transAxes)
+        plt.text(0.3, 0.6, r'$\mathrm{D/T_{\Delta \theta<30\degree}=%.2f}$' % stellar_data_tmp['disc_fraction_IT20'], fontsize=16,
                  transform=axis.transAxes)
         return None
 

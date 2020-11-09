@@ -9,9 +9,12 @@ matplotlib.use('Agg')
 
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.style as style
 
 from matplotlib import gridspec
 
+style.use("classic")
+plt.rcParams.update({'font.family':'serif'})
 date = time.strftime('%d_%m_%y_%H%M')  # Date.
 start_global_time = time.time()  # Start the global time.
 warnings.filterwarnings('ignore', category=matplotlib.cbook.mplDeprecation)  # Ignore some plt warnings.
@@ -83,27 +86,29 @@ class TullyFisherFaberJackson:
         axis10, axis11 = figure.add_subplot(gs[1, 0]), figure.add_subplot(gs[1, 1])
         axis20, axis21 = figure.add_subplot(gs[2, 0]), figure.add_subplot(gs[2, 1])
 
-        plot_tools.set_axis(axis10, xlim=[0.5, 3.1], ylim=[9.6, 12.5], ylabel=r'$\mathrm{log_{10}(M_{\bigstar}/M_{\odot})}$', aspect=None)
-        plot_tools.set_axis(axis11, xlim=[0.5, 3.1], ylim=[9.6, 12.5], aspect=None)
-        plot_tools.set_axis(axis20, xlim=[0.5, 3.1], ylim=[9.6, 12.5], xlabel=r'$\mathrm{log_{10}(V_{rot}/(km\;s^{-1}))}$',
+        plot_tools.set_axis(axis10, xlim=[0.5, 3.4], ylim=[9.6, 12.5], ylabel=r'$\mathrm{log_{10}(M_{\bigstar}/M_{\odot})}$', aspect=None)
+        plot_tools.set_axis(axis11, xlim=[0.5, 3.4], ylim=[9.6, 12.5], aspect=None)
+        plot_tools.set_axis(axis20, xlim=[0.5, 3.4], ylim=[9.6, 12.5], xlabel=r'$\mathrm{log_{10}(V_{rot}/(km\;s^{-1}))}$',
                             ylabel=r'$\mathrm{log_{10}(M_{\bigstar}/M_{\odot})}$', aspect=None)
-        plot_tools.set_axis(axis21, xlim=[0.5, 3.1], ylim=[9.6, 12.5], xlabel=r'$\mathrm{log_{10}(\sigma_{0,e}/(km\;s^{-1}))}$', aspect=None)
+        plot_tools.set_axis(axis21, xlim=[0.5, 3.4], ylim=[9.6, 12.5], xlabel=r'$\mathrm{log_{10}(\sigma_{0,e}/(km\;s^{-1}))}$', aspect=None)
         for axis in [axis11, axis21]:
             axis.set_yticklabels([])
         for axis in [axis10, axis11]:
             axis.set_xticklabels([])
 
         # Plot the Tully-Fisher relations #
-        sc = axis10.scatter(np.log10(glx_rotationals), np.log10(glx_stellar_masses), c=glx_disc_fractions_IT20, s=10, cmap='seismic_r', vmin=0,
-                            vmax=1)
-        axis20.scatter(np.log10(disc_rotationals), np.log10(glx_stellar_masses), c='tab:blue', s=10, label=r'$\mathrm{Discs}$')
-        axis20.scatter(np.log10(spheroid_rotationals), np.log10(glx_stellar_masses), c='tab:red', s=10, label=r'$\mathrm{Spheroids}$')
+        sc = axis10.scatter(np.log10(glx_rotationals), np.log10(glx_stellar_masses), c=glx_disc_fractions_IT20, s=20, cmap='seismic_r', vmin=0,
+                            vmax=1, edgecolor='none')
+        axis20.scatter(np.log10(disc_rotationals), np.log10(glx_stellar_masses), c='tab:blue', s=20, label=r'$\mathrm{Discs}$', edgecolor='none')
+        axis20.scatter(np.log10(spheroid_rotationals), np.log10(glx_stellar_masses), c='tab:red', s=20, label=r'$\mathrm{Spheroids}$',
+                       edgecolor='none')
         plot_tools.create_colorbar(axiscbar, sc, r'$\mathrm{D/T_{\Delta \theta<30\degree}}$', 'horizontal')
 
         # Plot the Faber-Jackson relations #
-        axis11.scatter(np.log10(glx_sigma_0s), np.log10(glx_stellar_masses), c=glx_disc_fractions_IT20, s=10, cmap='seismic_r', vmin=0, vmax=1)
-        axis21.scatter(np.log10(disc_sigma_0s), np.log10(glx_stellar_masses), c='tab:blue', s=10, label=r'$\mathrm{Discs}$')
-        axis21.scatter(np.log10(spheroid_sigma_0s), np.log10(glx_stellar_masses), c='tab:red', s=10, label=r'$\mathrm{Spheroids}$')
+        axis11.scatter(np.log10(glx_sigma_0s), np.log10(glx_stellar_masses), c=glx_disc_fractions_IT20, s=20, cmap='seismic_r', vmin=0, vmax=1,
+                       edgecolor='none')
+        axis21.scatter(np.log10(disc_sigma_0s), np.log10(glx_stellar_masses), c='tab:blue', s=20, label=r'$\mathrm{Discs}$', edgecolor='none')
+        axis21.scatter(np.log10(spheroid_sigma_0s), np.log10(glx_stellar_masses), c='tab:red', s=20, label=r'$\mathrm{Spheroids}$', edgecolor='none')
 
         # Read and plot observational data from AZF08, TEA11 and OCB20 #
         AZF08 = np.genfromtxt('./observational_data/AZF_0807.0636/Figure1.csv', delimiter=',', names=['Vrot', 'Mstar'])
@@ -114,7 +119,7 @@ class TullyFisherFaberJackson:
         OCB20_FJ_discs = np.genfromtxt('./observational_data/OCB_2005.06474/Figure8_FJ_discs.csv', delimiter=',', names=['sigma', 'Mstar'])
         OCB20_FJ_bulges = np.genfromtxt('./observational_data/OCB_2005.06474/Figure8_FJ_bulges.csv', delimiter=',', names=['sigma', 'Mstar'])
 
-        axis10.scatter(AZF08['Mstar'], AZF08['Vrot'], color='cyan', marker='s', s=15, label=r'$\mathrm{Avila-Reese\!+\!08}$')
+        axis10.scatter(AZF08['Mstar'], AZF08['Vrot'], edgecolor='black', color='grey', marker='s', s=15, label=r'$\mathrm{Avila-Reese\!+\!08}$')
         axis10.plot(OCB20_TF_DD['Vrot'], OCB20_TF_DD['Mstar'], color='cyan', label=r'$\mathrm{Oh\!+\!20:B/T<0.2}$')
         axis11.plot(OCB20_FJ_BD['sigma'], OCB20_FJ_BD['Mstar'], color='orange', label=r'$\mathrm{Oh\!+\!20:B/T>0.8}$')
         axis20.plot(OCB20_TF_discs['Vrot'], OCB20_TF_discs['Mstar'], color='cyan', label=r'$\mathrm{Oh\!+\!20:discs}$')
@@ -123,9 +128,9 @@ class TullyFisherFaberJackson:
         axis21.plot(OCB20_FJ_bulges['sigma'], OCB20_FJ_bulges['Mstar'], color='orange', label=r'$\mathrm{Oh\!+\!20:bulges}$')
 
         # Create the legend and save the figure #
-        axis10.legend(loc='upper left', fontsize=12, frameon=False, numpoints=1)
+        axis10.legend(loc='upper left', fontsize=14, frameon=False, numpoints=1, scatterpoints=1)
         for axis in [axis11, axis20, axis21]:
-            axis.legend(loc='upper left', fontsize=12, frameon=False, numpoints=1, ncol=2)
+            axis.legend(loc='upper left', fontsize=14, frameon=False, numpoints=1, scatterpoints=1, ncol=2)
         plt.savefig(plots_path + 'TFFJ' + '-' + date + '.png', bbox_inches='tight')
         plt.close()
         return None
