@@ -4,7 +4,7 @@ import time
 import warnings
 import argparse
 import matplotlib
-import access_database
+
 
 matplotlib.use('Agg')
 

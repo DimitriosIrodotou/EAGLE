@@ -36,7 +36,7 @@ class SampleRAEl:
         :param tag: redshift directory.
         """
         # Generate the figure and define its parameters #
-        figure, axes = plt.subplots(nrows=10, ncols=10, figsize=(20, 15), subplot_kw={'projection':'mollweide'})
+        figure, axes = plt.subplots(nrows=10, ncols=10, figsize=(20, 20), subplot_kw={'projection':'mollweide'})
 
         # Select a random sample from all group numbers #
         group_numbers = np.load(data_path + '/group_numbers.npy')
@@ -105,17 +105,17 @@ class SampleRAEl:
         # Find density at each coordinate position #
         coordinate_index = hp.lonlat_to_healpix(ra_grid, el_grid)
         density_map = density[coordinate_index]
-
         # Display data on a 2D regular raster and create a pseudo-color plot #
         pcm = axis.pcolormesh(np.radians(ra), np.radians(el), density_map, cmap='nipy_spectral_r')
-        # cbar = plt.colorbar(pcm, ax=axis, orientation='horizontal')
-        # cbar.ax.tick_params(labelsize=20)
+        cbar = plt.colorbar(pcm, ax=axis, ticks=[0, np.floor(max(np.hstack(density_map)) / 20) * 10, np.floor(max(np.hstack(density_map)) / 11) * 10],
+                            orientation='horizontal')
+        cbar.ax.tick_params(labelsize=15)
 
         # Define the figure parameters #
         axis.axis('off')
         plt.text(0.0, 0.95, str(group_number), color='red', fontsize=20, transform=axis.transAxes)
 
-        return pcm
+        return None
 
 
 if __name__ == '__main__':

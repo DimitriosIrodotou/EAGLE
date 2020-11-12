@@ -37,8 +37,8 @@ class SampleSpatialDistribution:
         :param simulation_path: simulation directory.
         :param tag: redshift directory.
         """
-        group_numbers = [39, 25, 18, 14]
         group_numbers = [2, 3, 5, 20]
+        group_numbers = [39, 25, 18, 14]
 
         # Generate the figure and define its parameters #
         figure = plt.figure(figsize=(20, 20))
@@ -55,13 +55,13 @@ class SampleSpatialDistribution:
             gs[4, 3])
 
         for axis in [axis10, axis12, axis20, axis22, axis30, axis32, axis40, axis42]:
-            plot_tools.set_axis(axis, xlabel=r'$\mathrm{x/kpc}$', ylabel=r'$\mathrm{y/kpc}$', aspect=None)
-            axis.set_xticklabels(['', '-20', '', '0', '', '20', ''], size=20)
-            axis.set_yticklabels(['', '-20', '', '0', '', '20', ''], size=20)
+            plot_tools.set_axis(axis, xlabel=r'$\mathrm{x/kpc}$', ylabel=r'$\mathrm{y/kpc}$', aspect=None, size=25)
+            axis.set_xticklabels(['', '-20', '', '0', '', '20', ''], size=25)
+            axis.set_yticklabels(['', '-20', '', '0', '', '20', ''], size=25)
         for axis in [axis11, axis13, axis21, axis23, axis31, axis33, axis41, axis43]:
-            plot_tools.set_axis(axis, xlabel=r'$\mathrm{x/kpc}$', ylabel=r'$\mathrm{z/kpc}$', aspect=None)
-            axis.set_xticklabels(['', '-20', '', '0', '', '20', ''], size=20)
-            axis.set_yticklabels(['', '-20', '', '0', '', '20', ''], size=20)
+            plot_tools.set_axis(axis, xlabel=r'$\mathrm{x/kpc}$', ylabel=r'$\mathrm{z/kpc}$', aspect=None, size=25)
+            axis.set_xticklabels(['', '-20', '', '0', '', '20', ''], size=25)
+            axis.set_yticklabels(['', '-20', '', '0', '', '20', ''], size=25)
 
         all_axes = [[axis10, axis11, axis12, axis13], [axis20, axis21, axis22, axis23], [axis30, axis31, axis32, axis33],
                     [axis40, axis41, axis42, axis43]]
@@ -85,12 +85,12 @@ class SampleSpatialDistribution:
                 print('–––––––––––––––––––––––––––––––––––––––––––––')
 
         # Add color bar #
-        plot_tools.create_colorbar(axiscbar, im, r'$\mathrm{log_{10}(\Sigma_{\bigstar}/(M_\odot\,kpc^{-2}))}$', 'horizontal', extend='both', size=20)
+        plot_tools.create_colorbar(axiscbar, im, r'$\mathrm{log_{10}(\Sigma_{\bigstar}/(M_\odot\,kpc^{-2}))}$', 'horizontal', extend='both', size=25)
         # Add text #
-        plt.text(0.17, 1.1, r'$\mathrm{Disc\;face-on}$', fontsize=20, transform=axis10.transAxes)
-        plt.text(0.17, 1.1, r'$\mathrm{Disc\;edge-on}$', fontsize=20, transform=axis11.transAxes)
-        plt.text(0.05, 1.1, r'$\mathrm{Spheroid\;face-on}$', fontsize=20, transform=axis12.transAxes)
-        plt.text(0.05, 1.1, r'$\mathrm{Spheroid\;edge-on}$', fontsize=20, transform=axis13.transAxes)
+        plt.text(0.05, 1.1, r'$\mathrm{Disc\;face-on}$', fontsize=30, transform=axis10.transAxes)
+        plt.text(0.05, 1.1, r'$\mathrm{Disc\;edge-on}$', fontsize=30, transform=axis11.transAxes)
+        plt.text(-0.05, 1.1, r'$\mathrm{Spheroid\;face-on}$', fontsize=30, transform=axis12.transAxes)
+        plt.text(-0.05, 1.1, r'$\mathrm{Spheroid\;edge-on}$', fontsize=30, transform=axis13.transAxes)
 
         # Save and close the figure #
         plt.savefig(plots_path + 'SSD' + '-' + date + '.png', bbox_inches='tight')
@@ -170,7 +170,7 @@ class SampleSpatialDistribution:
         count, xedges, yedges = np.histogram2d(coordinates[:,0], coordinates[:,2], weights=weights, bins=250, range=[[-30, 30], [-30, 30]])
         axes[3].imshow(np.log10(count.T), extent=[-30, 30, -30, 30], origin='lower', cmap=cmap, vmin=vmin, vmax=vmax, rasterized=True, aspect='equal')
 
-        plt.text(-0.2, 1.1, str(group_number), color='red', fontsize=20, transform=axes[0].transAxes)  # Add text.
+        plt.text(-0.2, 1.1, str(group_number), color='red', fontsize=25, transform=axes[0].transAxes)  # Add text.
         return im
 
 

@@ -119,7 +119,7 @@ class TullyFisherFaberJackson:
         OCB20_FJ_discs = np.genfromtxt('./observational_data/OCB_2005.06474/Figure8_FJ_discs.csv', delimiter=',', names=['sigma', 'Mstar'])
         OCB20_FJ_bulges = np.genfromtxt('./observational_data/OCB_2005.06474/Figure8_FJ_bulges.csv', delimiter=',', names=['sigma', 'Mstar'])
 
-        axis10.scatter(AZF08['Mstar'], AZF08['Vrot'], edgecolor='black', color='grey', marker='s', s=15, label=r'$\mathrm{Avila-Reese\!+\!08}$')
+        axis10.scatter(AZF08['Mstar'], AZF08['Vrot'], edgecolor='black', color='grey', marker='s', s=20, label=r'$\mathrm{Avila-Reese\!+\!08}$')
         axis10.plot(OCB20_TF_DD['Vrot'], OCB20_TF_DD['Mstar'], color='cyan', label=r'$\mathrm{Oh\!+\!20:B/T<0.2}$')
         axis11.plot(OCB20_FJ_BD['sigma'], OCB20_FJ_BD['Mstar'], color='orange', label=r'$\mathrm{Oh\!+\!20:B/T>0.8}$')
         axis20.plot(OCB20_TF_discs['Vrot'], OCB20_TF_discs['Mstar'], color='cyan', label=r'$\mathrm{Oh\!+\!20:discs}$')
