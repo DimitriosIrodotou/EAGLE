@@ -23,7 +23,8 @@ warnings.filterwarnings("ignore", category=matplotlib.cbook.mplDeprecation)  # I
 
 class AngularMomentumVsMass:
     """
-    For all galaxies create: a galactic angular momentum as a function of stellar mass colour-coded by disc to total ratio plot.
+    For all galaxies create: a galactic angular momentum as a function of stellar mass colour-coded by disc to total
+    ratio plot.
     """
 
 
@@ -43,18 +44,20 @@ class AngularMomentumVsMass:
         # Normalise the disc fractions #
         chi = 0.5 * (1 - np.cos(np.pi / 6))
         glx_disc_fractions_IT20 = np.divide(1, 1 - chi) * (glx_disc_fractions_IT20 - chi)
-        print('Loaded data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
+        print('Loaded data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (
+                time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
 
         # Plot the data #
         start_local_time = time.time()  # Start the local time.
 
         self.plot(glx_stellar_masses, glx_disc_fractions_IT20, glx_stellar_angular_momenta)
-        print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (time.time() - start_local_time))
+        print('Plotted data for ' + re.split('Planck1/|/PE', simulation_path)[1] + ' in %.4s s' % (
+                time.time() - start_local_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
 
-        print('Finished AngularMomentumVsMass for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (
-            time.time() - start_global_time))
+        print('Finished AngularMomentumVsMass for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(
+            tag) + ' in %.4s s' % (time.time() - start_global_time))
         print('–––––––––––––––––––––––––––––––––––––––––––––')
 
 
@@ -62,8 +65,10 @@ class AngularMomentumVsMass:
     def plot(glx_stellar_masses, glx_disc_fractions_IT20, glx_stellar_angular_momenta):
         """
         Plot galactic angular momentum as a function of stellar mass colour-coded by disc to total ratio.
-        :param glx_stellar_masses: defined as the mass of all stellar particles within 30kpc from the most bound particle.
-        :param glx_disc_fractions_IT20: where the disc consists of particles whose angular momentum angular separation is 30deg from the densest
+        :param glx_stellar_masses: defined as the mass of all stellar particles within 30kpc from the most bound
+        particle.
+        :param glx_disc_fractions_IT20: where the disc consists of particles whose angular momentum angular
+        separation is 30deg from the densest
         grid cell.
         :param glx_stellar_angular_momenta: defined as the sum of each stellar particle's angular momentum.
         :return: None
@@ -75,32 +80,37 @@ class AngularMomentumVsMass:
         axis10 = figure.add_subplot(gs[1, 0])
         plot_tools.set_axis(axis10, xlim=[5e9, 1e12], ylim=[1e0, 1e5], xscale='log', yscale='log',
                             xlabel=r'$\mathrm{log_{10}(M_{\bigstar}/M_{\odot})}$',
-                            ylabel=r'$\mathrm{(|\vec{J}_{\bigstar}|/M_{\bigstar})/(kpc\;km\;s^{-1})}$', aspect=None, which='major')
+                            ylabel=r'$\mathrm{(|\vec{J}_{\bigstar}|/M_{\bigstar})/(kpc\;km\;s^{-1})}$', aspect=None,
+                            which='major')
 
-        # Plot the specific galactic angular momentum as a function of stellar mass colour-coded by disc to total ratio #
+        # Plot the specific galactic angular momentum as a function of stellar mass colour-coded by disc to total
+        # ratio #
         spc_stellar_angular_momenta = np.linalg.norm(glx_stellar_angular_momenta, axis=1) / glx_stellar_masses
-        sc = axis10.scatter(glx_stellar_masses, spc_stellar_angular_momenta, c=glx_disc_fractions_IT20, s=20, cmap='seismic_r', vmin=0, vmax=1,
-                            edgecolor='none')
+        sc = axis10.scatter(glx_stellar_masses, spc_stellar_angular_momenta, c=glx_disc_fractions_IT20, s=20,
+                            cmap='seismic_r', vmin=0, vmax=1, edgecolor='none')
         plot_tools.create_colorbar(axis00, sc, r'$\mathrm{D/T_{\Delta \theta<30\degree}}$', 'horizontal')
 
         # Read observational data from OG13, FR18 and MPPF20 #
-        OG13 = np.genfromtxt('./observational_data/OG_1312.4543/Figure7_stars.csv', delimiter=',', names=['Mstar', 'jstar'])
-        FR18_table1 = np.genfromtxt('./observational_data/FR_1808.02525/Table1.txt', delimiter='\t', names=['Mstar', 'jstar', 'BTT'])
+        OG13 = np.genfromtxt('./observational_data/OG_1312.4543/Figure7_stars.csv', delimiter=',',
+                             names=['Mstar', 'jstar'])
+        FR18_table1 = np.genfromtxt('./observational_data/FR_1808.02525/Table1.txt', delimiter='\t',
+                                    names=['Mstar', 'jstar', 'BTT'])
         MPPF20 = np.genfromtxt('./observational_data/MPPF_2009.06645/Figure5_MJ_stars.txt', names=['Mstar', 'jstar'])
 
         # Plot observational data from OG13, FR18 and MPPF20 #
         axis10.scatter(MPPF20['Mstar'], MPPF20['jstar'], edgecolor='black', color='grey', s=75, marker='P',
                        label=r'$\mathrm{Mancera\,Pi\tilde{n}a\!+\!20}$', zorder=5)
-        axis10.scatter(np.power(10, OG13['Mstar']), np.power(10, OG13['jstar']), edgecolor='black', color='grey', s=75, marker='s',
-                       label=r'$\mathrm{OG14}$', zorder=5)
-        sc2 = axis10.scatter(np.power(10, FR18_table1['Mstar']), np.power(10, FR18_table1['jstar']), edgecolor='black', cmap='seismic_r',
-                             c=1 - FR18_table1['BTT'], marker='*', s=200, vmin=0, vmax=1)
+        axis10.scatter(np.power(10, OG13['Mstar']), np.power(10, OG13['jstar']), edgecolor='black', color='grey', s=75,
+                       marker='s', label=r'$\mathrm{OG14}$', zorder=5)
+        sc2 = axis10.scatter(np.power(10, FR18_table1['Mstar']), np.power(10, FR18_table1['jstar']), edgecolor='black',
+                             cmap='seismic_r', c=1 - FR18_table1['BTT'], marker='*', s=200, vmin=0, vmax=1)
         axiscbar = inset_axes(axis10, width='30%', height='3%', loc='upper center')
-        plot_tools.create_colorbar(axiscbar, sc2, r'$\mathrm{FR18:D/T}$', 'horizontal', top=False, ticks=[0, 0.5, 1], size=20)
+        plot_tools.create_colorbar(axiscbar, sc2, r'$\mathrm{FR18:D/T}$', 'horizontal', top=False, ticks=[0, 0.5, 1],
+                                   size=20)
 
         # Create the legend, save and close the figure #
         axis10.legend(loc='lower right', fontsize=20, frameon=False, numpoints=1, scatterpoints=1)
-        plt.savefig(plots_path + 'AM_M' + '-' + date + '.png', bbox_inches='tight')
+        plt.savefig(plots_path + 'AM_M' + '-' + date + '.pdf', bbox_inches='tight')
         plt.close()
         return None
 

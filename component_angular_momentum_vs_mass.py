@@ -100,7 +100,7 @@ class ComponentAngularMomentumVsMass:
                             scatterpoints=1)
         plt.gca().add_artist(legend)
         plt.legend(loc='upper right', fontsize=20, frameon=False, numpoints=1, scatterpoints=1)
-        plt.savefig(plots_path + 'C_AM_M' + '-' + date + '.png', bbox_inches='tight')
+        plt.savefig(plots_path + 'C_AM_M' + '-' + date + '.pdf', bbox_inches='tight')
         plt.close()
         return None
 

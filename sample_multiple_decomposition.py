@@ -37,8 +37,8 @@ class SampleMultipleDecomposition:
         :param simulation_path: simulation directory.
         :param tag: redshift directory.
         """
-        group_numbers = [39, 25, 18, 14]
         group_numbers = [2, 3, 5, 20]
+        group_numbers = [39, 25, 18, 14]
         # group_numbers = [10, 24, 107, 181]
         # subgroup_numbers = [1, 18, 3, 2]
         # group_numbers = [2775, 3117, 3411, 4181]

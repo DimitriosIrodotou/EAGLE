@@ -89,7 +89,7 @@ class DiscToTotalCRVsDiscToTotal:
 
         # Create the legends, save and close the figure #
         axis10.legend(loc='lower right', frameon=False, fontsize=20)
-        plt.savefig(plots_path + 'DTTCR_DTT' + '-' + date + '.png', bbox_inches='tight')
+        plt.savefig(plots_path + 'DTTCR_DTT' + '-' + date + '.pdf', bbox_inches='tight')
         plt.close()
         return None
 

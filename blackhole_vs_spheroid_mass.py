@@ -81,7 +81,7 @@ class BlackholeVsSpheroidMass:
 
         # Create the legends, save and close the figure #
         plt.legend(loc='upper center', fontsize=20, frameon=False, numpoints=1, scatterpoints=1, ncol=2)
-        plt.savefig(plots_path + 'B_B_M' + '-' + date + '.png', bbox_inches='tight')
+        plt.savefig(plots_path + 'B_B_M' + '-' + date + '.pdf', bbox_inches='tight')
         plt.close()
         return None
 

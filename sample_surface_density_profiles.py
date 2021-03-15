@@ -64,7 +64,7 @@ class SampleSurfaceDensityProfiles:
                 print('–––––––––––––––––––––––––––––––––––––––––––––')
 
         # Save and close the figure #
-        plt.savefig(plots_path + 'SSDP' + '-' + date + '.png', bbox_inches='tight')
+        plt.savefig(plots_path + 'SSDP' + '-' + date + '.pdf', bbox_inches='tight')
         plt.close()
         print('Finished SampleSurfaceDensityProfiles for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (
             time.time() - start_global_time))

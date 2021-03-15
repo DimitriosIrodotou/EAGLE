@@ -131,7 +131,7 @@ class TullyFisherFaberJackson:
         axis10.legend(loc='upper left', fontsize=14, frameon=False, numpoints=1, scatterpoints=1)
         for axis in [axis11, axis20, axis21]:
             axis.legend(loc='upper left', fontsize=14, frameon=False, numpoints=1, scatterpoints=1, ncol=2)
-        plt.savefig(plots_path + 'TFFJ' + '-' + date + '.png', bbox_inches='tight')
+        plt.savefig(plots_path + 'TFFJ' + '-' + date + '.pdf', bbox_inches='tight')
         plt.close()
         return None
 

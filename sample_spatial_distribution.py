@@ -93,7 +93,7 @@ class SampleSpatialDistribution:
         plt.text(-0.05, 1.1, r'$\mathrm{Spheroid\;edge-on}$', fontsize=30, transform=axis13.transAxes)
 
         # Save and close the figure #
-        plt.savefig(plots_path + 'SSD' + '-' + date + '.png', bbox_inches='tight')
+        plt.savefig(plots_path + 'SSD' + '-' + date + '.pdf', bbox_inches='tight')
         plt.close()
         print('Finished MultipleDecomposition for ' + re.split('Planck1/|/PE', simulation_path)[1] + '_' + str(tag) + ' in %.4s s' % (
             time.time() - start_global_time))

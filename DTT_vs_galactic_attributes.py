@@ -118,7 +118,7 @@ class DiscToTotalVsGalacticAttributes:
         axis10.legend(frameon=False, fontsize=20, loc='upper right',scatterpoints=1)
         axis11.legend([median], [r'$\mathrm{Median}$'], frameon=False, fontsize=20, loc='upper right')
         axis12.legend([fill], [r'$\mathrm{16^{th}-84^{th}\;\%ile}$'], frameon=False, fontsize=20, loc='upper left')
-        plt.savefig(plots_path + 'DTT_GP' + '-' + date + '.png', bbox_inches='tight')
+        plt.savefig(plots_path + 'DTT_GP' + '-' + date + '.pdf', bbox_inches='tight')
         plt.close()
         return None
 

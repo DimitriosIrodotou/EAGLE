@@ -112,7 +112,7 @@ class ComponentAgeMetallicityVsMass:
         axis10.legend([d, b, median, fill],
                       [r'$\mathrm{Discs}$', r'$\mathrm{Spheroids}$', r'$\mathrm{Median}$', r'$\mathrm{16^{th}-84^{th}\;\%ile}$'], frameon=False,
                       fontsize=20, loc='upper center', ncol=2, numpoints=1, scatterpoints=1)
-        plt.savefig(plots_path + 'C_A_M_M' + '-' + date + '.png', bbox_inches='tight')
+        plt.savefig(plots_path + 'C_A_M_M' + '-' + date + '.pdf', bbox_inches='tight')
         plt.close()
         return None
 
