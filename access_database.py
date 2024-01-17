@@ -30,7 +30,7 @@ def download_image(group_number, subgroup_number):
                     and SH.SubGroupNumber = %d' % (group_number, subgroup_number)
 
     # Connect to database and execute the query #
-    connnect = sql.connect('qzh009', password='SSIggUSE')
+    connnect = sql.connect('', password='')
     sql_data = sql.execute_query(connnect, query)
 
     # Save the result in a data frame and remove the unnecessary characters #
@@ -71,7 +71,7 @@ def create_merger_tree(group_number, subgroup_number):
         and REF.SubGroupNumber = %d' % (group_number, subgroup_number)
 
     # Connect to database and execute the query #
-    connnect = sql.connect('qzh009', password='SSIggUSE')
+    connnect = sql.connect('', password='')
     sql_data = sql.execute_query(connnect, query)
 
     # Save the result in a data frame #
@@ -103,7 +103,7 @@ def create_merger_tree(group_number, subgroup_number):
         SH.Redshift' % main_galaxy
 
     # Connect to database and execute the query #
-    connnect = sql.connect("hnz327", password="HRC478zd")
+    connnect = sql.connect("", password="")
     sql_data = sql.execute_query(connnect, query)
 
     # Save the result in a data frame #
